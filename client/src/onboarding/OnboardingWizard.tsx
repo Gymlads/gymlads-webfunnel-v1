@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createCheckoutSession } from '../api'
 import { storePendingCheckout } from './CheckoutResult'
 import {
@@ -21,7 +21,6 @@ import NextButton from './components/NextButton'
 import OptionButton from './components/OptionButton'
 import StatRangeField from './components/StatRangeField'
 import GoalsComparisonChart from './components/GoalsComparisonChart'
-import WorkoutsLaurel from './components/WorkoutsLaurel'
 import { trackOnboardingStepView } from '../analytics/gtm'
 import {
   autoAssignLocationDays,
@@ -36,7 +35,6 @@ import consistencyImage from './assets/03-consistency.png'
 import experienceImage from './assets/04-experience.png'
 import scheduleImage from './assets/06-schedule.png'
 import planReadyImage from './assets/07-plan-ready.png'
-import paywallImage from './assets/08-paywall.png'
 
 const DEFAULT_PAGE_BG = '#000000'
 
@@ -662,49 +660,78 @@ export default function OnboardingWizard() {
         <OnboardingLayout
           paywall
           footer={
-            <>
+            <div className="onboarding__legal">
+              <a href="#">Aankopen herstellen</a>
+              <a href="#">Voorwaarden</a>
+              <a href="#">Privacy</a>
+            </div>
+          }
+        >
+          <div className="onboarding__paywall-v2">
+            <header className="onboarding__paywall-v2-header">
+              <h1 className="onboarding__paywall-v2-title">Start vandaag voor €0,-</h1>
+              <p className="onboarding__paywall-v2-lead">
+                Probeer Gymlads 7 dagen 100% gratis; ben je niet overtuigd dat dit je
+                progressie versnelt, dan annuleer je en betaal je €0,00.
+              </p>
+              <p className="onboarding__paywall-v2-social">
+                <span className="onboarding__paywall-v2-stars" aria-hidden="true">
+                  ★★★★★
+                </span>
+                <span>4.8/5.0 • 10.000+ workouts gemaakt</span>
+              </p>
+            </header>
+
+            <div className="onboarding__paywall-offer">
+              <span className="onboarding__paywall-offer-badge">BESPAAR 30%</span>
+              <p className="onboarding__paywall-offer-daily">€ 0,19 / dag</p>
+              <p className="onboarding__paywall-offer-yearly">
+                Jaarabonnement:{' '}
+                <span className="onboarding__paywall-offer-old">€ 99,99</span>{' '}
+                <strong>€ 69,99 / jaar</strong>
+              </p>
+              <p className="onboarding__paywall-offer-note">(goedkoper dan 1 PT-sessie)</p>
+            </div>
+
+            <div className="onboarding__paywall-cta">
               {checkoutError && <div className="onboarding__error">{checkoutError}</div>}
               <NextButton
-                label="Start gratis proefperiode"
+                label="CLAIM JOUW 7 DAGEN GRATIS"
                 onClick={handleCheckout}
                 loading={checkoutLoading}
               />
-              <div className="onboarding__legal">
-                <a href="#">Aankopen herstellen</a>
-                <a href="#">Voorwaarden</a>
-                <a href="#">Privacy</a>
-              </div>
-            </>
-          }
-        >
-          <div
-            className="onboarding__paywall-panel"
-            style={{ '--paywall-bg': `url(${paywallImage})` } as CSSProperties}
-          >
-            <div className="onboarding__paywall-panel-content">
-              <div className="onboarding__paywall-spacer" aria-hidden="true" />
-              <div className="onboarding__paywall-bottom">
-                <WorkoutsLaurel />
-                <h1 className="onboarding__title onboarding__title--paywall">Ontvang volledige toegang</h1>
-                <p className="onboarding__paywall-desc">
-                  Behaal jouw fitnessdoelen met de juiste begeleiding. Een heel jaar coaching van
-                  Gymlads voor de prijs van één personal training sessie.
-                </p>
-                <ul className="onboarding__benefits onboarding__benefits--paywall">
-                  <li>Persoonlijk schema aangepast op jouw doelen</li>
-                  <li>Wekelijks aangepaste workouts op basis van jouw voortgang</li>
-                  <li>Wekelijkse analyse met concrete, actiegerichte feedback</li>
-                  <li>Log workouts, gewicht en lichaamsmetingen in één klik</li>
-                  <li>Inzicht in jouw trainingsprestaties en voortgang</li>
-                </ul>
-                <div className="onboarding__pricing">
-                  <p className="onboarding__pricing-title">Probeer 7 dagen gratis</p>
-                  <p className="onboarding__pricing-sub">
-                    Daarna €69,99/jaar - jaarlijks opzegbaar
-                  </p>
-                </div>
-              </div>
+              <p className="onboarding__paywall-disclaimer">
+                Probeer 7 dagen 100% gratis. Hierna wordt het abonnement automatisch verlengd
+                voor de actieprijs van €69,99/jaar (daarna €99,99/jaar). Annuleer eenvoudig
+                wanneer je wilt in jouw persoonlijke account.
+              </p>
             </div>
+
+            <section
+              className="onboarding__paywall-features"
+              aria-labelledby="paywall-features-title"
+            >
+              <h2 id="paywall-features-title" className="onboarding__paywall-features-title">
+                Wat krijg je met Gymlads?
+              </h2>
+              <ul className="onboarding__paywall-features-list">
+                <li>
+                  <strong>Schema op maat:</strong> Exact weten wat te doen (gym of thuis).
+                </li>
+                <li>
+                  <strong>Automatische bijsturing:</strong> Wekelijks aangepaste workouts voor
+                  maximale progressie.
+                </li>
+                <li>
+                  <strong>Slimme AI-coaching:</strong> Concrete week-feedback op jouw
+                  prestaties.
+                </li>
+                <li>
+                  <strong>Alles-in-1 tracking:</strong> Sets, gewicht, omtrek en voeding op 1
+                  plek.
+                </li>
+              </ul>
+            </section>
           </div>
         </OnboardingLayout>
       )
