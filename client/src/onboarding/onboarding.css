@@ -783,6 +783,7 @@
   padding: 16px 14px;
   border-radius: 14px;
   background: var(--surface);
+  text-align: left;
 }
 
 .onboarding__paywall-features-title {
@@ -790,6 +791,7 @@
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.25;
+  text-align: left;
 }
 
 .onboarding__paywall-features-list {
@@ -801,12 +803,13 @@
 
 .onboarding__paywall-features-list li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   margin-bottom: 10px;
   font-size: 0.82rem;
   line-height: 1.4;
   color: var(--text);
+  text-align: left;
 }
 
 .onboarding__paywall-features-list li:last-child {
@@ -818,11 +821,26 @@
   color: var(--accent);
   font-weight: 700;
   flex-shrink: 0;
-  margin-top: 1px;
+  line-height: 1;
 }
 
-.onboarding__paywall-features-list strong {
+.onboarding__paywall-features-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  min-width: 0;
+}
+
+.onboarding__paywall-features-item strong {
   font-weight: 700;
+}
+
+.onboarding__paywall-features-item span {
+  display: block;
+  text-align: left;
+  width: 100%;
 }
 
 .onboarding__footer--paywall .onboarding__legal {

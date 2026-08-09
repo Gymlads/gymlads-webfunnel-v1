@@ -716,19 +716,28 @@ export default function OnboardingWizard() {
               </h2>
               <ul className="onboarding__paywall-features-list">
                 <li>
-                  <strong>Schema op maat:</strong> Exact weten wat te doen (gym of thuis).
+                  <div className="onboarding__paywall-features-item">
+                    <strong>Schema op maat:</strong>
+                    <span>Exact weten wat te doen (gym of thuis).</span>
+                  </div>
                 </li>
                 <li>
-                  <strong>Automatische bijsturing:</strong> Wekelijks aangepaste workouts voor
-                  maximale progressie.
+                  <div className="onboarding__paywall-features-item">
+                    <strong>Automatische bijsturing:</strong>
+                    <span>Wekelijks aangepaste workouts voor maximale progressie.</span>
+                  </div>
                 </li>
                 <li>
-                  <strong>Slimme AI-coaching:</strong> Concrete week-feedback op jouw
-                  prestaties.
+                  <div className="onboarding__paywall-features-item">
+                    <strong>Slimme AI-coaching:</strong>
+                    <span>Concrete week-feedback op jouw prestaties.</span>
+                  </div>
                 </li>
                 <li>
-                  <strong>Alles-in-1 tracking:</strong> Sets, gewicht, omtrek en voeding op 1
-                  plek.
+                  <div className="onboarding__paywall-features-item">
+                    <strong>Alles-in-1 tracking:</strong>
+                    <span>Sets, gewicht, omtrek en voeding op 1 plek.</span>
+                  </div>
                 </li>
               </ul>
             </section>
