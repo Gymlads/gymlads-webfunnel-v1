@@ -111,7 +111,7 @@ export async function createCheckoutSession(metadata, req, bodyOrigin, options =
     success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${clientUrl}/checkout/cancelled`,
     phone_number_collection: {
-      enabled: true,
+      enabled: false,
     },
     subscription_data: skipTrial ? {} : { trial_period_days: 7 },
     metadata: enrichedMetadata,
