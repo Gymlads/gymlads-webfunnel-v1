@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createCheckoutSession } from '../api'
 import { storePendingCheckout } from './CheckoutResult'
 import {
@@ -22,6 +22,7 @@ import OptionButton from './components/OptionButton'
 import StatRangeField from './components/StatRangeField'
 import GoalsComparisonChart from './components/GoalsComparisonChart'
 import { trackOnboardingStepView } from '../analytics/gtm'
+import { SUBSCRIPTION_VALUE, trackTracklution } from '../analytics/tracklution'
 import {
   autoAssignLocationDays,
   buildStepList,
@@ -50,8 +51,17 @@ export default function OnboardingWizard() {
 
   const { progress, steps, currentIndex } = useOnboardingSteps(data, stepId)
 
+  // Tracklution AddToCart: one per funnel run, when the visitor reaches the
+  // offer. Meta only saw PageView and Purchase before; this adds the missing
+  // middle-funnel signal.
+  const addToCartFired = useRef(false)
+
   useEffect(() => {
     trackOnboardingStepView(stepId, currentIndex, steps.length, progress)
+    if (stepId === 'paywall' && !addToCartFired.current) {
+      addToCartFired.current = true
+      trackTracklution('AddToCart', SUBSCRIPTION_VALUE)
+    }
   }, [stepId])
 
   useEffect(() => {
@@ -124,6 +134,9 @@ export default function OnboardingWizard() {
   async function handleCheckout() {
     setCheckoutError('')
     setCheckoutLoading(true)
+    // Before the session request: the click itself is the checkout intent,
+    // and after the redirect to Stripe this page is gone.
+    trackTracklution('InitiateCheckout', SUBSCRIPTION_VALUE)
     try {
       const result = await createCheckoutSession(data)
 
