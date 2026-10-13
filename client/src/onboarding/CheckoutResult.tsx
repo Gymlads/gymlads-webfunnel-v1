@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { confirmDemoCheckout } from '../api'
+import { confirmDemoCheckout, fetchCheckoutRedeem } from '../api'
 import type { OnboardingData } from '../types'
 import { toStripeMetadata } from '../types'
 import { pushGtmEvent } from '../analytics/gtm'
+import { setTracklutionContactInfo } from '../analytics/tracklution'
 import OnboardingLayout from './components/OnboardingLayout'
 import NextButton from './components/NextButton'
 import GymladsLogo from './components/GymladsLogo'
@@ -35,6 +36,15 @@ export function CheckoutSuccess() {
       page_path: '/checkout/success',
       stripe_session_id: sessionId ?? undefined,
     })
+
+    // E-mailadres uit de Stripe-sessie doorgeven aan Tracklution (ContactInfo)
+    if (sessionId) {
+      fetchCheckoutRedeem(sessionId)
+        .then((result) => {
+          if (result.email) setTracklutionContactInfo(result.email)
+        })
+        .catch(() => {})
+    }
   }, [])
 
   return (
