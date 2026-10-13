@@ -49,6 +49,37 @@ production branch `main`. Andere branches krijgen een eigen testadres
 4. Stripe → Developers → Webhooks → nieuw endpoint
    `https://<adres>/api/stripe-webhook`, event `checkout.session.completed`.
 
+## Testen (stap voor stap)
+
+Testadres: `https://claude-project-thread-a1x7ma.gymlads-webfunnel.pages.dev`
+
+1. **Stripe-sleutel**: Stripe → Ontwikkelaars → API-sleutels → "Beperkte sleutel
+   maken", naam "Webfunnel Cloudflare". Recht: Checkout Sessions = Schrijven.
+   Sleutel alleen in Cloudflare plakken, nergens anders.
+2. **Stripe-webhook**: Stripe → Ontwikkelaars → Webhooks → "Eindpunt toevoegen".
+   URL: `<testadres>/api/stripe-webhook`, event `checkout.session.completed`.
+   Kopieer daarna de "signing secret" (begint met `whsec_`).
+3. **Cloudflare** → gymlads-webfunnel → Settings → Variables and Secrets, bij
+   **Preview**:
+   - `STRIPE_SECRET_KEY` = sleutel uit stap 1
+   - `STRIPE_PRICE_ID` = `price_1TfKa7ClVZcfiz3M1TzqDqOP`
+   - `STRIPE_WEBHOOK_SECRET` = `whsec_...` uit stap 2
+   - `N8N_WEBHOOK_URL` = `https://gymalds.app.n8n.cloud/webhook/onboarding-test`
+   - `ALLEEN_EIGEN_CHECKOUTS` = `true`
+
+   Daarna Deployments → laatste preview → "Retry deployment".
+4. **Controle**: open `<testadres>/api/health`; alles hoort `true` te zijn.
+5. **Proef**: loop de funnel door op je telefoon met `info+test@gymlads.nl`.
+   - Stripe-pagina: €69,99 per jaar en 7 dagen gratis?
+   - Na betalen: pagina "Betaling geslaagd".
+   - Stripe → Webhooks → het nieuwe eindpunt: levering met status 200.
+   - n8n "Webhook Test 2.0": nieuwe uitvoering met de antwoorden.
+   - Tracklution → Events: ContactInfo met het test-e-mailadres.
+   - Daarna de proef in Stripe opzeggen.
+
+Let op: de oude webfunnel stuurt dezelfde test-checkout ook door naar n8n, dus
+het testadres kan twee keer in n8n staan. Dat is alleen bij deze test.
+
 ## Omzetten (pas na test en OK van Roel)
 
 - Testen met één proef met info+test@gymlads.nl en daarna opzeggen.
