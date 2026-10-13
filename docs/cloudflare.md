@@ -39,7 +39,13 @@ production branch `main`. Andere branches krijgen een eigen testadres
    - `STRIPE_SECRET_KEY`: Stripe-sleutel die Checkout Sessions mag maken en lezen.
    - `STRIPE_PRICE_ID`: de jaarprijs (zelfde als nu).
    - `STRIPE_WEBHOOK_SECRET`: van het nieuwe webhook-endpoint (stap 4).
-   - `N8N_WEBHOOK_URL`: dezelfde n8n-webhook als de huidige webfunnel.
+   - `N8N_WEBHOOK_URL`: dezelfde n8n-webhook als de huidige webfunnel
+     (n8n-workflow "Webhook Test 2.0", pad `onboarding-test`, Production URL).
+   - `ALLEEN_EIGEN_CHECKOUTS` = `true` zolang de oude webfunnel nog draait: dan
+     stuurt de webhook alleen checkouts door die deze versie zelf maakte
+     (metadata `funnel_host=cloudflare`). Bij het omzetten weghalen, zodat hij
+     zich precies gedraagt als de oude.
+   - `STRIPE_PRICE_ID` kandidaat: `price_1TfKa7ClVZcfiz3M1TzqDqOP` (€69,99/jaar), controleren bij de test.
 4. Stripe → Developers → Webhooks → nieuw endpoint
    `https://<adres>/api/stripe-webhook`, event `checkout.session.completed`.
 

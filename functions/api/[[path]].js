@@ -6,6 +6,8 @@
 import Stripe from 'stripe'
 import { buildN8nPayloadFromMetadata } from '../../server/submission.js'
 
+const FUNNEL_HOST = 'cloudflare'
+
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -85,6 +87,7 @@ async function createCheckoutSession(request, env) {
     submittedAt: new Date().toISOString(),
     subscribed_int: '0',
     skip_trial: skipTrial ? 'true' : 'false',
+    funnel_host: FUNNEL_HOST,
   })
 
   if (!stripe || !env.STRIPE_PRICE_ID) {
@@ -152,6 +155,13 @@ async function stripeWebhook(request, env) {
 
   const session = event.data.object
   const metadata = session.metadata ?? {}
+
+  // Tijdens het testen ontvangt dit endpoint ook de checkouts van de oude
+  // webfunnel en de app. Met ALLEEN_EIGEN_CHECKOUTS=true sturen we alleen
+  // checkouts door die deze Cloudflare-versie zelf heeft gemaakt.
+  if (env.ALLEEN_EIGEN_CHECKOUTS === 'true' && metadata.funnel_host !== FUNNEL_HOST) {
+    return json({ received: true, handled: false, reason: 'not created by this funnel' })
+  }
   const email = session.customer_details?.email ?? session.customer_email ?? metadata.email ?? ''
   if (!email) return json({ error: 'Checkout session completed without customer email' }, 400)
 
