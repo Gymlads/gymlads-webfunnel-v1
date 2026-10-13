@@ -26,6 +26,11 @@ van Gymlads draaien, naast gymlads.nl.
 
 ## Instellen in Cloudflare (eenmalig)
 
+Gedaan op 13 okt 2026: project `gymlads-webfunnel` (gymlads-webfunnel.pages.dev),
+production branch `main`. Andere branches krijgen een eigen testadres
+(`<branch>.gymlads-webfunnel.pages.dev`).
+
+
 1. Cloudflare → Workers & Pages → Create → Pages → Connect to Git →
    `Gymlads/gymlads-webfunnel-v1`.
 2. Build command: `npm install --prefix client && npm run build --prefix client`.
