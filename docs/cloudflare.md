@@ -36,7 +36,8 @@ production branch `main`. Andere branches krijgen een eigen testadres
 2. Build command: `npm install --prefix client && npm run build --prefix client`.
    Build output directory: `client/dist`.
 3. Settings → Variables and Secrets (Production én Preview), als "Secret":
-   - `STRIPE_SECRET_KEY`: Stripe-sleutel die Checkout Sessions mag maken en lezen.
+   - `STRIPE_SECRET_KEY`: beperkte Stripe-sleutel: Checkout Sessions = Schrijven,
+     Payment Method Configurations = Lezen (anders geen iDEAL).
    - `STRIPE_PRICE_ID`: de jaarprijs (zelfde als nu).
    - `STRIPE_WEBHOOK_SECRET`: van het nieuwe webhook-endpoint (stap 4).
    - `N8N_WEBHOOK_URL`: dezelfde n8n-webhook als de huidige webfunnel
@@ -54,7 +55,9 @@ production branch `main`. Andere branches krijgen een eigen testadres
 Testadres: `https://claude-project-thread-a1x7ma.gymlads-webfunnel.pages.dev`
 
 1. **Stripe-sleutel**: Stripe → Ontwikkelaars → API-sleutels → "Beperkte sleutel
-   maken", naam "Webfunnel Cloudflare". Recht: Checkout Sessions = Schrijven.
+   maken", naam "Webfunnel Cloudflare". Rechten: Checkout Sessions = Schrijven
+   en Payment Method Configurations = Lezen. Zonder dat laatste toont Stripe
+   alleen kaart en Apple Pay en géén iDEAL (gezien bij de test op 14 okt 2026).
    Sleutel alleen in Cloudflare plakken, nergens anders.
 2. **Stripe-webhook**: Stripe → Ontwikkelaars → Webhooks → "Eindpunt toevoegen".
    URL: `<testadres>/api/stripe-webhook`, event `checkout.session.completed`.
@@ -77,8 +80,10 @@ Testadres: `https://claude-project-thread-a1x7ma.gymlads-webfunnel.pages.dev`
    - Tracklution → Events: ContactInfo met het test-e-mailadres.
    - Daarna de proef in Stripe opzeggen.
 
-Let op: de oude webfunnel stuurt dezelfde test-checkout ook door naar n8n, dus
-het testadres kan twee keer in n8n staan. Dat is alleen bij deze test.
+Let op: in Stripe staat geen webhook naar de oude (Vercel) webfunnel (gezien
+14 okt 2026). Bij het omzetten eerst uitzoeken welke flow nu de web-aanmeldingen
+naar n8n stuurt (waarschijnlijk het actieve n8n-eindpunt in Stripe), zodat er
+niets dubbel binnenkomt.
 
 ## Omzetten (pas na test en OK van Roel)
 
