@@ -82,6 +82,20 @@ Controle: `<adres>/api/health` → `stripeConfigured: true`.
   in Stripe → 200, en n8n "Webhook Test 2.0" (uitvoering 5996) schreef de
   antwoorden wel weg.
 
+## Test proef.gymlads.nl 14 okt 2026 (vóór omzetten advertenties)
+
+- 10:53 (roeltuijtelaars@live.nl): PageView + ContactInfo via `tralut.gymlads.nl`,
+  n8n "RevenueCat → Supabase 2.0" groen (Save To Staging (Web) ok), opzegging
+  ook verwerkt. StartTrial kwam wel uit Stripe binnen, maar met hetzelfde
+  event-nummer als de test van 08:33 (zelfde persoon), dus niet opnieuw geteld.
+- 11:25 (testroel1410@gymlads.nl, nieuw adres): StartTrial om 11:37 via Stripe
+  binnen (±12 min na betaling) en naar Meta gestuurd.
+- De Verify-knop onder First-Party Mode in Tracklution test alleen het
+  Vercel-adres van de container en blijft rood. Negeren.
+- Waar je StartTrial van de website ziet: Tracklution → Webhook Import Events
+  (bron stripe). Welke proef app of website is: in gymlads-app
+  `supabase/beheer/proeven-per-bron.sql`.
+
 ## Omzetten (pas na OK van Roel)
 
 1. Code naar `main` (PR #1 mergen) en de twee secrets ook bij **Production** zetten.
