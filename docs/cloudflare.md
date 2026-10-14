@@ -5,90 +5,92 @@ ontwikkelaar (gymlads-webfunnel-v1.vercel.app, gebouwd uit
 noErrdev/gymlads-webfunnel-v1). Deze repo kan nu ook op het Cloudflare-account
 van Gymlads draaien, naast gymlads.nl.
 
-## Hoe het werkt
+## Hoe een aanmelding via de website loopt (uitgezocht 14 okt 2026)
+
+1. De bezoeker vult de vragenlijst in de webfunnel in.
+2. De webfunnel maakt een Stripe-betaalpagina aan (`POST /api/create-checkout-session`):
+   jaarprijs `price_1TfKa7ClVZcfiz3M1TzqDqOP` (€69,99), 7 dagen proef. **Alle
+   antwoorden gaan mee als `metadata` van die betaling** (±45 velden).
+   Er is geen vaste betaallink; elke klant krijgt een eigen pagina.
+3. Welke betaalmethodes de klant ziet (iDEAL, kaart, Apple/Google Pay, Revolut)
+   bepaalt Stripe zelf uit de instellingen van het Stripe-account, niet de code.
+4. Na betalen stuurt Stripe `checkout.session.completed` **rechtstreeks naar
+   n8n**: workflow **"GymLads - RevenueCat → Supabase 2.0"** (ondanks de naam
+   ook voor web). Pad in die workflow:
+   `Stripe Trigger → Which Stripe event? → Extract Stripe Fields → Is App Checkout?`
+   - App-aankoop (heeft `client_reference_id`): `Activate App User (Stripe)`.
+   - Web-aankoop: `Parse Web Metadata → Save To Staging (Web)`, schrijft de
+     antwoorden naar Supabase-tabel `funnel_staging` (`on_conflict=email`,
+     credential "Supabase secret key - Gymlads 2.0").
+   - Opzegging: `Parse cancellation → Cancel user in Supabase`.
+5. Opent de klant later de app en maakt een account met hetzelfde e-mailadres,
+   dan koppelt het tweede deel van die workflow (`Link User`-webhook) de
+   antwoorden aan het account en wordt de regel in `funnel_staging` gewist.
+6. Tracking: Stripe → Tracklution → Meta (zie `docs/tracking.md` in de repo
+   gymlads-app). De pagina "Betaling geslaagd" stuurt Tracklution `ContactInfo`.
+
+Dus: **de webfunnel zelf stuurt niets naar n8n**. De oude funnel had wel code
+om naar n8n te sturen (`server/app.js`, `/api/stripe-webhook`), maar daar staat
+in Stripe geen webhook voor, en n8n "Webhook Test 2.0" (pad `onboarding-test`)
+had vóór 14 okt nooit een uitvoering.
+
+## Wat de Cloudflare-versie doet
 
 - De pagina's zijn dezelfde: `client/` wordt gebouwd naar `client/dist`.
-- De API staat voor Cloudflare in `functions/api/[[path]].js` en doet hetzelfde
-  als `server/app.js` (die blijft voor Vercel en lokaal ontwikkelen):
-  - `POST /api/create-checkout-session`: maakt de Stripe-betaalpagina (7 dagen proef).
+- De API staat in `functions/api/[[path]].js` (zelfde gedrag als `server/app.js`):
+  - `POST /api/create-checkout-session`: Stripe-betaalpagina, precies dezelfde
+    aanvraag als de oude funnel (vergeleken in Stripe-logboek, 14 okt), plus
+    één extra metadataveld `funnel_host=cloudflare`.
   - `GET /api/checkout-redeem`: zoekt na betalen het e-mailadres op (voor
     Tracklution ContactInfo).
-  - `POST /api/stripe-webhook`: Stripe meldt een geslaagde checkout; de
-    onboarding-antwoorden gaan naar n8n (zelfde gegevens als de Vercel-versie,
-    `server/submission.js`).
-  - `GET /api/health`: laat zien of Stripe en n8n zijn ingesteld.
-- Verschillen met de Vercel-versie:
-  - geen demo-checkout (die stuurde zonder betaling een abonnee naar n8n);
-  - de terugkeer-URL na betalen is altijd het eigen adres;
-  - lukt het doorsturen naar n8n niet, dan antwoordt de webhook met 500 zodat
-    Stripe het later opnieuw probeert.
-- Instellingen: `wrangler.toml` (Node-compatibiliteit aan).
+  - `POST /api/stripe-webhook`: kan antwoorden naar n8n sturen, maar is **niet
+    nodig** (zie hierboven) en wordt niet gebruikt. Laat `STRIPE_WEBHOOK_SECRET`
+    en `N8N_WEBHOOK_URL` leeg en zet in Stripe geen webhook naar dit adres.
+  - `GET /api/health`: laat zien wat er is ingesteld.
+- Geen demo-checkout (die stuurde in de Vercel-versie zonder betaling een
+  abonnee naar n8n).
+- Instellingen: `wrangler.toml` (Node-compatibiliteit aan). Omdat dat bestand
+  bestaat, kun je in het Cloudflare-dashboard alleen **Secrets** toevoegen.
 
-## Instellen in Cloudflare (eenmalig)
+## Instellen in Cloudflare
 
-Gedaan op 13 okt 2026: project `gymlads-webfunnel` (gymlads-webfunnel.pages.dev),
-production branch `main`. Andere branches krijgen een eigen testadres
-(`<branch>.gymlads-webfunnel.pages.dev`).
+Project `gymlads-webfunnel` (aangemaakt 13 okt 2026), production branch `main`
+→ gymlads-webfunnel.pages.dev. Andere branches krijgen een testadres
+(`<branch>.gymlads-webfunnel.pages.dev`). Build command:
+`npm install --prefix client && npm run build --prefix client`, output `client/dist`.
 
+Settings → Variables and Secrets (kies bovenaan Production of Preview), type
+**Secret**:
+- `STRIPE_SECRET_KEY`: beperkte Stripe-sleutel "Webfunnel Cloudflare" met
+  **Checkout Sessions = Schrijven** en **Payment Method Configurations = Lezen**.
+  Zonder dat laatste toont Stripe alleen kaart/Apple Pay en géén iDEAL.
+- `STRIPE_PRICE_ID` = `price_1TfKa7ClVZcfiz3M1TzqDqOP`
 
-1. Cloudflare → Workers & Pages → Create → Pages → Connect to Git →
-   `Gymlads/gymlads-webfunnel-v1`.
-2. Build command: `npm install --prefix client && npm run build --prefix client`.
-   Build output directory: `client/dist`.
-3. Settings → Variables and Secrets (Production én Preview), als "Secret":
-   - `STRIPE_SECRET_KEY`: beperkte Stripe-sleutel: Checkout Sessions = Schrijven,
-     Payment Method Configurations = Lezen (anders geen iDEAL).
-   - `STRIPE_PRICE_ID`: de jaarprijs (zelfde als nu).
-   - `STRIPE_WEBHOOK_SECRET`: van het nieuwe webhook-endpoint (stap 4).
-   - `N8N_WEBHOOK_URL`: dezelfde n8n-webhook als de huidige webfunnel
-     (n8n-workflow "Webhook Test 2.0", pad `onboarding-test`, Production URL).
-   - `ALLEEN_EIGEN_CHECKOUTS` = `true` zolang de oude webfunnel nog draait: dan
-     stuurt de webhook alleen checkouts door die deze versie zelf maakte
-     (metadata `funnel_host=cloudflare`). Bij het omzetten weghalen, zodat hij
-     zich precies gedraagt als de oude.
-   - `STRIPE_PRICE_ID` kandidaat: `price_1TfKa7ClVZcfiz3M1TzqDqOP` (€69,99/jaar), controleren bij de test.
-4. Stripe → Developers → Webhooks → nieuw endpoint
-   `https://<adres>/api/stripe-webhook`, event `checkout.session.completed`.
+Na het wijzigen: Deployments → laatste deployment → … → Retry deployment.
+Controle: `<adres>/api/health` → `stripeConfigured: true`.
 
-## Testen (stap voor stap)
+## Test 14 okt 2026 (Roel, info+test@gymlads.nl)
 
-Testadres: `https://claude-project-thread-a1x7ma.gymlads-webfunnel.pages.dev`
+- Testadres `claude-project-thread-a1x7ma.gymlads-webfunnel.pages.dev`, health ok.
+- Betaalpagina: €69,99/jaar, 7 dagen gratis. iDEAL ontbrak eerst; opgelost met
+  het leesrecht Payment Method Configurations op de sleutel.
+- Betaling 08:32. Stripe → n8n "RevenueCat → Supabase 2.0" (uitvoering 5997):
+  fout bij `Save To Staging (Web)`: "JWT issued at future" (Supabase vond de
+  inlog een paar seconden uit de toekomst; toevallig klokverschil, niet door de
+  nieuwe funnel). Advies: "Retry On Fail" aan op dat blokje.
+- Toen nog gebruikt (nu niet meer nodig): webhook "Webfunnel Cloudflare (test)"
+  in Stripe → 200, en n8n "Webhook Test 2.0" (uitvoering 5996) schreef de
+  antwoorden wel weg.
 
-1. **Stripe-sleutel**: Stripe → Ontwikkelaars → API-sleutels → "Beperkte sleutel
-   maken", naam "Webfunnel Cloudflare". Rechten: Checkout Sessions = Schrijven
-   en Payment Method Configurations = Lezen. Zonder dat laatste toont Stripe
-   alleen kaart en Apple Pay en géén iDEAL (gezien bij de test op 14 okt 2026).
-   Sleutel alleen in Cloudflare plakken, nergens anders.
-2. **Stripe-webhook**: Stripe → Ontwikkelaars → Webhooks → "Eindpunt toevoegen".
-   URL: `<testadres>/api/stripe-webhook`, event `checkout.session.completed`.
-   Kopieer daarna de "signing secret" (begint met `whsec_`).
-3. **Cloudflare** → gymlads-webfunnel → Settings → Variables and Secrets, bij
-   **Preview**:
-   - `STRIPE_SECRET_KEY` = sleutel uit stap 1
-   - `STRIPE_PRICE_ID` = `price_1TfKa7ClVZcfiz3M1TzqDqOP`
-   - `STRIPE_WEBHOOK_SECRET` = `whsec_...` uit stap 2
-   - `N8N_WEBHOOK_URL` = `https://gymalds.app.n8n.cloud/webhook/onboarding-test`
-   - `ALLEEN_EIGEN_CHECKOUTS` = `true`
+## Omzetten (pas na OK van Roel)
 
-   Daarna Deployments → laatste preview → "Retry deployment".
-4. **Controle**: open `<testadres>/api/health`; alles hoort `true` te zijn.
-5. **Proef**: loop de funnel door op je telefoon met `info+test@gymlads.nl`.
-   - Stripe-pagina: €69,99 per jaar en 7 dagen gratis?
-   - Na betalen: pagina "Betaling geslaagd".
-   - Stripe → Webhooks → het nieuwe eindpunt: levering met status 200.
-   - n8n "Webhook Test 2.0": nieuwe uitvoering met de antwoorden.
-   - Tracklution → Events: ContactInfo met het test-e-mailadres.
-   - Daarna de proef in Stripe opzeggen.
-
-Let op: in Stripe staat geen webhook naar de oude (Vercel) webfunnel (gezien
-14 okt 2026). Bij het omzetten eerst uitzoeken welke flow nu de web-aanmeldingen
-naar n8n stuurt (waarschijnlijk het actieve n8n-eindpunt in Stripe), zodat er
-niets dubbel binnenkomt.
-
-## Omzetten (pas na test en OK van Roel)
-
-- Testen met één proef met info+test@gymlads.nl en daarna opzeggen.
-- Bij het omzetten: het webhook-endpoint van de oude (Vercel) webfunnel in
-  Stripe uitzetten, anders gaat elke aanmelding twee keer naar n8n.
-- Tracklution: nieuw domein laten instellen (support).
-- Advertentielinks omzetten, of de ontwikkelaar de oude link laten doorsturen.
+1. Code naar `main` (PR #1 mergen) en de twee secrets ook bij **Production** zetten.
+2. In Stripe de test-webhook "Webfunnel Cloudflare (test)" verwijderen (als die
+   er nog staat). Aan de n8n-kant verandert niets.
+3. Eigen adres koppelen, bijvoorbeeld proef.gymlads.nl (start.gymlads.nl is al
+   in gebruik).
+4. Tracklution: nieuw domein laten instellen (support).
+5. Advertentielinks omzetten (reset het leren van Meta), of de ontwikkelaar de
+   oude link laten doorsturen.
+6. Daarna één echte controle: nieuwe web-aanmelding staat in n8n
+   "RevenueCat → Supabase 2.0" met groene `Save To Staging (Web)`.
