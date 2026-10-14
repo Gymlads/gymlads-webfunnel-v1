@@ -89,7 +89,13 @@ Controle: `<adres>/api/health` → `stripeConfigured: true`.
    er nog staat). Aan de n8n-kant verandert niets.
 3. Eigen adres koppelen, bijvoorbeeld proef.gymlads.nl (start.gymlads.nl is al
    in gebruik).
-4. Tracklution: nieuw domein laten instellen (support).
+4. Tracklution (advies Emma, 14 okt): zelfde container `LS-98875324-1`.
+   First-party subdomein `tralut.gymlads.nl` (CNAME in Cloudflare-DNS naar het
+   doel onder First-Party Mode in Tracklution, daarna daar verifiëren). Het
+   script in `client/index.html` laadt sinds 14 okt van `tralut.gymlads.nl`
+   (valt terug op `main-42377.trlution.com` als dat niet werkt). De Stripe
+   block rule blijft ongewijzigd. Vóór de advertenties: volledige checkout op
+   proef.gymlads.nl testen en kijken of de events in Tracklution binnenkomen.
 5. Advertentielinks omzetten (reset het leren van Meta), of de ontwikkelaar de
    oude link laten doorsturen.
 6. Daarna één echte controle: nieuwe web-aanmelding staat in n8n
