@@ -28,6 +28,8 @@ function readPendingCheckout(): PendingCheckout | null {
 }
 
 export function CheckoutSuccess() {
+  const [email, setEmail] = useState<string | null>(null)
+
   useEffect(() => {
     sessionStorage.removeItem(PENDING_CHECKOUT_KEY)
 
@@ -37,11 +39,15 @@ export function CheckoutSuccess() {
       stripe_session_id: sessionId ?? undefined,
     })
 
-    // E-mailadres uit de Stripe-sessie doorgeven aan Tracklution (ContactInfo)
+    // E-mailadres uit de Stripe-sessie: tonen in stap 2 en doorgeven aan
+    // Tracklution (ContactInfo)
     if (sessionId) {
       fetchCheckoutRedeem(sessionId)
         .then((result) => {
-          if (result.email) setTracklutionContactInfo(result.email)
+          if (result.email) {
+            setEmail(result.email)
+            setTracklutionContactInfo(result.email)
+          }
         })
         .catch(() => {})
     }
@@ -51,12 +57,48 @@ export function CheckoutSuccess() {
     <OnboardingLayout centered checkoutSuccess>
       <div className="checkout-success">
         <GymladsLogo className="checkout-success__logo" />
-        <h1 className="checkout-success__title">Betaling geslaagd!</h1>
+        <h1 className="checkout-success__title">Je proefweek is gestart!</h1>
         <p className="checkout-success__subtitle">
-          Je hebt nu toegang tot Gymlads — download de app en begin vandaag.
+          Je coach zet je persoonlijke schema voor je klaar. Nog 3 stappen en je doet vandaag je
+          eerste workout.
         </p>
 
-        <StoreDownloadButtons />
+        <ol className="checkout-success__steps">
+          <li className="checkout-success__step">
+            <span className="checkout-success__step-nr">1</span>
+            <div className="checkout-success__step-body">
+              <p className="checkout-success__step-title">Download de Gymlads-app</p>
+              <StoreDownloadButtons />
+            </div>
+          </li>
+          <li className="checkout-success__step">
+            <span className="checkout-success__step-nr">2</span>
+            <div className="checkout-success__step-body">
+              <p className="checkout-success__step-title">Tik op "Nieuw account aanmaken"</p>
+              <p className="checkout-success__step-text">
+                Gebruik hetzelfde e-mailadres als bij je aanmelding
+                {email ? (
+                  <>
+                    : <strong className="checkout-success__email">{email}</strong>
+                  </>
+                ) : (
+                  '.'
+                )}{' '}
+                Dan staan je antwoorden en je proefweek meteen klaar.
+              </p>
+            </div>
+          </li>
+          <li className="checkout-success__step">
+            <span className="checkout-success__step-nr">3</span>
+            <div className="checkout-success__step-body">
+              <p className="checkout-success__step-title">Start je eerste workout</p>
+              <p className="checkout-success__step-text">
+                Je schema staat op het startscherm. Doe je eerste workout vandaag of morgen, dan
+                haal je het meeste uit je proefweek.
+              </p>
+            </div>
+          </li>
+        </ol>
       </div>
     </OnboardingLayout>
   )
