@@ -1,5 +1,6 @@
 import type { OnboardingData } from './types'
 import { toStripeMetadata } from './types'
+import { meetKoppeling } from './analytics/meten'
 
 export interface CheckoutResponse {
   url?: string
@@ -30,6 +31,7 @@ export async function createCheckoutSession(
   const body = JSON.stringify({
     metadata: toStripeMetadata(data),
     clientOrigin: window.location.origin,
+    meting: meetKoppeling(),
   })
   const maxAttempts = 2
 

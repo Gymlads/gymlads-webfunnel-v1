@@ -22,6 +22,7 @@ import OptionButton from './components/OptionButton'
 import StatRangeField from './components/StatRangeField'
 import GoalsComparisonChart from './components/GoalsComparisonChart'
 import { trackOnboardingStepView } from '../analytics/gtm'
+import { meetStap } from '../analytics/meten'
 import {
   autoAssignLocationDays,
   buildStepList,
@@ -52,6 +53,7 @@ export default function OnboardingWizard() {
 
   useEffect(() => {
     trackOnboardingStepView(stepId, currentIndex, steps.length, progress)
+    meetStap(stepId, currentIndex >= 0 ? currentIndex + 1 : undefined, data)
   }, [stepId])
 
   useEffect(() => {
@@ -124,6 +126,7 @@ export default function OnboardingWizard() {
   async function handleCheckout() {
     setCheckoutError('')
     setCheckoutLoading(true)
+    meetStap('betaalknop', undefined, data)
     try {
       const result = await createCheckoutSession(data)
 
