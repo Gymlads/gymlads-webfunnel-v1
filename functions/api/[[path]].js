@@ -8,6 +8,13 @@ import { buildN8nPayloadFromMetadata } from '../../server/submission.js'
 
 const FUNNEL_HOST = 'cloudflare'
 
+// Meting voor de trechter (docs/meten.md). Publieke Supabase-gegevens (dezelfde
+// die de app en gymlads.nl/cijfers gebruiken); de functies log_web_stap en
+// log_web_checkout accepteren alleen bekende waarden.
+const SUPABASE_URL = 'https://igcmunshswzaxxtccxij.supabase.co'
+const SUPABASE_PUBLIEKE_SLEUTEL = 'sb_publishable_KDytEfGmM-_frKy-ykQB4g_PS5huk7r'
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -71,7 +78,47 @@ async function forwardToN8n(env, payload) {
   return { forwarded: true }
 }
 
-async function createCheckoutSession(request, env) {
+async function supabaseRpc(functie, args) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functie}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_PUBLIEKE_SLEUTEL,
+      Authorization: `Bearer ${SUPABASE_PUBLIEKE_SLEUTEL}`,
+    },
+    body: JSON.stringify(args),
+  })
+  if (!response.ok) {
+    console.error(`[meten] ${functie} mislukt (${response.status}): ${await response.text()}`)
+  }
+}
+
+// Stap uit de vragenlijst doorgeven aan Supabase. Antwoordt altijd meteen met
+// 204; het doorgeven gebeurt op de achtergrond en een fout blijft hier.
+async function meet(request, waitUntil) {
+  try {
+    const tekst = await request.text()
+    if (tekst.length > 4000) return new Response(null, { status: 204 })
+    const body = JSON.parse(tekst)
+    if (typeof body?.sessie === 'string' && UUID.test(body.sessie) && typeof body?.stap === 'string') {
+      const info = body.info && typeof body.info === 'object' && !Array.isArray(body.info) ? body.info : {}
+      const volgnummer = Number.isInteger(body.volgnummer) ? body.volgnummer : null
+      waitUntil(
+        supabaseRpc('log_web_stap', {
+          p_sessie: body.sessie,
+          p_stap: body.stap.slice(0, 40),
+          p_volgnummer: volgnummer,
+          p_info: info,
+        }).catch((error) => console.error('[meten] stap:', error)),
+      )
+    }
+  } catch {
+    // ongeldige meting: negeren
+  }
+  return new Response(null, { status: 204 })
+}
+
+async function createCheckoutSession(request, env, waitUntil) {
   const body = await request.json().catch(() => null)
   const metadata = body?.metadata
   if (!metadata || typeof metadata !== 'object') {
@@ -94,6 +141,16 @@ async function createCheckoutSession(request, env) {
     return json({ demo: true, submissionId, skipTrial })
   }
 
+  // Koppeling met de meting: sessie-id en advertentie op het abonnement in
+  // Stripe (niet in de checkout-metadata, die gaat in zijn geheel naar n8n).
+  const meting = body?.meting && typeof body.meting === 'object' ? body.meting : null
+  const sessieId = typeof meting?.sessie === 'string' && UUID.test(meting.sessie) ? meting.sessie : null
+  const abonnementMetadata = {}
+  if (sessieId) abonnementMetadata.funnel_sessie_id = sessieId
+  if (typeof meting?.utm_content === 'string' && meting.utm_content) {
+    abonnementMetadata.utm_content = meting.utm_content.slice(0, 500)
+  }
+
   const clientUrl = resolveClientUrl(request, env, body?.clientOrigin)
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -101,9 +158,19 @@ async function createCheckoutSession(request, env) {
     success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${clientUrl}/checkout/cancelled`,
     phone_number_collection: { enabled: false },
-    subscription_data: skipTrial ? {} : { trial_period_days: 7 },
+    subscription_data: {
+      ...(skipTrial ? {} : { trial_period_days: 7 }),
+      ...(Object.keys(abonnementMetadata).length ? { metadata: abonnementMetadata } : {}),
+    },
     metadata: enrichedMetadata,
   })
+
+  if (sessieId) {
+    waitUntil(
+      supabaseRpc('log_web_checkout', { p_sessie: sessieId, p_checkout: session.id })
+        .catch((error) => console.error('[meten] checkout:', error)),
+    )
+  }
 
   return json({ url: session.url, submissionId, skipTrial })
 }
@@ -193,7 +260,8 @@ function health(env) {
   })
 }
 
-export async function onRequest({ request, env }) {
+export async function onRequest({ request, env, waitUntil }) {
+  const opAchtergrond = typeof waitUntil === 'function' ? waitUntil : (promise) => promise
   const { pathname } = new URL(request.url)
   const route = `${request.method} ${pathname.replace(/\/$/, '')}`
 
@@ -202,7 +270,9 @@ export async function onRequest({ request, env }) {
       case 'GET /api/health':
         return health(env)
       case 'POST /api/create-checkout-session':
-        return await createCheckoutSession(request, env)
+        return await createCheckoutSession(request, env, opAchtergrond)
+      case 'POST /api/meet':
+        return await meet(request, opAchtergrond)
       case 'GET /api/checkout-redeem':
         return await checkoutRedeem(request, env)
       case 'POST /api/stripe-webhook':
