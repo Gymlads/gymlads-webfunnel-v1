@@ -50,7 +50,7 @@ antwoorden. Doet niets tot Roel de SQL draait (gymlads-app
 | E-mail ook naar Tracklution | Tracklution | `ContactInfo` al bij de e-mailstap (was alleen op de bedankpagina) |
 
 Bestaande events blijven. **Check in GTM** of er een trigger op de oude knoptekst
-"CLAIM JOUW 7 DAGEN GRATIS" staat; die tekst is nu "START 7 DAGEN GRATIS".
+"CLAIM JOUW 7 DAGEN GRATIS" staat; die tekst is nu "GA VERDER".
 Beide knoppen hebben `data-cta-positie="boven|onder"`.
 
 Dashboard /cijfers: "Onboarding geopend/gestart" telt nu `gender`/`stats`. Na

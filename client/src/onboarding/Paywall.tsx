@@ -79,7 +79,7 @@ function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { posit
             Even geduld…
           </>
         ) : (
-          'START 7 DAGEN GRATIS'
+          'GA VERDER'
         )}
       </button>
       <PaymentLogos />
@@ -153,13 +153,11 @@ export default function Paywall(props: PaywallProps) {
         <h2 className="paywall__h2">Wat krijg je met Gymlads?</h2>
         <ul className="paywall__checks">
           {VOORDELEN.map((v) => (
-            <li key={v.titel}>
+            <li key={v}>
               <span className="paywall__check" aria-hidden="true">
                 <Check size={14} strokeWidth={3.5} />
               </span>
-              <span>
-                <strong>{v.titel}:</strong> {v.tekst}
-              </span>
+              <span>{v}</span>
             </li>
           ))}
         </ul>
@@ -196,7 +194,7 @@ export default function Paywall(props: PaywallProps) {
           sporters gingen je voor
         </p>
         <p className="paywall__social-sub">
-          Sluit je aan en weet vanaf vandaag bij elke training precies wat je moet doen.
+          Word lid en zet de eerste stap naar jouw doel! 🚀
         </p>
       </section>
 

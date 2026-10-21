@@ -48,13 +48,12 @@ export const BETAALMETHODES: Array<'ideal' | 'applepay' | 'googlepay' | 'visa' |
   'mastercard',
 ]
 
-// Concreet: wat je krijgt en wat je eraan hebt (voorstel 21-10, Roel kan schrappen)
+// Letterlijk van Roel (21-10-2026)
 export const VOORDELEN = [
-  { titel: 'Schema op maat', tekst: 'Precies afgestemd op jouw doel, niveau en trainingsdagen.' },
-  { titel: 'Elke week sterker', tekst: 'Je coach past gewicht en herhalingen elke week aan op wat je deed.' },
-  { titel: 'Nooit twijfelen', tekst: 'Uitleg bij elke oefening, en een AI-coach die al je vragen beantwoordt.' },
-  { titel: 'Voeding bijhouden', tekst: 'Log je eten uit 2.300+ producten en zie direct je calorieën en eiwitten.' },
-  { titel: 'Apparaat bezet?', tekst: 'Wissel met één tik naar een oefening voor dezelfde spieren.' },
+  'Je eigen AI-coach, die je helpt bij elke training en al je vragen',
+  'Een schema op maat voor jouw doel en niveau',
+  'Elke week wordt je plan bijgestuurd op basis van jouw voortgang',
+  'Alles in één app: training, voeding en voortgang',
 ]
 
 /** Letterlijk uit de App Store; geen woorden veranderen. */
