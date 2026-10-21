@@ -17,7 +17,7 @@ de Cloudflare-preview akkoord geeft.
 - Nieuwe stap `email` vóór `plan-ready` ("Je schema is bijna klaar!", zoals Fitbod; `client/src/onboarding/EmailStap.tsx`).
 
 **Paywall** (`client/src/onboarding/Paywall.tsx`, teksten in `paywallInhoud.ts`)
-- Blokken: kop · betaalblok "Jouw plan" (Flitsboek-stijl) · wat krijg je · reviews · sociaal bewijs · betaalblok · FAQ (4 vragen) · voorwaarden.
+- Blokken: betaalblok "Jouw plan" (Flitsboek-stijl) · wat krijg je · reviews · sociaal bewijs · betaalblok · FAQ (4 vragen) · voorwaarden.
 - Weg: "Annuleer eenvoudig ... persoonlijke account", "4.8/5.0", "10.000+ workouts", dode link "Aankopen herstellen".
 - Knop reageert meteen (spinner + "Even geduld…", beide knoppen uit). De server
   wordt bij het openen van de paywall alvast gewekt (`/api/health`) en de browser

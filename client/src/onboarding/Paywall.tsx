@@ -142,15 +142,7 @@ export default function Paywall(props: PaywallProps) {
 
   return (
     <div className="paywall">
-      {/* 1. Kop */}
-      <header className="paywall__header">
-        <h1 className="paywall__title">Start vandaag voor €0,-</h1>
-        <p className="paywall__lead">
-          Probeer Gymlads 7 dagen gratis. Zeg je op tijdens je proef, dan betaal je niks.
-        </p>
-      </header>
-
-      {/* 2. Betaalblok boven */}
+      {/* Betaalblok boven (geen kop erboven, zoals Flitsboek; Roel 21-10) */}
       <Betaalblok {...props} positie="boven" />
 
       {/* 3. Wat krijg je */}
