@@ -19,8 +19,7 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
 // Eigen tekst boven de betaalknop van Stripe (custom_text.submit, max. 1200 tekens).
 // Alleen bij een proef: zonder proef klopt "vandaag €0" niet.
 const STRIPE_KNOP_TEKST =
-  'Je betaalt vandaag €0. Je proef loopt 7 dagen, opzeggen kan altijd tijdens je proef. ' +
-  'Kies je iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.'
+  'Je betaalt vandaag €0. Opzeggen kan altijd tijdens je proef.'
 
 function geldigEmail(waarde) {
   if (typeof waarde !== 'string') return null
