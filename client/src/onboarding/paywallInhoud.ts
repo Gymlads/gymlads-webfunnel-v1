@@ -57,7 +57,7 @@ export const VOORDELEN = [
 ]
 
 /** Letterlijk uit de App Store; geen woorden veranderen. */
-// Avatars: getekende figuurtjes (DiceBear "Notionists", CC0), geen foto's van echte mensen.
+// Avatars: foto's aangeleverd door Roel (assets/lid-*.jpg).
 export const REVIEWS = [
   {
     avatar: 'gijs',

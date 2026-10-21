@@ -1645,6 +1645,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
+  object-fit: cover;
 }
 
 .paywall__social {
@@ -1681,6 +1682,26 @@
   margin: 0;
   font-size: 1rem;
   color: #c7c7cc;
+}
+
+/* Rijtje leden-foto's onder "1.000+" (zoals Flitsboek) */
+.paywall__leden {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.paywall__leden img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #171719;
+  margin-left: -10px;
+}
+
+.paywall__leden img:first-child {
+  margin-left: 0;
 }
 
 .paywall__faq {

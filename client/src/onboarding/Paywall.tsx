@@ -13,11 +13,16 @@ import {
   VOORWAARDEN_URL,
 } from './paywallInhoud'
 import vlagImage from './assets/gymlads-vlag.png'
-import avatarGijs from './assets/avatar-gijs.svg'
-import avatarBjarne from './assets/avatar-bjarne.svg'
-import avatarLuuk from './assets/avatar-luuk.svg'
+import lid1 from './assets/lid-1.jpg'
+import lid2 from './assets/lid-2.jpg'
+import lid3 from './assets/lid-3.jpg'
+import lid4 from './assets/lid-4.jpg'
+import lid5 from './assets/lid-5.jpg'
+import lid6 from './assets/lid-6.jpg'
 
-const AVATARS: Record<string, string> = { gijs: avatarGijs, bjarne: avatarBjarne, luuk: avatarLuuk }
+// Foto's aangeleverd door Roel (21-10-2026)
+const AVATARS: Record<string, string> = { gijs: lid1, bjarne: lid2, luuk: lid4 }
+const LEDEN = [lid1, lid3, lid5, lid2, lid6]
 
 export type CtaPositie = 'boven' | 'onder'
 
@@ -196,6 +201,11 @@ export default function Paywall(props: PaywallProps) {
         <p className="paywall__social-sub">
           Word lid en zet de eerste stap naar jouw doel! 🚀
         </p>
+        <div className="paywall__leden" aria-hidden="true">
+          {LEDEN.map((src) => (
+            <img key={src} src={src} alt="" width={40} height={40} />
+          ))}
+        </div>
       </section>
 
       {/* 5. Betaalblok herhaald */}
