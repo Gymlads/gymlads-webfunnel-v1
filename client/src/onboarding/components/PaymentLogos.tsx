@@ -15,7 +15,7 @@ function Badge({ children, label }: { children: React.ReactNode; label: string }
 const LOGOS = {
   ideal: (
     <Badge label="iDEAL" key="ideal">
-      <svg viewBox="0 0 44 20" height="16" aria-hidden="true">
+      <svg viewBox="0 0 44 20" height="14" aria-hidden="true">
         <text x="22" y="15" textAnchor="middle" fontFamily="Inter, Arial, sans-serif" fontWeight="800" fontSize="13" fill="#CC0066">
           iDEAL
         </text>
@@ -24,7 +24,7 @@ const LOGOS = {
   ),
   applepay: (
     <Badge label="Apple Pay" key="applepay">
-      <svg viewBox="0 0 44 20" height="16" aria-hidden="true">
+      <svg viewBox="0 0 44 20" height="14" aria-hidden="true">
         <path
           transform="translate(3 2) scale(0.66)"
           fill="#000"
@@ -38,7 +38,7 @@ const LOGOS = {
   ),
   googlepay: (
     <Badge label="Google Pay" key="googlepay">
-      <svg viewBox="0 0 44 20" height="16" aria-hidden="true">
+      <svg viewBox="0 0 44 20" height="14" aria-hidden="true">
         <text x="4" y="15" fontFamily="Inter, Arial, sans-serif" fontWeight="700" fontSize="13">
           <tspan fill="#4285F4">G</tspan>
         </text>
@@ -50,7 +50,7 @@ const LOGOS = {
   ),
   visa: (
     <Badge label="Visa" key="visa">
-      <svg viewBox="0 0 44 20" height="16" aria-hidden="true">
+      <svg viewBox="0 0 44 20" height="14" aria-hidden="true">
         <text x="22" y="15.5" textAnchor="middle" fontFamily="Arial, sans-serif" fontStyle="italic" fontWeight="900" fontSize="14" fill="#1A1F71">
           VISA
         </text>
@@ -59,7 +59,7 @@ const LOGOS = {
   ),
   mastercard: (
     <Badge label="Mastercard" key="mastercard">
-      <svg viewBox="0 0 44 20" height="16" aria-hidden="true">
+      <svg viewBox="0 0 44 20" height="14" aria-hidden="true">
         <circle cx="17.5" cy="10" r="7.5" fill="#EB001B" />
         <circle cx="26.5" cy="10" r="7.5" fill="#F79E1B" />
         <path d="M22 4a7.5 7.5 0 0 1 0 12 7.5 7.5 0 0 1 0-12z" fill="#FF5F00" />

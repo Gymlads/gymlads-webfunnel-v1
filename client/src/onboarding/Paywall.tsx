@@ -13,6 +13,11 @@ import {
   VOORWAARDEN_URL,
 } from './paywallInhoud'
 import vlagImage from './assets/gymlads-vlag.png'
+import avatarGijs from './assets/avatar-gijs.svg'
+import avatarBjarne from './assets/avatar-bjarne.svg'
+import avatarLuuk from './assets/avatar-luuk.svg'
+
+const AVATARS: Record<string, string> = { gijs: avatarGijs, bjarne: avatarBjarne, luuk: avatarLuuk }
 
 export type CtaPositie = 'boven' | 'onder'
 
@@ -34,16 +39,20 @@ function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { posit
 
       <div className="paywall__offer">
         <div className="paywall__offer-top">
-          <p className="paywall__offer-name">Jaarabonnement</p>
+          <p className="paywall__offer-name">
+            {PRIJS.naam}
+            {PRIJS.doorgestreept && (
+              <>
+                {' - '}
+                <s className="paywall__offer-old">{PRIJS.doorgestreept}</s>
+              </>
+            )}
+          </p>
           <span className="paywall__radio" aria-hidden="true">
             <Check size={14} strokeWidth={3.5} />
           </span>
         </div>
-        <p className="paywall__offer-price">
-          {PRIJS.prijsRegel}
-          {PRIJS.doorgestreept && <s className="paywall__offer-old">{PRIJS.doorgestreept}</s>}
-        </p>
-        <p className="paywall__offer-trial">7 dagen gratis uitproberen</p>
+        <p className="paywall__offer-trial">7 dagen gratis uitproberen!</p>
         <div className="paywall__offer-bottom">
           <p className="paywall__offer-daily">
             {PRIJS.perDag}
@@ -70,7 +79,7 @@ function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { posit
             Even geduld…
           </>
         ) : (
-          'START MIJN 7 DAGEN GRATIS'
+          'START 7 DAGEN GRATIS'
         )}
       </button>
       <PaymentLogos />
@@ -144,11 +153,13 @@ export default function Paywall(props: PaywallProps) {
         <h2 className="paywall__h2">Wat krijg je met Gymlads?</h2>
         <ul className="paywall__checks">
           {VOORDELEN.map((v) => (
-            <li key={v}>
+            <li key={v.titel}>
               <span className="paywall__check" aria-hidden="true">
                 <Check size={14} strokeWidth={3.5} />
               </span>
-              <span>{v}</span>
+              <span>
+                <strong>{v.titel}:</strong> {v.tekst}
+              </span>
             </li>
           ))}
         </ul>
@@ -163,15 +174,13 @@ export default function Paywall(props: PaywallProps) {
           </p>
         )}
         <div className="paywall__reviews">
-          {REVIEWS.map((r, i) => (
+          {REVIEWS.map((r) => (
             <figure key={r.naam} className="paywall__review">
               <p className="paywall__review-title">{r.titel}</p>
               <Sterren />
               <blockquote className="paywall__review-text">“{r.tekst}”</blockquote>
               <figcaption className="paywall__review-who">
-                <span className={`paywall__avatar paywall__avatar--${i % 3}`} aria-hidden="true">
-                  {r.naam.charAt(0)}
-                </span>
+                <img className="paywall__avatar" src={AVATARS[r.avatar]} alt="" width={36} height={36} />
                 <span>{r.naam}</span>
               </figcaption>
             </figure>
@@ -187,7 +196,7 @@ export default function Paywall(props: PaywallProps) {
           sporters gingen je voor
         </p>
         <p className="paywall__social-sub">
-          Start vandaag, en weet elke training precies wat je moet doen.
+          Sluit je aan en weet vanaf vandaag bij elke training precies wat je moet doen.
         </p>
       </section>
 

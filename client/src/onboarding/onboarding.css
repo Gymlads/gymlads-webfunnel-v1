@@ -1386,7 +1386,7 @@
 }
 
 .paywall__offer-old {
-  margin-left: 8px;
+  margin-left: 0;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -1493,11 +1493,16 @@
 }
 
 .paywall__pm {
-  margin-top: 14px;
-  padding: 12px 10px;
-  border: 1px solid rgba(204, 255, 0, 0.35);
-  border-radius: 12px;
-  background: rgba(204, 255, 0, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 8px;
+  margin: 12px auto 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(52, 199, 89, 0.45);
+  border-radius: 10px;
+  background: rgba(52, 199, 89, 0.12);
 }
 
 .paywall__pm-title {
@@ -1505,30 +1510,30 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin: 0 0 10px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text);
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #7ee29a;
 }
 
 .paywall__pm-title svg {
-  color: var(--accent);
+  color: #34c759;
 }
 
 .paywall__pm-list {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .paywall__pm-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 30px;
-  border-radius: 6px;
+  width: 36px;
+  height: 22px;
+  border-radius: 4px;
   background: #fff;
 }
 
@@ -1637,26 +1642,9 @@
 }
 
 .paywall__avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  font-weight: 800;
-  color: #000;
-}
-
-.paywall__avatar--0 {
-  background: var(--accent);
-}
-
-.paywall__avatar--1 {
-  background: #ff9f43;
-}
-
-.paywall__avatar--2 {
-  background: #5ac8fa;
 }
 
 .paywall__social {
@@ -1675,7 +1663,7 @@
 
 .paywall__social-title {
   margin: 0 0 10px;
-  font-size: 1.75rem;
+  font-size: 1.45rem;
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -1683,7 +1671,7 @@
 
 .paywall__social-getal {
   display: block;
-  font-size: 3.4rem;
+  font-size: 2.5rem;
   line-height: 1;
   margin-bottom: 6px;
   color: var(--accent);
