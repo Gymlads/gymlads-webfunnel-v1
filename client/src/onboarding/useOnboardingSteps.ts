@@ -2,9 +2,9 @@ import { useMemo } from 'react'
 import type { OnboardingData } from '../types'
 
 export type StepId =
-  | 'gender'
-  | 'stats'
   | 'goal'
+  | 'gender'
+  | 'age'
   | 'info-personalization'
   | 'info-consistency'
   | 'challenge'
@@ -23,12 +23,15 @@ export type StepId =
   | 'equipment'
   | 'info-feedback'
   | 'plan-ready'
+  | 'email'
   | 'paywall'
 
+// Doel eerst (sluit aan op de advertentie), dan geslacht en leeftijd.
+// Lengte en gewicht vragen we niet meer in de webfunnel (v3, 21-10-2026).
 const BASE_STEPS: StepId[] = [
-  'gender',
-  'stats',
   'goal',
+  'gender',
+  'age',
   'info-personalization',
   'info-consistency',
   'challenge',
@@ -47,6 +50,7 @@ const TAIL_STEPS: StepId[] = [
   'info-schedule',
   'info-feedback',
   'plan-ready',
+  'email',
   'paywall',
 ]
 
@@ -73,7 +77,7 @@ export function buildStepList(data: OnboardingData): StepId[] {
 }
 
 export function shouldShowProgress(stepId: StepId): boolean {
-  if (stepId === 'plan-ready' || stepId === 'paywall') {
+  if (stepId === 'plan-ready' || stepId === 'email' || stepId === 'paywall') {
     return false
   }
 
@@ -85,7 +89,7 @@ export function useOnboardingSteps(data: OnboardingData, currentStepId: StepId) 
 
   const currentIndex = steps.indexOf(currentStepId)
   const progressSteps = steps.filter(
-    (s) => !s.startsWith('info-') && s !== 'plan-ready' && s !== 'paywall',
+    (s) => !s.startsWith('info-') && s !== 'plan-ready' && s !== 'email' && s !== 'paywall',
   )
   const progressIndex = progressSteps.indexOf(currentStepId)
 

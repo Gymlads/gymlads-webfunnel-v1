@@ -1,0 +1,247 @@
+import { useState } from 'react'
+import { Check, ChevronDown, Star } from 'lucide-react'
+import PaymentLogos from './components/PaymentLogos'
+import {
+  AANTAL_SPORTERS,
+  APP_STORE_SCORE,
+  APP_STORE_URL,
+  GOOGLE_PLAY_URL,
+  PRIJS,
+  PRIVACY_URL,
+  REVIEWS,
+  VOORDELEN,
+  VOORWAARDEN_URL,
+} from './paywallInhoud'
+import vlagImage from './assets/gymlads-vlag.png'
+
+export type CtaPositie = 'boven' | 'onder'
+
+interface PaywallProps {
+  onCheckout: (positie: CtaPositie) => void
+  /** Welke knop bezig is (null = geen). Beide knoppen staan dan uit. */
+  bezig: CtaPositie | null
+  /** Foutmelding, getoond bij de knop waarop getikt werd. */
+  fout: { positie: CtaPositie; tekst: string } | null
+}
+
+function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { positie: CtaPositie }) {
+  const ditBlokBezig = bezig === positie
+  return (
+    <section className="paywall__offer" aria-label="Jaarabonnement">
+      {PRIJS.label && <span className="paywall__offer-badge">{PRIJS.label}</span>}
+      <p className="paywall__offer-name">Jaarabonnement</p>
+      <p className="paywall__offer-price">
+        {PRIJS.hoofdregel}
+        {PRIJS.doorgestreept && (
+          <>
+            {', met '}
+            <s className="paywall__offer-old">{PRIJS.doorgestreept}</s>
+          </>
+        )}
+      </p>
+      <p className="paywall__offer-trial">7 dagen gratis uitproberen</p>
+      <p className="paywall__offer-daily">
+        {PRIJS.perDag} <span>/ dag</span>
+      </p>
+
+      {fout?.positie === positie && <div className="onboarding__error">{fout.tekst}</div>}
+      <button
+        type="button"
+        className={`onboarding__btn paywall__cta${ditBlokBezig ? ' paywall__cta--bezig' : ''}`}
+        onClick={() => onCheckout(positie)}
+        disabled={bezig !== null}
+        aria-busy={ditBlokBezig}
+        data-cta-positie={positie}
+      >
+        {ditBlokBezig ? (
+          <>
+            <span className="paywall__spinner" aria-hidden="true" />
+            Even geduld…
+          </>
+        ) : (
+          'START MIJN 7 DAGEN GRATIS'
+        )}
+      </button>
+      <p className="paywall__smallprint">{PRIJS.kleineTekst}</p>
+      <PaymentLogos />
+    </section>
+  )
+}
+
+const FAQ: Array<{ vraag: string; antwoord: React.ReactNode }> = [
+  {
+    vraag: 'Waarom heb ik Gymlads nodig?',
+    antwoord:
+      'Gymlads maakt een trainingsschema op jouw doel, niveau en planning. Elke week past je coach het aan op wat je deed. Zo weet je elke training precies wat je moet doen, en word je stap voor stap sterker. Zonder uren te zoeken naar de perfecte workout.',
+  },
+  { vraag: 'Hoe werkt de gratis proef?', antwoord: PRIJS.faqProef },
+  {
+    vraag: 'Hoe krijg ik toegang tot de app?',
+    antwoord: (
+      <>
+        Na het starten van je proef download je de Gymlads-app (
+        <a href={APP_STORE_URL} target="_blank" rel="noreferrer">
+          App Store
+        </a>{' '}
+        /{' '}
+        <a href={GOOGLE_PLAY_URL} target="_blank" rel="noreferrer">
+          Google Play
+        </a>
+        ) en maak je een account aan met hetzelfde e-mailadres. Je plan staat dan al voor je
+        klaar.
+      </>
+    ),
+  },
+  {
+    vraag: 'Hoe zeg ik mijn abonnement op?',
+    antwoord: (
+      <>
+        Stuur een mail naar <a href="mailto:info@gymlads.nl">info@gymlads.nl</a> met je
+        e-mailadres. Doe dit uiterlijk 24 uur voor het einde van je proef, dan betaal je niks.
+      </>
+    ),
+  },
+  {
+    vraag: 'Werkt Gymlads ook als ik net begin?',
+    antwoord:
+      'Ja. Je schema wordt gemaakt op jouw niveau. Bij elke oefening staat uitleg, en twijfel je ergens over, dan vraag je het gewoon aan je coach in de app.',
+  },
+  {
+    vraag: 'Past het bij mijn sportschool?',
+    antwoord:
+      'Ja. Is een apparaat bezet of heeft jouw sportschool het niet? Dan wissel je de oefening voor een andere die dezelfde spieren traint. Train je thuis, dan kies je het materiaal dat je hebt.',
+  },
+  {
+    vraag: 'Heb je meer vragen? We zijn altijd bereikbaar!',
+    antwoord: (
+      <>
+        Stuur een mail naar <a href="mailto:info@gymlads.nl">info@gymlads.nl</a>. We helpen je
+        graag.
+      </>
+    ),
+  },
+]
+
+function Sterren() {
+  return (
+    <span className="paywall__stars" aria-label="5 van 5 sterren">
+      {Array.from({ length: 5 }, (_, i) => (
+        <Star key={i} size={16} strokeWidth={0} fill="currentColor" aria-hidden="true" />
+      ))}
+    </span>
+  )
+}
+
+export default function Paywall(props: PaywallProps) {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+
+  return (
+    <div className="paywall">
+      {/* 1. Kop */}
+      <header className="paywall__header">
+        <h1 className="paywall__title">Start vandaag voor €0,-</h1>
+        <p className="paywall__lead">
+          Probeer Gymlads 7 dagen gratis. Zeg je op tijdens je proef, dan betaal je niks.
+        </p>
+      </header>
+
+      {/* 2. Betaalblok boven */}
+      <Betaalblok {...props} positie="boven" />
+
+      {/* 3. Wat krijg je */}
+      <section className="paywall__card">
+        <h2 className="paywall__h2">Wat krijg je met Gymlads?</h2>
+        <ul className="paywall__checks">
+          {VOORDELEN.map((v) => (
+            <li key={v}>
+              <Check size={20} strokeWidth={2.5} className="paywall__check" aria-hidden="true" />
+              <span>{v}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* 4. Reviews */}
+      <section>
+        <h2 className="paywall__h2 paywall__h2--center">Wat zeggen sporters?</h2>
+        {APP_STORE_SCORE && (
+          <p className="paywall__score">
+            ★ {APP_STORE_SCORE.score} in de App Store ({APP_STORE_SCORE.aantal} beoordelingen)
+          </p>
+        )}
+        <div className="paywall__reviews">
+          {REVIEWS.map((r) => (
+            <figure key={r.naam} className="paywall__review">
+              <p className="paywall__review-title">{r.titel}</p>
+              <Sterren />
+              <blockquote className="paywall__review-text">"{r.tekst}"</blockquote>
+              <figcaption className="paywall__review-who">
+                <span className="paywall__avatar" aria-hidden="true">
+                  {r.naam.charAt(0)}
+                </span>
+                <span>{r.naam}</span>
+                <span className="paywall__review-src">· App Store</span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+
+      {/* 4b. Sociaal bewijs */}
+      <section className="paywall__social">
+        <img src={vlagImage} alt="" className="paywall__social-icon" width={40} height={40} />
+        <p className="paywall__social-title">
+          <span className="paywall__accent">{AANTAL_SPORTERS}</span> sporters gingen je voor
+        </p>
+        <p className="paywall__social-sub">
+          Start vandaag, en weet elke training precies wat je moet doen.
+        </p>
+      </section>
+
+      {/* 5. Betaalblok herhaald */}
+      <Betaalblok {...props} positie="onder" />
+
+      {/* 6. FAQ */}
+      <section>
+        <h2 className="paywall__h2 paywall__h2--center">Veelgestelde vragen</h2>
+        <div className="paywall__faq">
+          {FAQ.map((item, i) => {
+            const open = openFaq === i
+            return (
+              <div key={item.vraag} className={`paywall__faq-item${open ? ' paywall__faq-item--open' : ''}`}>
+                <button
+                  type="button"
+                  className="paywall__faq-q"
+                  aria-expanded={open}
+                  aria-controls={`faq-${i}`}
+                  onClick={() => setOpenFaq(open ? null : i)}
+                >
+                  <span>{item.vraag}</span>
+                  <ChevronDown size={20} className="paywall__faq-arrow" aria-hidden="true" />
+                </button>
+                {open && (
+                  <div id={`faq-${i}`} className="paywall__faq-a">
+                    {item.antwoord}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* 7. Onderaan */}
+      <p className="paywall__legal">
+        Door verder te gaan ga je akkoord met onze{' '}
+        <a href={VOORWAARDEN_URL} target="_blank" rel="noreferrer">
+          Algemene Voorwaarden
+        </a>{' '}
+        en het{' '}
+        <a href={PRIVACY_URL} target="_blank" rel="noreferrer">
+          Privacybeleid
+        </a>
+        .
+      </p>
+    </div>
+  )
+}

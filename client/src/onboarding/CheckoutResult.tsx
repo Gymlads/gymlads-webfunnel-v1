@@ -9,6 +9,7 @@ import OnboardingLayout from './components/OnboardingLayout'
 import NextButton from './components/NextButton'
 import GymladsLogo from './components/GymladsLogo'
 import StoreDownloadButtons from './components/StoreDownloadButtons'
+import { leesAntwoorden, wisAntwoorden } from './bewaren'
 import './onboarding.css'
 
 const PENDING_CHECKOUT_KEY = 'onboarding_checkout'
@@ -33,6 +34,7 @@ export function CheckoutSuccess() {
 
   useEffect(() => {
     sessionStorage.removeItem(PENDING_CHECKOUT_KEY)
+    wisAntwoorden()
 
     const sessionId = new URLSearchParams(window.location.search).get('session_id')
     meetStap('betaald', undefined, undefined, { alleenBestaand: true })
@@ -107,16 +109,35 @@ export function CheckoutSuccess() {
 }
 
 export function CheckoutCancelled() {
+  // Antwoorden nog op dit toestel? Dan brengt "Probeer opnieuw" je terug naar
+  // je plan (paywall), anders begin je opnieuw bij de eerste vraag.
+  const [heeftAntwoorden] = useState(() => leesAntwoorden() !== null)
+
+  useEffect(() => {
+    pushGtmEvent('checkout_cancelled', { page_path: '/checkout/cancelled', heeft_antwoorden: heeftAntwoorden })
+  }, [heeftAntwoorden])
+
   return (
     <OnboardingLayout
       centered
       footer={
-        <NextButton label="Terug naar onboarding" onClick={() => (window.location.href = '/')} />
+        <NextButton
+          label="Probeer opnieuw"
+          onClick={() => (window.location.href = heeftAntwoorden ? '/?terug=paywall' : '/')}
+        />
       }
     >
-      <h1 className="onboarding__title">Betaling geannuleerd</h1>
+      <GymladsLogo className="checkout-success__logo" />
+      <h1 className="onboarding__title">Geen zorgen, er is niets betaald</h1>
       <p className="onboarding__body-text">
-        Je bent teruggekeerd zonder te betalen. Je kunt opnieuw beginnen wanneer je wilt.
+        Je hebt de betaalpagina gesloten voordat je proef startte.{' '}
+        {heeftAntwoorden
+          ? 'Je plan staat nog voor je klaar. Tik op "Probeer opnieuw" om verder te gaan waar je was.'
+          : 'Tik op "Probeer opnieuw" om je plan opnieuw te maken. Het duurt maar een paar minuten.'}
+      </p>
+      <p className="onboarding__body-text checkout-cancelled__help">
+        Lukt het betalen niet? Mail ons op <a href="mailto:info@gymlads.nl">info@gymlads.nl</a>, dan
+        helpen we je.
       </p>
     </OnboardingLayout>
   )

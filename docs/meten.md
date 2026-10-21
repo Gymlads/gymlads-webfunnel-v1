@@ -28,3 +28,11 @@ hoe geteld): `docs/dashboard-trechter.md` in Gymlads/gymlads-app.
 - Testen: zet `?test=1` in de link; die sessie telt niet mee.
 - Een nieuwe stap in de vragenlijst? Zet hem ook in `MeetStap` (meten.ts) en in
   `trechter_web_stappen()` in Supabase, anders wordt hij genegeerd.
+
+## v3 (21-10-2026)
+
+- Nieuwe stappen `age` en `email`, volgorde doel → geslacht → leeftijd. Supabase
+  telt ze pas na `20261021000000_webfunnel_v3.sql` (gymlads-app); tot dan worden
+  ze stil genegeerd.
+- `info.browser` (instagram / facebook / overig) gaat mee bij de eerste stap.
+- Het e-mailadres gaat nooit via `/api/meet`, alleen via `/api/lead` (aparte tabel).

@@ -14,6 +14,19 @@ const FUNNEL_HOST = 'cloudflare'
 const SUPABASE_URL = 'https://igcmunshswzaxxtccxij.supabase.co'
 const SUPABASE_PUBLIEKE_SLEUTEL = 'sb_publishable_KDytEfGmM-_frKy-ykQB4g_PS5huk7r'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
+
+// Eigen tekst boven de betaalknop van Stripe (custom_text.submit, max. 1200 tekens).
+// Alleen bij een proef: zonder proef klopt "vandaag €0" niet.
+const STRIPE_KNOP_TEKST =
+  'Je betaalt vandaag €0. Je proef loopt 7 dagen, opzeggen kan altijd tijdens je proef. ' +
+  'Kies je iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.'
+
+function geldigEmail(waarde) {
+  if (typeof waarde !== 'string') return null
+  const schoon = waarde.trim().toLowerCase()
+  return schoon.length <= 254 && EMAIL.test(schoon) ? schoon : null
+}
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -152,12 +165,17 @@ async function createCheckoutSession(request, env, waitUntil) {
   }
 
   const clientUrl = resolveClientUrl(request, env, body?.clientOrigin)
+  // E-mail uit de e-mailstap: op de betaalpagina al ingevuld. Bewust GEEN
+  // client_reference_id: n8n en Tracklution zien een web-checkout dan als app-checkout.
+  const customerEmail = geldigEmail(body?.email)
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price: env.STRIPE_PRICE_ID, quantity: 1 }],
     success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${clientUrl}/checkout/cancelled`,
     phone_number_collection: { enabled: false },
+    ...(customerEmail ? { customer_email: customerEmail } : {}),
+    ...(skipTrial ? {} : { custom_text: { submit: { message: STRIPE_KNOP_TEKST } } }),
     subscription_data: {
       ...(skipTrial ? {} : { trial_period_days: 7 }),
       ...(Object.keys(abonnementMetadata).length ? { metadata: abonnementMetadata } : {}),
@@ -173,6 +191,37 @@ async function createCheckoutSession(request, env, waitUntil) {
   }
 
   return json({ url: session.url, submissionId, skipTrial })
+}
+
+// E-mailadres + antwoorden uit de e-mailstap bewaren als lead (Supabase-functie
+// log_web_lead), ook als er geen proef volgt. Antwoordt altijd meteen met 204;
+// zolang log_web_lead nog niet bestaat, gebeurt er niets.
+async function lead(request, waitUntil) {
+  try {
+    const tekst = await request.text()
+    if (tekst.length > 8000) return new Response(null, { status: 204 })
+    const body = JSON.parse(tekst)
+    const email = geldigEmail(body?.email)
+    if (email) {
+      const antwoorden =
+        body.antwoorden && typeof body.antwoorden === 'object' && !Array.isArray(body.antwoorden)
+          ? body.antwoorden
+          : {}
+      const sessie =
+        typeof body?.meting?.sessie === 'string' && UUID.test(body.meting.sessie) ? body.meting.sessie : null
+      waitUntil(
+        supabaseRpc('log_web_lead', {
+          p_email: email,
+          p_herinneringen: body.herinneringen === true,
+          p_sessie: sessie,
+          p_antwoorden: antwoorden,
+        }).catch((error) => console.error('[lead]', error)),
+      )
+    }
+  } catch {
+    // ongeldig: negeren
+  }
+  return new Response(null, { status: 204 })
 }
 
 // Alleen het e-mailadres van de sessie (voor Tracklution ContactInfo); de QR-code
@@ -273,6 +322,8 @@ export async function onRequest({ request, env, waitUntil }) {
         return await createCheckoutSession(request, env, opAchtergrond)
       case 'POST /api/meet':
         return await meet(request, opAchtergrond)
+      case 'POST /api/lead':
+        return await lead(request, opAchtergrond)
       case 'GET /api/checkout-redeem':
         return await checkoutRedeem(request, env)
       case 'POST /api/stripe-webhook':

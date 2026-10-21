@@ -1,4 +1,5 @@
 import type { OnboardingData } from '../types'
+import { browserSoort } from './browser'
 
 // Eigen meting voor de trechter op gymlads.nl/trechter (zie docs/meten.md).
 //
@@ -9,11 +10,11 @@ import type { OnboardingData } from '../types'
 //   meting merkt de bezoeker niet.
 
 export type MeetStap =
-  | 'gender' | 'stats' | 'goal' | 'info-personalization' | 'info-consistency'
+  | 'goal' | 'gender' | 'age' | 'stats' | 'info-personalization' | 'info-consistency'
   | 'challenge' | 'experience' | 'info-experience' | 'info-goals' | 'info-schedule'
   | 'frequency' | 'duration' | 'muscle-focus' | 'location' | 'training-days'
   | 'gym-days' | 'home-days' | 'activity' | 'equipment' | 'info-feedback'
-  | 'plan-ready' | 'paywall' | 'betaalknop' | 'betaald'
+  | 'plan-ready' | 'email' | 'paywall' | 'betaalknop' | 'betaald'
 
 const SESSIE_KEY = 'gl_meet_sessie'
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const
@@ -58,6 +59,7 @@ function nieuweSessie(): Sessie {
     if (params.get('test') === '1') info.test = '1'
     info.host = window.location.hostname
     info.apparaat = window.matchMedia?.('(pointer: coarse)').matches ? 'mobiel' : 'desktop'
+    info.browser = browserSoort()
   } catch {
     // niets: de meting is nooit belangrijker dan de funnel
   }
