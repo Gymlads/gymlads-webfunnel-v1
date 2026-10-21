@@ -25,7 +25,7 @@ de Cloudflare-preview akkoord geeft.
 
 **Stripe Checkout** (`functions/api/[[path]].js`)
 - `customer_email` = adres uit de e-mailstap (alleen als het een geldig adres is).
-- `custom_text.submit` = "Je betaalt vandaag €0 ..." (alleen met proef).
+- Geen eigen tekst bij de Stripe-knop (Roel 21-10: de verplichte SEPA-tekst is al lang genoeg).
 - Bewust **geen** `client_reference_id` (dan ziet n8n/Tracklution het als app-checkout).
 - Prijsoptie A (Roel 21-10): `discounts: [{ coupon: STRIPE_COUPON_ID }]` bij een proef, als Cloudflare-variabele `STRIPE_COUPON_ID` gezet is. `STRIPE_PRICE_ID` moet dan de nieuwe €99,99-prijs zijn.
 

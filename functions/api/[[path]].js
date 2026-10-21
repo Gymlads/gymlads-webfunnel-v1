@@ -16,11 +16,6 @@ const SUPABASE_PUBLIEKE_SLEUTEL = 'sb_publishable_KDytEfGmM-_frKy-ykQB4g_PS5huk7
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
 
-// Eigen tekst boven de betaalknop van Stripe (custom_text.submit, max. 1200 tekens).
-// Alleen bij een proef: zonder proef klopt "vandaag €0" niet.
-const STRIPE_KNOP_TEKST =
-  'Je betaalt vandaag €0. Opzeggen kan altijd tijdens je proef.'
-
 function geldigEmail(waarde) {
   if (typeof waarde !== 'string') return null
   const schoon = waarde.trim().toLowerCase()
@@ -174,7 +169,6 @@ async function createCheckoutSession(request, env, waitUntil) {
     cancel_url: `${clientUrl}/checkout/cancelled`,
     phone_number_collection: { enabled: false },
     ...(customerEmail ? { customer_email: customerEmail } : {}),
-    ...(skipTrial ? {} : { custom_text: { submit: { message: STRIPE_KNOP_TEKST } } }),
     // Korting eerste jaar (Roel 21-10-2026: automatisch, alleen bij een nieuwe proef).
     // Coupon-ID staat in Cloudflare (STRIPE_COUPON_ID), zodat Roel hem zonder codewijziging kan wisselen.
     ...(!skipTrial && env.STRIPE_COUPON_ID ? { discounts: [{ coupon: env.STRIPE_COUPON_ID }] } : {}),
