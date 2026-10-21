@@ -36,8 +36,8 @@ export default function OnboardingLayout({
 
   return (
     <div className="onboarding" style={layoutStyle}>
-      {/* Klein logo bovenaan elk scherm (zoals Fitbod) */}
-      {!checkoutSuccess && (
+      {/* Klein logo bovenaan elk scherm (zoals Fitbod), niet op de paywall (Roel 21-10) */}
+      {!checkoutSuccess && !paywall && (
         <header className={`onboarding__header${paywall ? ' onboarding__header--paywall' : ''}`}>
           {showBack && onBack && (
             <button type="button" className="onboarding__back" onClick={onBack} aria-label="Terug">

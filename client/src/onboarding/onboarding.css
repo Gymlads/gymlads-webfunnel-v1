@@ -1030,7 +1030,8 @@
 }
 
 .checkout-success__logo {
-  height: 72px;
+  height: 30px;
+  max-width: 100%;
   width: auto;
   display: block;
   object-fit: contain;
