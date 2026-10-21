@@ -12,8 +12,8 @@ de Cloudflare-preview akkoord geeft.
   het midden als getal: 20, 26, 35, 45, 55.
 - Lengte en gewicht worden niet meer gevraagd. De velden `lengte` en `gewicht`
   gaan leeg (`""`) mee in de Stripe-metadata (zelfde sleutels als altijd).
-- Lime lijn-icoontjes (Lucide) bij doel, uitdaging, ervaring, locatie en activiteit. "Ik wil alles gelijk trainen" bovenaan.
-  Alle antwoordvlakken: #2C2C2E, 56 px, gekozen = lime rand (+ lime icoon).
+- Gekleurde emoji (Roel 21-10) bij doel, uitdaging, ervaring, locatie en activiteit. "Ik wil alles gelijk trainen" bovenaan.
+  Alle antwoordvlakken: #2C2C2E, 56 px, gekozen = lime rand.
 - Nieuwe stap `email` vóór `plan-ready` ("Je schema is bijna klaar!", zoals Fitbod; `client/src/onboarding/EmailStap.tsx`).
 
 **Paywall** (`client/src/onboarding/Paywall.tsx`, teksten in `paywallInhoud.ts`)

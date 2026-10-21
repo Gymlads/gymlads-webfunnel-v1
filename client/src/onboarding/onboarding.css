@@ -364,8 +364,10 @@
 
 .onboarding__option-icon {
   flex-shrink: 0;
-  color: var(--accent);
-  transition: color 0.15s;
+  width: 26px;
+  font-size: 1.35rem;
+  line-height: 1;
+  text-align: center;
 }
 
 /* Alleen met een muis: op telefoons blijft :hover anders "hangen" op het volgende scherm */
@@ -382,11 +384,6 @@
   border-color: var(--accent);
   background: #2c2c2e;
   color: var(--text);
-}
-
-.onboarding__option--selected .onboarding__option-icon,
-.onboarding__option--border-selected .onboarding__option-icon {
-  color: var(--accent);
 }
 
 .onboarding__footer {

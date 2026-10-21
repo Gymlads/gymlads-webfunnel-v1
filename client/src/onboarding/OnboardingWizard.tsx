@@ -1,25 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  Armchair,
-  ArrowLeftRight,
-  BatteryLow,
-  CalendarCheck,
-  CalendarRange,
-  CircleHelp,
-  Clock,
-  Dumbbell,
-  Flame,
-  Footprints,
-  HeartPulse,
-  House,
-  Repeat,
-  Shuffle,
-  Sprout,
-  TrendingDown,
-  TrendingUp,
-  Trophy,
-  Zap,
-} from 'lucide-react'
 import { createCheckoutSession, saveLead } from '../api'
 import { storePendingCheckout } from './CheckoutResult'
 import {
@@ -78,42 +57,42 @@ const LEEFTIJDEN = [
   { label: '50+', waarde: 55 },
 ] as const
 
-// Lijn-icoontjes (Lucide) per antwoord; alleen waar het antwoord een duidelijk beeld heeft.
+// Gekleurde emoji per antwoord (Roel 21-10: de bekende icoontjes, zoals andere apps).
 const DOEL_ICONEN = {
-  Afvallen: Flame,
-  Spieropbouw: Dumbbell,
-  'Kracht opbouwen': Zap,
-  Onderhouden: Repeat,
-  'Fit voelen': HeartPulse,
-} satisfies Record<Doel, unknown>
+  Afvallen: '🔥',
+  Spieropbouw: '💪',
+  'Kracht opbouwen': '🏋️',
+  Onderhouden: '⚖️',
+  'Fit voelen': '❤️',
+} satisfies Record<Doel, string>
 
 const UITDAGING_ICONEN = {
-  Consistentie: CalendarCheck,
-  Motivatie: BatteryLow,
-  'Niet weten wat te doen': CircleHelp,
-  'Geen resultaat': TrendingDown,
-  'Weinig tijd': Clock,
-} satisfies Record<GrootsteUitdaging, unknown>
+  Consistentie: '📅',
+  Motivatie: '🪫',
+  'Niet weten wat te doen': '🤔',
+  'Geen resultaat': '📉',
+  'Weinig tijd': '⏰',
+} satisfies Record<GrootsteUitdaging, string>
 
 const ERVARING_ICONEN = {
-  'Ik begin net': Sprout,
-  'Ik train soms (niet consistent)': Shuffle,
-  '6-12 maanden consistent': TrendingUp,
-  '1+ jaar consistent': Trophy,
-} satisfies Record<ErvaringKrachttraining, unknown>
+  'Ik begin net': '🌱',
+  'Ik train soms (niet consistent)': '🔄',
+  '6-12 maanden consistent': '📈',
+  '1+ jaar consistent': '🏆',
+} satisfies Record<ErvaringKrachttraining, string>
 
 const LOCATIE_ICONEN = {
-  Sportschool: Dumbbell,
-  Thuis: House,
-  Beide: ArrowLeftRight,
-} satisfies Record<LocatieTraining, unknown>
+  Sportschool: '🏋️',
+  Thuis: '🏠',
+  Beide: '🔁',
+} satisfies Record<LocatieTraining, string>
 
 const ACTIVITEIT_ICONEN = {
-  'Meestal zittend': Armchair,
-  'Veel staan': Footprints,
-  'Een combinatie van zitten en staan': Shuffle,
-  'Het verschilt elke dag': CalendarRange,
-} satisfies Record<DagelijkseActiviteit, unknown>
+  'Meestal zittend': '🪑',
+  'Veel staan': '🚶',
+  'Een combinatie van zitten en staan': '🔄',
+  'Het verschilt elke dag': '🎲',
+} satisfies Record<DagelijkseActiviteit, string>
 
 /** Terug van "Probeer opnieuw" (geannuleerde betaling)? Dan meteen naar de paywall. */
 function startPunt() {
