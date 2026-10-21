@@ -136,7 +136,7 @@ const STEP_PAGE_BG: Partial<Record<StepId, string>> = {
 
 export default function OnboardingWizard() {
   const [terug] = useState(startPunt)
-  const [stepId, setStepId] = useState<StepId>(terug ? 'paywall' : 'goal')
+  const [stepId, setStepId] = useState<StepId>(terug ? 'paywall' : 'gender')
   const [data, setData] = useState<OnboardingData>(terug?.data ?? initialOnboardingData)
   const [email, setEmail] = useState(terug?.email ?? '')
   const [herinneringen, setHerinneringen] = useState(terug?.herinneringen ?? false)
@@ -280,7 +280,7 @@ export default function OnboardingWizard() {
 
   const layoutProps = {
     progress: showProgress ? progress : undefined,
-    showBack: stepId !== 'goal' && stepId !== 'paywall',
+    showBack: stepId !== 'gender' && stepId !== 'paywall',
     onBack: navigateBack,
   }
 
@@ -461,7 +461,6 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout
           {...layoutProps}
-          showLogo
           centered
           footer={<NextButton onClick={() => navigateNext()} />}
         >
@@ -525,13 +524,13 @@ export default function OnboardingWizard() {
           <div className="onboarding__options">
             {(
               [
+                'Ik wil alles gelijk trainen',
                 'Borst',
                 'Rug',
                 'Schouder',
                 'Biceps',
                 'Triceps',
                 'Billen/Benen',
-                'Ik wil alles gelijk trainen',
               ] as SpiergroepFocus[]
             ).map((option) => (
               <OptionButton

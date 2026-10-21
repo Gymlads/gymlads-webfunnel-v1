@@ -4,18 +4,18 @@
 /**
  * ⚠️ Prijs. Moet precies kloppen met wat Stripe afschrijft.
  * - 'A': €69,99 het eerste jaar, daarna €99,99 per jaar. Alleen zetten als in
- *   Stripe een prijs van €99,99/jaar + kortingsbon €30 (1 keer) actief is.
+ *   Stripe een prijs van €99,99/jaar + kortingsbon 30% voor het eerste jaar actief is.
  * - 'B': €69,99 per jaar, zonder doorgestreepte prijs en zonder "Bespaar 30%".
  *   Dit klopt met de huidige Stripe-prijs (price_1TfKa7ClVZcfiz3M1TzqDqOP).
- * Bij A moet de checkout ook de kortingsbon meekrijgen (nog niet gebouwd,
- * pas na Roels keuze).
+ * Bij A geeft de checkout de kortingsbon automatisch mee (Cloudflare-variabele
+ * STRIPE_COUPON_ID, zie functions/api/[[path]].js).
  */
-export const PRIJS_OPTIE: 'A' | 'B' = 'A'
+export const PRIJS_OPTIE: 'A' | 'B' = 'A' // Roel koos A (21-10-2026)
 
 export const PRIJS = {
   A: {
     label: 'Bespaar 30%',
-    hoofdregel: '€69,99 het eerste jaar',
+    prijsRegel: '€69,99 het eerste jaar',
     doorgestreept: '€99,99',
     perDag: '€0,19',
     kleineTekst:
@@ -25,7 +25,7 @@ export const PRIJS = {
   },
   B: {
     label: null,
-    hoofdregel: '€69,99 per jaar',
+    prijsRegel: '€69,99 per jaar',
     doorgestreept: null,
     perDag: '€0,19',
     kleineTekst:

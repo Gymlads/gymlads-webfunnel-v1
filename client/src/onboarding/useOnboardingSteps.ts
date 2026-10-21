@@ -26,12 +26,12 @@ export type StepId =
   | 'email'
   | 'paywall'
 
-// Doel eerst (sluit aan op de advertentie), dan geslacht en leeftijd.
-// Lengte en gewicht vragen we niet meer in de webfunnel (v3, 21-10-2026).
+// Geslacht, leeftijd, dan doel (Roel 21-10-2026: volgorde niet omdraaien).
+// Lengte en gewicht vragen we niet meer in de webfunnel (v3).
 const BASE_STEPS: StepId[] = [
-  'goal',
   'gender',
   'age',
+  'goal',
   'info-personalization',
   'info-consistency',
   'challenge',
@@ -49,8 +49,8 @@ const TAIL_STEPS: StepId[] = [
   'activity',
   'info-schedule',
   'info-feedback',
-  'plan-ready',
   'email',
+  'plan-ready',
   'paywall',
 ]
 

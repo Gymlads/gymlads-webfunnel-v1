@@ -127,7 +127,6 @@ export function CheckoutCancelled() {
         />
       }
     >
-      <GymladsLogo className="checkout-success__logo" />
       <h1 className="onboarding__title">Geen zorgen, er is niets betaald</h1>
       <p className="onboarding__body-text">
         Je hebt de betaalpagina gesloten voordat je proef startte.{' '}

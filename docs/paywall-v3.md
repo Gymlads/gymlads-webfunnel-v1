@@ -7,17 +7,17 @@ de Cloudflare-preview akkoord geeft.
 ## Wat is er veranderd
 
 **Vragenlijst**
-- Volgorde: doel → geslacht → leeftijd → de rest (was: geslacht → leeftijd/lengte/gewicht → doel).
+- Volgorde: geslacht → leeftijd → doel → de rest (Roel: niet omdraaien). Klein logo bovenaan elk scherm (zoals Fitbod).
 - Leeftijd als tikvlakken 18-23 · 24-29 · 30-39 · 40-49 · 50+. Naar Stripe/n8n gaat
   het midden als getal: 20, 26, 35, 45, 55.
 - Lengte en gewicht worden niet meer gevraagd. De velden `lengte` en `gewicht`
   gaan leeg (`""`) mee in de Stripe-metadata (zelfde sleutels als altijd).
-- Lijn-icoontjes (Lucide) bij doel, uitdaging, ervaring, locatie en activiteit.
+- Lime lijn-icoontjes (Lucide) bij doel, uitdaging, ervaring, locatie en activiteit. "Ik wil alles gelijk trainen" bovenaan.
   Alle antwoordvlakken: #2C2C2E, 56 px, gekozen = lime rand (+ lime icoon).
-- Nieuwe stap `email` tussen `plan-ready` en `paywall` (`client/src/onboarding/EmailStap.tsx`).
+- Nieuwe stap `email` vóór `plan-ready` ("Je schema is bijna klaar!", zoals Fitbod; `client/src/onboarding/EmailStap.tsx`).
 
 **Paywall** (`client/src/onboarding/Paywall.tsx`, teksten in `paywallInhoud.ts`)
-- Blokken: kop · betaalblok · wat krijg je · reviews · sociaal bewijs · betaalblok · FAQ · voorwaarden.
+- Blokken: kop · betaalblok "Jouw plan" (Flitsboek-stijl) · wat krijg je · reviews · sociaal bewijs · betaalblok · FAQ (4 vragen) · voorwaarden.
 - Weg: "Annuleer eenvoudig ... persoonlijke account", "4.8/5.0", "10.000+ workouts", dode link "Aankopen herstellen".
 - Knop reageert meteen (spinner + "Even geduld…", beide knoppen uit). De server
   wordt bij het openen van de paywall alvast gewekt (`/api/health`) en de browser
@@ -27,7 +27,7 @@ de Cloudflare-preview akkoord geeft.
 - `customer_email` = adres uit de e-mailstap (alleen als het een geldig adres is).
 - `custom_text.submit` = "Je betaalt vandaag €0 ..." (alleen met proef).
 - Bewust **geen** `client_reference_id` (dan ziet n8n/Tracklution het als app-checkout).
-- Nog **niet** gebouwd: kortingsbon voor prijsoptie A (wacht op Roels prijskeuze).
+- Prijsoptie A (Roel 21-10): `discounts: [{ coupon: STRIPE_COUPON_ID }]` bij een proef, als Cloudflare-variabele `STRIPE_COUPON_ID` gezet is. `STRIPE_PRICE_ID` moet dan de nieuwe €99,99-prijs zijn.
 
 **Geannuleerd** (`/checkout/cancelled`): vriendelijke pagina met "Probeer opnieuw".
 De antwoorden staan 24 uur op het toestel (localStorage), zodat "Probeer opnieuw"

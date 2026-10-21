@@ -176,6 +176,9 @@ async function createCheckoutSession(request, env, waitUntil) {
     phone_number_collection: { enabled: false },
     ...(customerEmail ? { customer_email: customerEmail } : {}),
     ...(skipTrial ? {} : { custom_text: { submit: { message: STRIPE_KNOP_TEKST } } }),
+    // Korting eerste jaar (Roel 21-10-2026: automatisch, alleen bij een nieuwe proef).
+    // Coupon-ID staat in Cloudflare (STRIPE_COUPON_ID), zodat Roel hem zonder codewijziging kan wisselen.
+    ...(!skipTrial && env.STRIPE_COUPON_ID ? { discounts: [{ coupon: env.STRIPE_COUPON_ID }] } : {}),
     subscription_data: {
       ...(skipTrial ? {} : { trial_period_days: 7 }),
       ...(Object.keys(abonnementMetadata).length ? { metadata: abonnementMetadata } : {}),

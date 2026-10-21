@@ -24,25 +24,36 @@ interface PaywallProps {
   fout: { positie: CtaPositie; tekst: string } | null
 }
 
+// Betaalblok in de opbouw van Flitsboek: kaart "Jouw plan" met het gekozen
+// abonnement (lime rand + vinkje), kleine tekst, knop en "Veilig betalen".
 function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { positie: CtaPositie }) {
   const ditBlokBezig = bezig === positie
   return (
-    <section className="paywall__offer" aria-label="Jaarabonnement">
-      {PRIJS.label && <span className="paywall__offer-badge">{PRIJS.label}</span>}
-      <p className="paywall__offer-name">Jaarabonnement</p>
-      <p className="paywall__offer-price">
-        {PRIJS.hoofdregel}
-        {PRIJS.doorgestreept && (
-          <>
-            {', met '}
-            <s className="paywall__offer-old">{PRIJS.doorgestreept}</s>
-          </>
-        )}
-      </p>
-      <p className="paywall__offer-trial">7 dagen gratis uitproberen</p>
-      <p className="paywall__offer-daily">
-        {PRIJS.perDag} <span>/ dag</span>
-      </p>
+    <section className="paywall__plan" aria-label="Jouw plan">
+      <h2 className="paywall__plan-title">Jouw plan</h2>
+
+      <div className="paywall__offer">
+        <div className="paywall__offer-top">
+          <p className="paywall__offer-name">Jaarabonnement</p>
+          <span className="paywall__radio" aria-hidden="true">
+            <Check size={14} strokeWidth={3.5} />
+          </span>
+        </div>
+        <p className="paywall__offer-price">
+          {PRIJS.prijsRegel}
+          {PRIJS.doorgestreept && <s className="paywall__offer-old">{PRIJS.doorgestreept}</s>}
+        </p>
+        <p className="paywall__offer-trial">7 dagen gratis uitproberen</p>
+        <div className="paywall__offer-bottom">
+          <p className="paywall__offer-daily">
+            {PRIJS.perDag}
+            <span>/dag</span>
+          </p>
+          {PRIJS.label && <span className="paywall__offer-badge">{PRIJS.label}</span>}
+        </div>
+      </div>
+
+      <p className="paywall__smallprint">{PRIJS.kleineTekst}</p>
 
       {fout?.positie === positie && <div className="onboarding__error">{fout.tekst}</div>}
       <button
@@ -62,19 +73,23 @@ function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { posit
           'START MIJN 7 DAGEN GRATIS'
         )}
       </button>
-      <p className="paywall__smallprint">{PRIJS.kleineTekst}</p>
       <PaymentLogos />
     </section>
   )
 }
 
+// Vier vragen (Roel 21-10: er waren er te veel). Overige vragen: mail, zie onder de FAQ.
 const FAQ: Array<{ vraag: string; antwoord: React.ReactNode }> = [
-  {
-    vraag: 'Waarom heb ik Gymlads nodig?',
-    antwoord:
-      'Gymlads maakt een trainingsschema op jouw doel, niveau en planning. Elke week past je coach het aan op wat je deed. Zo weet je elke training precies wat je moet doen, en word je stap voor stap sterker. Zonder uren te zoeken naar de perfecte workout.',
-  },
   { vraag: 'Hoe werkt de gratis proef?', antwoord: PRIJS.faqProef },
+  {
+    vraag: 'Hoe zeg ik mijn abonnement op?',
+    antwoord: (
+      <>
+        Stuur een mail naar <a href="mailto:info@gymlads.nl">info@gymlads.nl</a> met je
+        e-mailadres. Doe dit uiterlijk 24 uur voor het einde van je proef, dan betaal je niks.
+      </>
+    ),
+  },
   {
     vraag: 'Hoe krijg ik toegang tot de app?',
     antwoord: (
@@ -87,17 +102,7 @@ const FAQ: Array<{ vraag: string; antwoord: React.ReactNode }> = [
         <a href={GOOGLE_PLAY_URL} target="_blank" rel="noreferrer">
           Google Play
         </a>
-        ) en maak je een account aan met hetzelfde e-mailadres. Je plan staat dan al voor je
-        klaar.
-      </>
-    ),
-  },
-  {
-    vraag: 'Hoe zeg ik mijn abonnement op?',
-    antwoord: (
-      <>
-        Stuur een mail naar <a href="mailto:info@gymlads.nl">info@gymlads.nl</a> met je
-        e-mailadres. Doe dit uiterlijk 24 uur voor het einde van je proef, dan betaal je niks.
+        ) en maak je een account aan met hetzelfde e-mailadres. Je plan staat dan voor je klaar.
       </>
     ),
   },
@@ -106,27 +111,13 @@ const FAQ: Array<{ vraag: string; antwoord: React.ReactNode }> = [
     antwoord:
       'Ja. Je schema wordt gemaakt op jouw niveau. Bij elke oefening staat uitleg, en twijfel je ergens over, dan vraag je het gewoon aan je coach in de app.',
   },
-  {
-    vraag: 'Past het bij mijn sportschool?',
-    antwoord:
-      'Ja. Is een apparaat bezet of heeft jouw sportschool het niet? Dan wissel je de oefening voor een andere die dezelfde spieren traint. Train je thuis, dan kies je het materiaal dat je hebt.',
-  },
-  {
-    vraag: 'Heb je meer vragen? We zijn altijd bereikbaar!',
-    antwoord: (
-      <>
-        Stuur een mail naar <a href="mailto:info@gymlads.nl">info@gymlads.nl</a>. We helpen je
-        graag.
-      </>
-    ),
-  },
 ]
 
 function Sterren() {
   return (
     <span className="paywall__stars" aria-label="5 van 5 sterren">
       {Array.from({ length: 5 }, (_, i) => (
-        <Star key={i} size={16} strokeWidth={0} fill="currentColor" aria-hidden="true" />
+        <Star key={i} size={18} strokeWidth={0} fill="currentColor" aria-hidden="true" />
       ))}
     </span>
   )
@@ -149,12 +140,14 @@ export default function Paywall(props: PaywallProps) {
       <Betaalblok {...props} positie="boven" />
 
       {/* 3. Wat krijg je */}
-      <section className="paywall__card">
+      <section className="paywall__card paywall__card--rand">
         <h2 className="paywall__h2">Wat krijg je met Gymlads?</h2>
         <ul className="paywall__checks">
           {VOORDELEN.map((v) => (
             <li key={v}>
-              <Check size={20} strokeWidth={2.5} className="paywall__check" aria-hidden="true" />
+              <span className="paywall__check" aria-hidden="true">
+                <Check size={14} strokeWidth={3.5} />
+              </span>
               <span>{v}</span>
             </li>
           ))}
@@ -163,24 +156,23 @@ export default function Paywall(props: PaywallProps) {
 
       {/* 4. Reviews */}
       <section>
-        <h2 className="paywall__h2 paywall__h2--center">Wat zeggen sporters?</h2>
+        <h2 className="paywall__h2 paywall__h2--groot">Wat zeggen sporters?</h2>
         {APP_STORE_SCORE && (
           <p className="paywall__score">
             ★ {APP_STORE_SCORE.score} in de App Store ({APP_STORE_SCORE.aantal} beoordelingen)
           </p>
         )}
         <div className="paywall__reviews">
-          {REVIEWS.map((r) => (
+          {REVIEWS.map((r, i) => (
             <figure key={r.naam} className="paywall__review">
               <p className="paywall__review-title">{r.titel}</p>
               <Sterren />
-              <blockquote className="paywall__review-text">"{r.tekst}"</blockquote>
+              <blockquote className="paywall__review-text">“{r.tekst}”</blockquote>
               <figcaption className="paywall__review-who">
-                <span className="paywall__avatar" aria-hidden="true">
+                <span className={`paywall__avatar paywall__avatar--${i % 3}`} aria-hidden="true">
                   {r.naam.charAt(0)}
                 </span>
                 <span>{r.naam}</span>
-                <span className="paywall__review-src">· App Store</span>
               </figcaption>
             </figure>
           ))}
@@ -189,9 +181,10 @@ export default function Paywall(props: PaywallProps) {
 
       {/* 4b. Sociaal bewijs */}
       <section className="paywall__social">
-        <img src={vlagImage} alt="" className="paywall__social-icon" width={40} height={40} />
+        <img src={vlagImage} alt="" className="paywall__social-icon" width={48} height={48} />
         <p className="paywall__social-title">
-          <span className="paywall__accent">{AANTAL_SPORTERS}</span> sporters gingen je voor
+          <span className="paywall__social-getal">{AANTAL_SPORTERS}</span>
+          sporters gingen je voor
         </p>
         <p className="paywall__social-sub">
           Start vandaag, en weet elke training precies wat je moet doen.
@@ -203,7 +196,7 @@ export default function Paywall(props: PaywallProps) {
 
       {/* 6. FAQ */}
       <section>
-        <h2 className="paywall__h2 paywall__h2--center">Veelgestelde vragen</h2>
+        <h2 className="paywall__h2 paywall__h2--groot">Veelgestelde vragen</h2>
         <div className="paywall__faq">
           {FAQ.map((item, i) => {
             const open = openFaq === i
@@ -228,6 +221,9 @@ export default function Paywall(props: PaywallProps) {
             )
           })}
         </div>
+        <p className="paywall__faq-meer">
+          Meer vragen? Mail ons op <a href="mailto:info@gymlads.nl">info@gymlads.nl</a>.
+        </p>
       </section>
 
       {/* 7. Onderaan */}
