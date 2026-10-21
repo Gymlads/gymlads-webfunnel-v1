@@ -73,3 +73,10 @@ eerst meten met de nieuwe tekst + vooraf ingevulde e-mail.
 2. Op de Stripe-pagina op "terug" tikken: komt de pagina "Geen zorgen, er is niets
    betaald", en brengt "Probeer opnieuw" je terug op de paywall?
 3. Staat je e-mailadres al ingevuld op de Stripe-pagina, en staat de eigen tekst bij de knop?
+
+## Cloudflare-instellingen voor de test (let op de omgeving)
+
+Zet `STRIPE_PRICE_ID` (nieuwe €99,99-prijs) en `STRIPE_COUPON_ID` alleen bij **Preview**
+(keuzemenu rechtsboven op de Settings-pagina). Bij Production blijft tot livegang de oude
+prijs staan en géén `STRIPE_COUPON_ID`. Nieuwe waarden werken pas na een nieuwe deploy.
+Controle: in het Stripe-logboek (POST /v1/checkout/sessions) moet `discounts` de coupon bevatten.
