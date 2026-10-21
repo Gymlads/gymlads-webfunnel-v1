@@ -27,9 +27,12 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
 export async function createCheckoutSession(
   data: OnboardingData,
+  email?: string,
 ): Promise<CheckoutResponse> {
   const body = JSON.stringify({
     metadata: toStripeMetadata(data),
+    // Alleen voor customer_email in Stripe (vooraf ingevuld), niet in de metadata
+    email: email || undefined,
     clientOrigin: window.location.origin,
     meting: meetKoppeling(),
   })
@@ -116,4 +119,26 @@ export async function confirmDemoCheckout(
   }
 
   return { success: true, submissionId: result.submissionId ?? '' }
+}
+
+/**
+ * E-mailadres + antwoorden bewaren als lead (ook als iemand daarna geen proef
+ * start). Fire-and-forget: een fout merkt de bezoeker niet.
+ */
+export function saveLead(data: OnboardingData, email: string, herinneringen: boolean) {
+  try {
+    void fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        herinneringen,
+        antwoorden: toStripeMetadata(data),
+        meting: meetKoppeling(),
+      }),
+      keepalive: true,
+    }).catch(() => undefined)
+  } catch {
+    // stil
+  }
 }

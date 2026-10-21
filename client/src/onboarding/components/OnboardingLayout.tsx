@@ -1,11 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react'
-import GymladsLogo from './GymladsLogo'
+import logoKlein from '../assets/gymlads-logo-klein.png'
 
 interface OnboardingLayoutProps {
   children: ReactNode
   progress?: { current: number; total: number }
   showBack?: boolean
-  showLogo?: boolean
   pageBg?: string
   onBack?: () => void
   footer?: ReactNode
@@ -21,7 +20,6 @@ export default function OnboardingLayout({
   children,
   progress,
   showBack,
-  showLogo,
   pageBg,
   onBack,
   footer,
@@ -38,8 +36,9 @@ export default function OnboardingLayout({
 
   return (
     <div className="onboarding" style={layoutStyle}>
-      {(showBack || showLogo || progress) && (
-        <header className="onboarding__header">
+      {/* Klein logo bovenaan elk scherm (zoals Fitbod), niet op de paywall (Roel 21-10) */}
+      {!checkoutSuccess && !paywall && (
+        <header className={`onboarding__header${paywall ? ' onboarding__header--paywall' : ''}`}>
           {showBack && onBack && (
             <button type="button" className="onboarding__back" onClick={onBack} aria-label="Terug">
               <svg
@@ -60,11 +59,9 @@ export default function OnboardingLayout({
               </svg>
             </button>
           )}
-          {showLogo && (
-            <div className="onboarding__logo">
-              <GymladsLogo />
-            </div>
-          )}
+          <div className="onboarding__logo">
+            <img className="onboarding__logo-klein" src={logoKlein} alt="Gymlads" />
+          </div>
         </header>
       )}
 

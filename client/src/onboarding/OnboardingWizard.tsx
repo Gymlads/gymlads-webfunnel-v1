@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { createCheckoutSession } from '../api'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createCheckoutSession, saveLead } from '../api'
 import { storePendingCheckout } from './CheckoutResult'
 import {
   HOME_EQUIPMENT,
@@ -19,9 +19,17 @@ import {
 import OnboardingLayout from './components/OnboardingLayout'
 import NextButton from './components/NextButton'
 import OptionButton from './components/OptionButton'
-import StatRangeField from './components/StatRangeField'
 import GoalsComparisonChart from './components/GoalsComparisonChart'
-import { trackOnboardingStepView } from '../analytics/gtm'
+import EmailStap from './EmailStap'
+import Paywall, { type CtaPositie } from './Paywall'
+import { bewaarAntwoorden, leesAntwoorden } from './bewaren'
+import {
+  trackCheckoutWacht,
+  trackEmailSubmitted,
+  trackOnboardingStepView,
+  trackPaywallCta,
+} from '../analytics/gtm'
+import { setTracklutionContactInfo } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
 import {
   autoAssignLocationDays,
@@ -39,15 +47,82 @@ import planReadyImage from './assets/07-plan-ready.png'
 
 const DEFAULT_PAGE_BG = '#000000'
 
+// Leeftijd als ranges (v3). De app en n8n verwachten een getal: we geven het
+// midden van de range door (24-29 -> 26).
+const LEEFTIJDEN = [
+  { label: '18-23', waarde: 20 },
+  { label: '24-29', waarde: 26 },
+  { label: '30-39', waarde: 35 },
+  { label: '40-49', waarde: 45 },
+  { label: '50+', waarde: 55 },
+] as const
+
+// Gekleurde emoji per antwoord (Roel 21-10: de bekende icoontjes, zoals andere apps).
+const DOEL_ICONEN = {
+  Afvallen: '🔥',
+  Spieropbouw: '💪',
+  'Kracht opbouwen': '🏋️',
+  Onderhouden: '⚖️',
+  'Fit voelen': '❤️',
+} satisfies Record<Doel, string>
+
+const UITDAGING_ICONEN = {
+  Consistentie: '📅',
+  Motivatie: '🪫',
+  'Niet weten wat te doen': '🤔',
+  'Geen resultaat': '📉',
+  'Weinig tijd': '⏰',
+} satisfies Record<GrootsteUitdaging, string>
+
+const ERVARING_ICONEN = {
+  'Ik begin net': '🌱',
+  'Ik train soms (niet consistent)': '🔄',
+  '6-12 maanden consistent': '📈',
+  '1+ jaar consistent': '🏆',
+} satisfies Record<ErvaringKrachttraining, string>
+
+const LOCATIE_ICONEN = {
+  Sportschool: '🏋️',
+  Thuis: '🏠',
+  Beide: '🔁',
+} satisfies Record<LocatieTraining, string>
+
+const ACTIVITEIT_ICONEN = {
+  'Meestal zittend': '🪑',
+  'Veel staan': '🚶',
+  'Een combinatie van zitten en staan': '🔄',
+  'Het verschilt elke dag': '🎲',
+} satisfies Record<DagelijkseActiviteit, string>
+
+/** Terug van "Probeer opnieuw" (geannuleerde betaling)? Dan meteen naar de paywall. */
+function startPunt() {
+  try {
+    if (new URLSearchParams(window.location.search).get('terug') === 'paywall') {
+      const bewaard = leesAntwoorden()
+      if (bewaard) return bewaard
+    }
+  } catch {
+    // gewoon bij het begin starten
+  }
+  return null
+}
+
 /** Matched to each screen image’s sampled edge/background pixels */
-const STEP_PAGE_BG: Partial<Record<StepId, string>> = {}
+const STEP_PAGE_BG: Partial<Record<StepId, string>> = {
+  email: '#171719',
+  paywall: '#171719',
+}
 
 export default function OnboardingWizard() {
-  const [stepId, setStepId] = useState<StepId>('gender')
-  const [data, setData] = useState<OnboardingData>(initialOnboardingData)
-  const [checkoutError, setCheckoutError] = useState('')
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [terug] = useState(startPunt)
+  const [stepId, setStepId] = useState<StepId>(terug ? 'paywall' : 'gender')
+  const [data, setData] = useState<OnboardingData>(terug?.data ?? initialOnboardingData)
+  const [email, setEmail] = useState(terug?.email ?? '')
+  const [herinneringen, setHerinneringen] = useState(terug?.herinneringen ?? false)
+  const [checkoutFout, setCheckoutFout] = useState<{ positie: CtaPositie; tekst: string } | null>(null)
+  const [checkoutBezig, setCheckoutBezig] = useState<CtaPositie | null>(null)
   const [pressedOption, setPressedOption] = useState<string | null>(null)
+  const opgewarmd = useRef(false)
 
   const { progress, steps, currentIndex } = useOnboardingSteps(data, stepId)
 
@@ -59,6 +134,19 @@ export default function OnboardingWizard() {
   useEffect(() => {
     setPressedOption(null)
   }, [stepId])
+
+  // Paywall in beeld: de server alvast wakker maken, zodat de knop sneller
+  // naar Stripe gaat (geen Stripe-aanroep, alleen /api/health).
+  useEffect(() => {
+    if (stepId !== 'paywall' || opgewarmd.current) return
+    opgewarmd.current = true
+    void fetch('/api/health', { cache: 'no-store' }).catch(() => undefined)
+  }, [stepId])
+
+  // Terug via "Probeer opnieuw": de URL weer schoon maken
+  useEffect(() => {
+    if (terug) window.history.replaceState(null, '', '/')
+  }, [terug])
 
   useEffect(() => {
     const pageBg = STEP_PAGE_BG[stepId] ?? DEFAULT_PAGE_BG
@@ -123,12 +211,17 @@ export default function OnboardingWizard() {
   const hasSelectedHomeDay = WEEKDAYS.some((d) => data[d.home])
   const hasNoHomeEquipment = HOME_EQUIPMENT.every((item) => !data[item.key])
 
-  async function handleCheckout() {
-    setCheckoutError('')
-    setCheckoutLoading(true)
+  async function handleCheckout(positie: CtaPositie) {
+    if (checkoutBezig) return
+    const start = performance.now()
+    // Direct laten zien dat er iets gebeurt (spinner + "Even geduld…")
+    setCheckoutFout(null)
+    setCheckoutBezig(positie)
+    trackPaywallCta(positie)
     meetStap('betaalknop', undefined, data)
+    bewaarAntwoorden(data, email, herinneringen)
     try {
-      const result = await createCheckoutSession(data)
+      const result = await createCheckoutSession(data, email)
 
       if (result.demo) {
         storePendingCheckout(data, result.submissionId ?? crypto.randomUUID())
@@ -140,12 +233,27 @@ export default function OnboardingWizard() {
         throw new Error('Geen checkout-URL ontvangen')
       }
 
+      trackCheckoutWacht(positie, performance.now() - start, true)
       window.location.href = result.url
     } catch (err) {
-      setCheckoutError(err instanceof Error ? err.message : 'Checkout mislukt')
-      setCheckoutLoading(false)
+      console.error('[checkout]', err)
+      trackCheckoutWacht(positie, performance.now() - start, false)
+      setCheckoutFout({
+        positie,
+        tekst: 'Het lukt even niet om de betaalpagina te openen. Probeer het nog een keer.',
+      })
+      setCheckoutBezig(null)
     }
   }
+
+  // Terug uit Stripe met de terugknop van de browser (bfcache): knop weer aanzetten
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setCheckoutBezig(null)
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
 
   const showProgress = shouldShowProgress(stepId)
 
@@ -174,63 +282,23 @@ export default function OnboardingWizard() {
         </OnboardingLayout>
       )
 
-    case 'stats': {
-      const leeftijd = data.leeftijd ?? 25
-      const lengte = data.lengte ? Number(data.lengte) : 175
-      const gewicht = data.gewicht ? Number(data.gewicht) : 75
-
+    case 'age':
       return (
-        <OnboardingLayout
-          {...layoutProps}
-          footer={
-            <NextButton
-              onClick={() =>
-                navigateNext({
-                  leeftijd,
-                  lengte: String(lengte),
-                  gewicht: String(gewicht),
-                })
-              }
-            />
-          }
-        >
-          <h1 className="onboarding__title">Vertel ons over jezelf</h1>
-          <p className="onboarding__subtitle">Dit helpt ons jouw plan te personaliseren</p>
-          <div className="onboarding__stats-fields">
-            <StatRangeField
-              id="leeftijd"
-              label="Leeftijd"
-              min={10}
-              max={100}
-              value={leeftijd}
-              onChange={(value) => setData((prev) => ({ ...prev, leeftijd: value }))}
-            />
-            <StatRangeField
-              id="lengte"
-              label="Lengte"
-              min={100}
-              max={250}
-              unit="cm"
-              value={lengte}
-              onChange={(value) =>
-                setData((prev) => ({ ...prev, lengte: String(value) }))
-              }
-            />
-            <StatRangeField
-              id="gewicht"
-              label="Gewicht"
-              min={30}
-              max={300}
-              unit="kg"
-              value={gewicht}
-              onChange={(value) =>
-                setData((prev) => ({ ...prev, gewicht: String(value) }))
-              }
-            />
+        <OnboardingLayout {...layoutProps}>
+          <h1 className="onboarding__title">Hoe oud ben je?</h1>
+          <div className="onboarding__options">
+            {LEEFTIJDEN.map((optie) => (
+              <OptionButton
+                key={optie.label}
+                selected={isOptionSelected(optie.waarde, data.leeftijd)}
+                onClick={() => selectSingle('leeftijd', optie.waarde)}
+              >
+                {optie.label}
+              </OptionButton>
+            ))}
           </div>
         </OnboardingLayout>
       )
-    }
 
     case 'goal':
       return (
@@ -248,6 +316,7 @@ export default function OnboardingWizard() {
             ).map((option) => (
               <OptionButton
                 key={option}
+                icon={DOEL_ICONEN[option]}
                 selected={isOptionSelected(option, data.doel)}
                 onClick={() => selectSingle('doel', option)}
               >
@@ -311,6 +380,7 @@ export default function OnboardingWizard() {
             ).map((option) => (
               <OptionButton
                 key={option}
+                icon={UITDAGING_ICONEN[option]}
                 selected={isOptionSelected(option, data.grootste_uitdaging)}
                 onClick={() => selectSingle('grootste_uitdaging', option)}
               >
@@ -336,6 +406,7 @@ export default function OnboardingWizard() {
             ).map((option) => (
               <OptionButton
                 key={option}
+                icon={ERVARING_ICONEN[option]}
                 selected={isOptionSelected(option, data.ervaring_krachttraining)}
                 onClick={() => selectSingle('ervaring_krachttraining', option)}
               >
@@ -369,7 +440,6 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout
           {...layoutProps}
-          showLogo
           centered
           footer={<NextButton onClick={() => navigateNext()} />}
         >
@@ -433,13 +503,13 @@ export default function OnboardingWizard() {
           <div className="onboarding__options">
             {(
               [
+                'Ik wil alles gelijk trainen',
                 'Borst',
                 'Rug',
                 'Schouder',
                 'Biceps',
                 'Triceps',
                 'Billen/Benen',
-                'Ik wil alles gelijk trainen',
               ] as SpiergroepFocus[]
             ).map((option) => (
               <OptionButton
@@ -481,6 +551,7 @@ export default function OnboardingWizard() {
             {(['Sportschool', 'Thuis', 'Beide'] as LocatieTraining[]).map((option) => (
               <OptionButton
                 key={option}
+                icon={LOCATIE_ICONEN[option]}
                 selected={isOptionSelected(option, data.locatie_training)}
                 onClick={() => selectSingle('locatie_training', option)}
               >
@@ -574,6 +645,7 @@ export default function OnboardingWizard() {
             ).map((option) => (
               <OptionButton
                 key={option}
+                icon={ACTIVITEIT_ICONEN[option]}
                 selected={isOptionSelected(option, data.dagelijkse_activiteit)}
                 onClick={() => selectSingle('dagelijkse_activiteit', option)}
               >
@@ -658,93 +730,28 @@ export default function OnboardingWizard() {
         </OnboardingLayout>
       )
 
+    case 'email':
+      return (
+        <OnboardingLayout {...layoutProps} pageBg="#171719">
+          <EmailStap
+            email={email}
+            herinneringen={herinneringen}
+            onVerder={(adres, vinkje) => {
+              setEmail(adres)
+              setHerinneringen(vinkje)
+              trackEmailSubmitted(vinkje)
+              setTracklutionContactInfo(adres)
+              saveLead(data, adres, vinkje)
+              navigateNext()
+            }}
+          />
+        </OnboardingLayout>
+      )
+
     case 'paywall':
       return (
-        <OnboardingLayout
-          paywall
-          footer={
-            <div className="onboarding__legal">
-              <a href="#">Aankopen herstellen</a>
-              <a href="#">Voorwaarden</a>
-              <a href="#">Privacy</a>
-            </div>
-          }
-        >
-          <div className="onboarding__paywall-v2">
-            <header className="onboarding__paywall-v2-header">
-              <h1 className="onboarding__paywall-v2-title">Start vandaag voor €0,-</h1>
-              <p className="onboarding__paywall-v2-lead">
-                Probeer Gymlads 7 dagen 100% gratis; ben je niet overtuigd dat dit je
-                progressie versnelt, dan annuleer je en betaal je €0,00.
-              </p>
-              <p className="onboarding__paywall-v2-social">
-                <span className="onboarding__paywall-v2-stars" aria-hidden="true">
-                  ★★★★★
-                </span>
-                <span>4.8/5.0 • 10.000+ workouts gemaakt</span>
-              </p>
-            </header>
-
-            <div className="onboarding__paywall-offer">
-              <span className="onboarding__paywall-offer-badge">BESPAAR 30%</span>
-              <p className="onboarding__paywall-offer-daily">€ 0,19 / dag</p>
-              <p className="onboarding__paywall-offer-yearly">
-                Jaarabonnement:{' '}
-                <span className="onboarding__paywall-offer-old">€ 99,99</span>{' '}
-                <strong>€ 69,99 / jaar</strong>
-              </p>
-              <p className="onboarding__paywall-offer-note">(goedkoper dan 1 PT-sessie)</p>
-            </div>
-
-            <div className="onboarding__paywall-cta">
-              {checkoutError && <div className="onboarding__error">{checkoutError}</div>}
-              <NextButton
-                label="CLAIM JOUW 7 DAGEN GRATIS"
-                onClick={handleCheckout}
-                loading={checkoutLoading}
-              />
-              <p className="onboarding__paywall-disclaimer">
-                Probeer 7 dagen 100% gratis. Hierna wordt het abonnement automatisch verlengd
-                voor de actieprijs van €69,99/jaar (daarna €99,99/jaar). Annuleer eenvoudig
-                wanneer je wilt in jouw persoonlijke account.
-              </p>
-            </div>
-
-            <section
-              className="onboarding__paywall-features"
-              aria-labelledby="paywall-features-title"
-            >
-              <h2 id="paywall-features-title" className="onboarding__paywall-features-title">
-                Wat krijg je met Gymlads?
-              </h2>
-              <ul className="onboarding__paywall-features-list">
-                <li>
-                  <div className="onboarding__paywall-features-item">
-                    <strong>Schema op maat:</strong>
-                    <span>Exact weten wat te doen (gym of thuis).</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="onboarding__paywall-features-item">
-                    <strong>Automatische bijsturing:</strong>
-                    <span>Wekelijks aangepaste workouts voor maximale progressie.</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="onboarding__paywall-features-item">
-                    <strong>Slimme AI-coaching:</strong>
-                    <span>Concrete week-feedback op jouw prestaties.</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="onboarding__paywall-features-item">
-                    <strong>Alles-in-1 tracking:</strong>
-                    <span>Sets, gewicht, omtrek en voeding op 1 plek.</span>
-                  </div>
-                </li>
-              </ul>
-            </section>
-          </div>
+        <OnboardingLayout paywall pageBg="#171719">
+          <Paywall onCheckout={handleCheckout} bezig={checkoutBezig} fout={checkoutFout} />
         </OnboardingLayout>
       )
 
