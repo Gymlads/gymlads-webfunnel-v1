@@ -97,6 +97,10 @@ Bij livegang: regel toevoegen aan het logboek van `docs/tracking.md` (gymlads-ap
    Let op: Stripe stuurt die standaard 7 dagen vóór het einde, bij een proef van
    7 dagen is dat meteen bij de start.
 4. Oude prijs €69,99 pas archiveren bij livegang (de app gebruikt hem nog).
+5. **Kortingsbon ifVHsAaK en promotiecode EERSTEJAAR niet uitzetten** zolang app
+   2.2.6 in de winkels staat: die app-paywall toont €69,99 en rekent op die code
+   (betaallink met `prefilled_promo_code=EERSTEJAAR`). Alleen de Cloudflare-variabele
+   `STRIPE_COUPON_ID` van de webfunnel gaat weg.
 
 ## Cloudflare (alleen Preview!)
 
