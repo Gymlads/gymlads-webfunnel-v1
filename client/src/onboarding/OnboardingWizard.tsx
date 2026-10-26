@@ -22,12 +22,14 @@ import OptionButton from './components/OptionButton'
 import GoalsComparisonChart from './components/GoalsComparisonChart'
 import EmailStap from './EmailStap'
 import Paywall, { type CtaPositie } from './Paywall'
+import { STANDAARD_PLAN, type Plan } from './paywallInhoud'
 import { bewaarAntwoorden, leesAntwoorden } from './bewaren'
 import {
   trackCheckoutWacht,
   trackEmailSubmitted,
   trackOnboardingStepView,
   trackPaywallCta,
+  trackPlanSelected,
 } from '../analytics/gtm'
 import { setTracklutionContactInfo } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
@@ -121,6 +123,7 @@ export default function OnboardingWizard() {
   const [herinneringen, setHerinneringen] = useState(terug?.herinneringen ?? false)
   const [checkoutFout, setCheckoutFout] = useState<{ positie: CtaPositie; tekst: string } | null>(null)
   const [checkoutBezig, setCheckoutBezig] = useState<CtaPositie | null>(null)
+  const [plan, setPlan] = useState<Plan>(STANDAARD_PLAN)
   const [pressedOption, setPressedOption] = useState<string | null>(null)
   const opgewarmd = useRef(false)
 
@@ -217,11 +220,11 @@ export default function OnboardingWizard() {
     // Direct laten zien dat er iets gebeurt (spinner + "Even geduld…")
     setCheckoutFout(null)
     setCheckoutBezig(positie)
-    trackPaywallCta(positie)
+    trackPaywallCta(positie, plan)
     meetStap('betaalknop', undefined, data)
     bewaarAntwoorden(data, email, herinneringen)
     try {
-      const result = await createCheckoutSession(data, email)
+      const result = await createCheckoutSession(data, email, plan)
 
       if (result.demo) {
         storePendingCheckout(data, result.submissionId ?? crypto.randomUUID())
@@ -244,6 +247,12 @@ export default function OnboardingWizard() {
       })
       setCheckoutBezig(null)
     }
+  }
+
+  function kiesPlan(nieuw: Plan, positie: CtaPositie) {
+    setCheckoutFout(null)
+    setPlan(nieuw)
+    trackPlanSelected(nieuw, positie)
   }
 
   // Terug uit Stripe met de terugknop van de browser (bfcache): knop weer aanzetten
@@ -751,7 +760,13 @@ export default function OnboardingWizard() {
     case 'paywall':
       return (
         <OnboardingLayout paywall pageBg="#171719">
-          <Paywall onCheckout={handleCheckout} bezig={checkoutBezig} fout={checkoutFout} />
+          <Paywall
+            onCheckout={handleCheckout}
+            bezig={checkoutBezig}
+            fout={checkoutFout}
+            plan={plan}
+            onKiesPlan={kiesPlan}
+          />
         </OnboardingLayout>
       )
 

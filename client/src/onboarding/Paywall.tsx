@@ -6,8 +6,12 @@ import {
   APP_STORE_SCORE,
   APP_STORE_URL,
   GOOGLE_PLAY_URL,
-  PRIJS,
+  FAQ_PROEF,
+  FAQ_VERSCHIL,
+  KOP,
+  PLANNEN,
   PRIVACY_URL,
+  type Plan,
   REVIEWS,
   VOORDELEN,
   VOORWAARDEN_URL,
@@ -32,42 +36,55 @@ interface PaywallProps {
   bezig: CtaPositie | null
   /** Foutmelding, getoond bij de knop waarop getikt werd. */
   fout: { positie: CtaPositie; tekst: string } | null
+  /** Gekozen plan; boven en onder delen dezelfde keuze. */
+  plan: Plan
+  onKiesPlan: (plan: Plan, positie: CtaPositie) => void
 }
 
-// Betaalblok in de opbouw van Flitsboek: kaart "Jouw plan" met het gekozen
-// abonnement (lime rand + vinkje), kleine tekst, knop en "Veilig betalen".
-function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { positie: CtaPositie }) {
-  const ditBlokBezig = bezig === positie
-  return (
-    <section className="paywall__plan" aria-label="Jouw plan">
-      <h2 className="paywall__plan-title">Jouw plan</h2>
+const PLAN_VOLGORDE: Plan[] = ['jaar', 'maand']
 
-      <div className="paywall__offer">
-        <div className="paywall__offer-top">
-          <p className="paywall__offer-name">
-            {PRIJS.naam}
-            {PRIJS.doorgestreept && (
-              <>
-                {' - '}
-                <s className="paywall__offer-old">{PRIJS.doorgestreept}</s>
-              </>
-            )}
-          </p>
-          <span className="paywall__radio" aria-hidden="true">
-            <Check size={14} strokeWidth={3.5} />
-          </span>
-        </div>
-        <p className="paywall__offer-trial">7 dagen gratis uitproberen!</p>
-        <div className="paywall__offer-bottom">
-          <p className="paywall__offer-daily">
-            {PRIJS.perDag}
-            <span>/dag</span>
-          </p>
-          {PRIJS.label && <span className="paywall__offer-badge">{PRIJS.label}</span>}
-        </div>
+// Plankeuze (Roel 26-10): twee kaarten onder elkaar, jaar bovenaan en standaard
+// gekozen. Knop en kleine tekst wisselen mee met de keuze.
+function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: PaywallProps & { positie: CtaPositie }) {
+  const ditBlokBezig = bezig === positie
+  const gekozen = PLANNEN[plan]
+  return (
+    <section className="paywall__plan" aria-label="Kies je plan">
+      <h2 className="paywall__plan-title">Kies je plan</h2>
+
+      <div className="paywall__offers" role="radiogroup" aria-label="Abonnement">
+        {PLAN_VOLGORDE.map((id) => {
+          const p = PLANNEN[id]
+          const aan = plan === id
+          return (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={aan}
+              className={`paywall__offer paywall__offer--${id}${aan ? ' paywall__offer--aan' : ''}`}
+              onClick={() => onKiesPlan(id, positie)}
+              disabled={bezig !== null}
+              data-plan={id}
+            >
+              {p.label && <span className="paywall__offer-badge paywall__offer-badge--hoek">{p.label}</span>}
+              <span className="paywall__offer-top">
+                <span className="paywall__offer-name">{p.naam}</span>
+                <span className="paywall__radio" aria-hidden="true">
+                  {aan && <Check size={14} strokeWidth={3.5} />}
+                </span>
+              </span>
+              <span className="paywall__offer-daily">
+                {p.prijs}
+                <span> {p.prijsEenheid}</span>
+              </span>
+              <span className="paywall__offer-trial">{p.onderPrijs}</span>
+            </button>
+          )
+        })}
       </div>
 
-      <p className="paywall__smallprint">{PRIJS.kleineTekst}</p>
+      <p className="paywall__smallprint">{gekozen.kleineTekst}</p>
 
       {fout?.positie === positie && <div className="onboarding__error">{fout.tekst}</div>}
       <button
@@ -77,6 +94,7 @@ function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { posit
         disabled={bezig !== null}
         aria-busy={ditBlokBezig}
         data-cta-positie={positie}
+        data-plan={plan}
       >
         {ditBlokBezig ? (
           <>
@@ -84,7 +102,7 @@ function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { posit
             Even geduld…
           </>
         ) : (
-          'GA VERDER'
+          gekozen.knop
         )}
       </button>
       <PaymentLogos />
@@ -92,15 +110,17 @@ function Betaalblok({ positie, onCheckout, bezig, fout }: PaywallProps & { posit
   )
 }
 
-// Vier vragen (Roel 21-10: er waren er te veel). Overige vragen: mail, zie onder de FAQ.
+// Vier vragen (Roel 21-10: er waren er te veel), plus maand/jaar (Roel 26-10). Overige vragen: mail, zie onder de FAQ.
 const FAQ: Array<{ vraag: string; antwoord: React.ReactNode }> = [
-  { vraag: 'Hoe werkt de gratis proef?', antwoord: PRIJS.faqProef },
+  { vraag: 'Hoe werkt de gratis proef?', antwoord: FAQ_PROEF },
+  { vraag: 'Wat is het verschil tussen maand en jaar?', antwoord: FAQ_VERSCHIL },
   {
     vraag: 'Hoe zeg ik mijn abonnement op?',
     antwoord: (
       <>
         Stuur een mail naar <a href="mailto:info@gymlads.nl">info@gymlads.nl</a> met je
-        e-mailadres. Doe dit uiterlijk 24 uur voor het einde van je proef, dan betaal je niks.
+        e-mailadres. Doe dit uiterlijk 24 uur voor het einde van je proef, dan betaal je niks. Een
+        maandabonnement zeg je op dezelfde manier op, elke maand.
       </>
     ),
   },
@@ -142,7 +162,11 @@ export default function Paywall(props: PaywallProps) {
 
   return (
     <div className="paywall">
-      {/* Betaalblok boven (geen kop erboven, zoals Flitsboek; Roel 21-10) */}
+      {/* Kop (terug in het prijsmodel van 26-10; hoort bij het jaar, dat standaard gekozen is) */}
+      <header className="paywall__header">
+        <h1 className="paywall__title">{KOP}</h1>
+      </header>
+
       <Betaalblok {...props} positie="boven" />
 
       {/* 3. Wat krijg je */}

@@ -2,39 +2,58 @@
 // Punten met ⚠️ beslist Roel voordat dit live gaat (zie docs/paywall-v3.md).
 
 /**
- * ⚠️ Prijs. Moet precies kloppen met wat Stripe afschrijft.
- * - 'A': €69,99 het eerste jaar, daarna €99,99 per jaar. Alleen zetten als in
- *   Stripe een prijs van €99,99/jaar + kortingsbon 30% voor het eerste jaar actief is.
- * - 'B': €69,99 per jaar, zonder doorgestreepte prijs en zonder "Bespaar 30%".
- *   Dit klopt met de huidige Stripe-prijs (price_1TfKa7ClVZcfiz3M1TzqDqOP).
- * Bij A geeft de checkout de kortingsbon automatisch mee (Cloudflare-variabele
- * STRIPE_COUPON_ID, zie functions/api/[[path]].js).
+ * Prijsmodel jaar + maand (opdracht Roel 26-10-2026, docs/prijsmodel-jaar-maand.md).
+ * Moet precies kloppen met wat Stripe afschrijft: jaar = Cloudflare-variabele
+ * STRIPE_PRICE_ID (€99,99/jaar, 7 dagen proef), maand = STRIPE_PRICE_ID_MAAND
+ * (€17,99/maand, geen proef). Geen kortingsbon meer.
+ * Rekensom: 12 × €17,99 = €215,88, jaar is 53,7% goedkoper, dus "Bespaar 50%" klopt.
  */
-export const PRIJS_OPTIE: 'A' | 'B' = 'A' // Roel koos A (21-10-2026)
+export type Plan = 'jaar' | 'maand'
 
-export const PRIJS = {
-  A: {
-    label: 'Bespaar 30%',
-    naam: 'Jaarlijks - €69,99',
-    doorgestreept: '€99,99',
-    perDag: '€0,19',
-    // Naar het voorbeeld van Flitsboek (Roel 21-10)
+/** Standaard gekozen plan (de kop "Start vandaag voor €0,-" hoort hierbij). */
+export const STANDAARD_PLAN: Plan = 'jaar'
+
+export const PLANNEN: Record<
+  Plan,
+  {
+    naam: string
+    label: string | null
+    prijs: string
+    prijsEenheid: string
+    onderPrijs: string
+    knop: string
+    kleineTekst: string
+  }
+> = {
+  jaar: {
+    naam: 'Jaarabonnement',
+    label: 'Bespaar 50%',
+    prijs: '€8,33',
+    prijsEenheid: '/ maand',
+    onderPrijs: '€99,99 per jaar · 7 dagen gratis',
+    knop: 'START MIJN 7 DAGEN GRATIS',
+    // ⚠️ Laten checken door een jurist (opdracht deel 4c)
     kleineTekst:
-      'De korting geldt voor je eerste jaar. Je abonnement wordt daarna automatisch verlengd tegen de volle prijs van €99,99 per jaar, tenzij je het opzegt. Opzeggen tijdens je proef? Dan betaal je niks.',
-    faqProef:
-      'Vandaag betaal je niks. Zeg je op tijdens je proef, dan blijft dat zo. Zeg je niet op, dan betaal je na 7 dagen €69,99 voor je eerste jaar, daarna €99,99 per jaar. Met iDEAL vraagt je bank eenmalig €0,01 om je rekening te koppelen.',
+      'Vandaag betaal je €0. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens je proef. Na het eerste jaar is je abonnement maandelijks opzegbaar.',
   },
-  B: {
+  maand: {
+    naam: 'Maandabonnement',
     label: null,
-    naam: 'Jaarlijks - €69,99',
-    doorgestreept: null,
-    perDag: '€0,19',
-    kleineTekst:
-      'Je abonnement wordt na je proef automatisch verlengd voor €69,99 per jaar, tenzij je het opzegt. Opzeggen tijdens je proef? Dan betaal je niks.',
-    faqProef:
-      'Vandaag betaal je niks. Zeg je op tijdens je proef, dan blijft dat zo. Zeg je niet op, dan betaal je na 7 dagen €69,99 per jaar. Met iDEAL vraagt je bank eenmalig €0,01 om je rekening te koppelen.',
+    prijs: '€17,99',
+    prijsEenheid: '/ maand',
+    onderPrijs: 'Elke maand opzegbaar',
+    knop: 'START NU VOOR €17,99',
+    kleineTekst: 'Je betaalt vandaag €17,99, daarna elke maand. Elke maand opzegbaar.',
   },
-}[PRIJS_OPTIE]
+}
+
+export const KOP = 'Start vandaag voor €0,-'
+
+export const FAQ_PROEF =
+  'Kies je het jaarabonnement, dan probeer je Gymlads 7 dagen gratis. Vandaag betaal je €0. Zeg je op tijdens je proef, dan betaal je niks. Zeg je niet op, dan betaal je €99,99 voor een jaar. Betaal je met iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.'
+
+export const FAQ_VERSCHIL =
+  'Met het jaarabonnement probeer je Gymlads eerst 7 dagen gratis, en betaal je daarna €99,99 per jaar. Dat is €8,33 per maand. Met het maandabonnement betaal je €17,99 per maand, zonder proefperiode, en zeg je elke maand op.'
 
 /**
  * ⚠️ Logo's onder de knop: alleen methodes die echt aanstaan in Stripe.

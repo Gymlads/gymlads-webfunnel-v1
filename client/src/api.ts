@@ -28,9 +28,12 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 export async function createCheckoutSession(
   data: OnboardingData,
   email?: string,
+  plan: 'jaar' | 'maand' = 'jaar',
 ): Promise<CheckoutResponse> {
   const body = JSON.stringify({
     metadata: toStripeMetadata(data),
+    // Jaar (met proef) of maand (zonder proef); de server kiest de Stripe-prijs
+    plan,
     // Alleen voor customer_email in Stripe (vooraf ingevuld), niet in de metadata
     email: email || undefined,
     clientOrigin: window.location.origin,

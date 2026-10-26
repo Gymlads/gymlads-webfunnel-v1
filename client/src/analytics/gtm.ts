@@ -40,9 +40,19 @@ export function trackEmailSubmitted(herinneringen: boolean) {
   pushGtmEvent('email_submitted', { herinneringen, browser: browserSoort() })
 }
 
-/** Betaalknop op de paywall: 'boven' (blok 2) of 'onder' (blok 5). */
-export function trackPaywallCta(positie: 'boven' | 'onder') {
-  pushGtmEvent('paywall_cta_click', { cta_position: positie, browser: browserSoort() })
+/** Betaalknop op de paywall: 'boven' (blok 2) of 'onder' (blok 5), met het gekozen plan. */
+export function trackPaywallCta(positie: 'boven' | 'onder', plan: 'jaar' | 'maand') {
+  pushGtmEvent('paywall_cta_click', { cta_position: positie, plan: planVoorGtm(plan), browser: browserSoort() })
+}
+
+// In GTM heet het plan year/month (opdracht Roel 26-10-2026).
+function planVoorGtm(plan: 'jaar' | 'maand'): 'year' | 'month' {
+  return plan === 'maand' ? 'month' : 'year'
+}
+
+/** Tik op een plankaart: `plan_selected` met plan = year | month. */
+export function trackPlanSelected(plan: 'jaar' | 'maand', positie: 'boven' | 'onder') {
+  pushGtmEvent('plan_selected', { plan: planVoorGtm(plan), cta_position: positie, browser: browserSoort() })
 }
 
 /** Hoe lang "Even geduld…" duurde: van tik tot doorsturen naar Stripe (of fout). */

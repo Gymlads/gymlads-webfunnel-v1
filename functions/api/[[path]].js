@@ -16,6 +16,15 @@ const SUPABASE_PUBLIEKE_SLEUTEL = 'sb_publishable_KDytEfGmM-_frKy-ykQB4g_PS5huk7
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
 
+// Eigen tekst bij de betaalknop van Stripe (custom_text.submit, max. 1200 tekens),
+// per plan (opdracht Roel 26-10-2026). Jaar zonder proef (shouldSkipTrial) krijgt
+// geen tekst: "vandaag €0" klopt dan niet.
+const STRIPE_KNOP_TEKST = {
+  jaar:
+    'Je betaalt vandaag €0. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef. Kies je iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.',
+  maand: 'Je betaalt vandaag €17,99. Daarna elke maand €17,99. Elke maand opzegbaar.',
+}
+
 function geldigEmail(waarde) {
   if (typeof waarde !== 'string') return null
   const schoon = waarde.trim().toLowerCase()
@@ -133,7 +142,9 @@ async function createCheckoutSession(request, env, waitUntil) {
   }
 
   const stripe = getStripe(env)
-  const skipTrial = shouldSkipTrial(metadata, body?.skipTrial)
+  // Jaar (€99,99, 7 dagen proef) of maand (€17,99, geen proef). Onbekend = jaar.
+  const plan = body?.plan === 'maand' ? 'maand' : 'jaar'
+  const skipTrial = plan === 'maand' || shouldSkipTrial(metadata, body?.skipTrial)
   const submissionId = crypto.randomUUID()
   const enrichedMetadata = sanitizeStripeMetadata({
     ...metadata,
@@ -145,14 +156,20 @@ async function createCheckoutSession(request, env, waitUntil) {
   })
 
   if (!stripe || !env.STRIPE_PRICE_ID) {
-    return json({ demo: true, submissionId, skipTrial })
+    return json({ demo: true, submissionId, skipTrial, plan })
+  }
+  // Nooit stil de jaarprijs rekenen als iemand maand koos
+  const priceId = plan === 'maand' ? env.STRIPE_PRICE_ID_MAAND : env.STRIPE_PRICE_ID
+  if (!priceId) {
+    console.error('[checkout] STRIPE_PRICE_ID_MAAND ontbreekt')
+    return json({ error: 'Dit abonnement is nu niet beschikbaar' }, 503)
   }
 
   // Koppeling met de meting: sessie-id en advertentie op het abonnement in
   // Stripe (niet in de checkout-metadata, die gaat in zijn geheel naar n8n).
   const meting = body?.meting && typeof body.meting === 'object' ? body.meting : null
   const sessieId = typeof meting?.sessie === 'string' && UUID.test(meting.sessie) ? meting.sessie : null
-  const abonnementMetadata = {}
+  const abonnementMetadata = { plan }
   if (sessieId) abonnementMetadata.funnel_sessie_id = sessieId
   if (typeof meting?.utm_content === 'string' && meting.utm_content) {
     abonnementMetadata.utm_content = meting.utm_content.slice(0, 500)
@@ -162,19 +179,21 @@ async function createCheckoutSession(request, env, waitUntil) {
   // E-mail uit de e-mailstap: op de betaalpagina al ingevuld. Bewust GEEN
   // client_reference_id: n8n en Tracklution zien een web-checkout dan als app-checkout.
   const customerEmail = geldigEmail(body?.email)
+  const knopTekst = plan === 'maand' ? STRIPE_KNOP_TEKST.maand : skipTrial ? null : STRIPE_KNOP_TEKST.jaar
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    line_items: [{ price: env.STRIPE_PRICE_ID, quantity: 1 }],
-    success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+    line_items: [{ price: priceId, quantity: 1 }],
+    // plan in de terug-URL: de bedankpagina toont de juiste tekst en meldt een
+    // maandaankoop aan Tracklution (ook als de bank-app een andere browser opent)
+    success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
     cancel_url: `${clientUrl}/checkout/cancelled`,
     phone_number_collection: { enabled: false },
     ...(customerEmail ? { customer_email: customerEmail } : {}),
-    // Korting eerste jaar (Roel 21-10-2026: automatisch, alleen bij een nieuwe proef).
-    // Coupon-ID staat in Cloudflare (STRIPE_COUPON_ID), zodat Roel hem zonder codewijziging kan wisselen.
-    ...(!skipTrial && env.STRIPE_COUPON_ID ? { discounts: [{ coupon: env.STRIPE_COUPON_ID }] } : {}),
+    ...(knopTekst ? { custom_text: { submit: { message: knopTekst } } } : {}),
+    // Geen kortingsbon meer (prijsmodel 26-10: €99,99 is de echte jaarprijs).
     subscription_data: {
       ...(skipTrial ? {} : { trial_period_days: 7 }),
-      ...(Object.keys(abonnementMetadata).length ? { metadata: abonnementMetadata } : {}),
+      metadata: abonnementMetadata,
     },
     metadata: enrichedMetadata,
   })
@@ -186,7 +205,7 @@ async function createCheckoutSession(request, env, waitUntil) {
     )
   }
 
-  return json({ url: session.url, submissionId, skipTrial })
+  return json({ url: session.url, submissionId, skipTrial, plan })
 }
 
 // E-mailadres + antwoorden uit de e-mailstap bewaren als lead (Supabase-functie
@@ -301,6 +320,9 @@ function health(env) {
     status: 'ok',
     n8nConfigured: Boolean(env.N8N_WEBHOOK_URL),
     stripeConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID),
+    maandConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_MAAND),
+    // Staat de oude kortingsbon nog in Cloudflare? Wordt niet meer gebruikt; mag weg.
+    oudeCouponIngesteld: Boolean(env.STRIPE_COUPON_ID),
     stripeWebhookConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET),
   })
 }

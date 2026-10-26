@@ -4,6 +4,8 @@ Opdracht van Roel (thread "Webfunnel paywall en vragenlijst v3"). Gebouwd op
 branch `claude/project-thread-2008k9`. **Niet live** tot Roel na het testen in
 de Cloudflare-preview akkoord geeft.
 
+> Prijsmodel jaar + maand (26-10-2026) bouwt hierop voort: zie `docs/prijsmodel-jaar-maand.md`. De kortingsbon en "Bespaar 30%" hieronder vervallen dan.
+
 ## Wat is er veranderd
 
 **Vragenlijst**

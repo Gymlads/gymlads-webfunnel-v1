@@ -1357,11 +1357,45 @@
   text-align: center;
 }
 
+.paywall__offers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Plankaart (knop). Gekozen = lime rand; niet gekozen = grijze rand. */
 .paywall__offer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
   padding: 14px 14px 12px;
-  border: 2px solid var(--accent);
+  border: 2px solid #48484a;
   border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.paywall__offer--aan {
+  border-color: var(--accent);
   background: rgba(204, 255, 0, 0.06);
+}
+
+.paywall__offer--maand {
+  padding: 11px 14px 10px;
+}
+
+.paywall__offer--maand .paywall__offer-daily {
+  font-size: 1.5rem;
+}
+
+.paywall__offer:disabled {
+  cursor: default;
 }
 
 .paywall__offer-top {
@@ -1397,12 +1431,18 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--accent);
+  border: 2px solid #636366;
   color: #000;
 }
 
+.paywall__offer--aan .paywall__radio {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
 .paywall__offer-trial {
-  margin: 2px 0 0;
+  display: block;
+  margin: 4px 0 0;
   font-size: 0.9rem;
   color: #c7c7cc;
 }
@@ -1416,7 +1456,8 @@
 }
 
 .paywall__offer-daily {
-  margin: 0;
+  display: block;
+  margin: 8px 0 0;
   font-size: 1.9rem;
   font-weight: 800;
   line-height: 1;
@@ -1436,6 +1477,17 @@
   font-size: 0.8rem;
   font-weight: 800;
   white-space: nowrap;
+}
+
+.paywall__offer-badge--hoek {
+  position: absolute;
+  top: -11px;
+  right: 14px;
+  padding: 3px 10px;
+}
+
+.paywall__offer--jaar .paywall__offer-top {
+  margin-top: 4px;
 }
 
 .paywall__plan .paywall__smallprint {

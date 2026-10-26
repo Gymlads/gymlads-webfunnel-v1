@@ -3,7 +3,7 @@ import { confirmDemoCheckout, fetchCheckoutRedeem } from '../api'
 import type { OnboardingData } from '../types'
 import { toStripeMetadata } from '../types'
 import { pushGtmEvent } from '../analytics/gtm'
-import { setTracklutionContactInfo } from '../analytics/tracklution'
+import { setTracklutionContactInfo, trackTracklutionSubscribe } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
 import OnboardingLayout from './components/OnboardingLayout'
 import NextButton from './components/NextButton'
@@ -31,6 +31,8 @@ function readPendingCheckout(): PendingCheckout | null {
 
 export function CheckoutSuccess() {
   const [email, setEmail] = useState<string | null>(null)
+  // plan staat in de terug-URL van Stripe (functions/api: success_url)
+  const [maand] = useState(() => new URLSearchParams(window.location.search).get('plan') === 'maand')
 
   useEffect(() => {
     sessionStorage.removeItem(PENDING_CHECKOUT_KEY)
@@ -41,6 +43,7 @@ export function CheckoutSuccess() {
     pushGtmEvent('checkout_success', {
       page_path: '/checkout/success',
       stripe_session_id: sessionId ?? undefined,
+      plan: maand ? 'month' : 'year',
     })
 
     // E-mailadres uit de Stripe-sessie: tonen in stap 2 en doorgeven aan
@@ -52,6 +55,8 @@ export function CheckoutSuccess() {
             setEmail(result.email)
             setTracklutionContactInfo(result.email)
           }
+          // Na ContactInfo, zodat Tracklution de aankoop aan dit bezoek koppelt
+          if (maand && !result.demo) trackTracklutionSubscribe(sessionId)
         })
         .catch(() => {})
     }
@@ -61,7 +66,9 @@ export function CheckoutSuccess() {
     <OnboardingLayout centered checkoutSuccess>
       <div className="checkout-success">
         <GymladsLogo className="checkout-success__logo" />
-        <h1 className="checkout-success__title">Je proefweek is gestart!</h1>
+        <h1 className="checkout-success__title">
+          {maand ? 'Je abonnement is gestart!' : 'Je proefweek is gestart!'}
+        </h1>
         <p className="checkout-success__subtitle">
           Je coach zet je persoonlijke schema voor je klaar. Nog 3 stappen en je doet vandaag je
           eerste workout.
@@ -88,7 +95,7 @@ export function CheckoutSuccess() {
                 ) : (
                   '.'
                 )}{' '}
-                Dan staan je antwoorden en je proefweek meteen klaar.
+                Dan staan je antwoorden en {maand ? 'je abonnement' : 'je proefweek'} meteen klaar.
               </p>
             </div>
           </li>
@@ -98,7 +105,7 @@ export function CheckoutSuccess() {
               <p className="checkout-success__step-title">Start je eerste workout</p>
               <p className="checkout-success__step-text">
                 Je schema staat op het startscherm. Doe je eerste workout vandaag of morgen, dan
-                haal je het meeste uit je proefweek.
+                haal je {maand ? 'er meteen het meeste uit.' : 'het meeste uit je proefweek.'}
               </p>
             </div>
           </li>
