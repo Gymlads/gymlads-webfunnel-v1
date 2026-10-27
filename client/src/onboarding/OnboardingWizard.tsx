@@ -3,10 +3,11 @@ import { createCheckoutSession, saveLead } from '../api'
 import { storePendingCheckout } from './CheckoutResult'
 import {
   HOME_EQUIPMENT,
+  SPORTSCHOOL_TOESTELLEN,
   WEEKDAYS,
   initialOnboardingData,
+  werkDagenBij,
   type BooleanFieldKey,
-  type DagelijkseActiviteit,
   type Doel,
   type ErvaringKrachttraining,
   type Geslacht,
@@ -14,6 +15,7 @@ import {
   type GrootsteUitdaging,
   type LocatieTraining,
   type OnboardingData,
+  type SoortSportschool,
   type SpiergroepFocus,
 } from '../types'
 import OnboardingLayout from './components/OnboardingLayout'
@@ -34,7 +36,6 @@ import {
 import { setTracklutionContactInfo } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
 import {
-  autoAssignLocationDays,
   buildStepList,
   type StepId,
   shouldShowProgress,
@@ -83,18 +84,29 @@ const ERVARING_ICONEN = {
   '1+ jaar consistent': '🏆',
 } satisfies Record<ErvaringKrachttraining, string>
 
-const LOCATIE_ICONEN = {
-  Sportschool: '🏋️',
-  Thuis: '🏠',
-  Beide: '🔁',
-} satisfies Record<LocatieTraining, string>
+// Zelfde vier keuzes als de app (locatie.tsx, 2.2.6).
+const LOCATIES: ReadonlyArray<{
+  label: string
+  locatie: LocatieTraining
+  soort: SoortSportschool
+  icon: string
+}> = [
+  { label: 'Grote sportschool', locatie: 'Sportschool', soort: 'groot', icon: '🏢' },
+  { label: 'Kleine sportschool', locatie: 'Sportschool', soort: 'klein', icon: '🏠' },
+  { label: 'Thuis', locatie: 'Thuis', soort: '', icon: '🛋️' },
+  { label: 'Sportschool én thuis', locatie: 'Beide', soort: 'groot', icon: '🔁' },
+]
 
-const ACTIVITEIT_ICONEN = {
-  'Meestal zittend': '🪑',
-  'Veel staan': '🚶',
-  'Een combinatie van zitten en staan': '🔄',
-  'Het verschilt elke dag': '🎲',
-} satisfies Record<DagelijkseActiviteit, string>
+// Opgeslagen waarden blijven zoals n8n ze kent; alleen de tekst is gelijk aan de app.
+const SPIERGROEPEN: ReadonlyArray<{ label: string; waarde: SpiergroepFocus }> = [
+  { label: 'Ik wil alles gelijk trainen', waarde: 'Ik wil alles gelijk trainen' },
+  { label: 'Borst', waarde: 'Borst' },
+  { label: 'Rug', waarde: 'Rug' },
+  { label: 'Schouders', waarde: 'Schouder' },
+  { label: 'Biceps', waarde: 'Biceps' },
+  { label: 'Triceps', waarde: 'Triceps' },
+  { label: 'Benen/billen', waarde: 'Billen/Benen' },
+]
 
 /** Terug van "Probeer opnieuw" (geannuleerde betaling)? Dan meteen naar de paywall. */
 function startPunt() {
@@ -171,11 +183,7 @@ export default function OnboardingWizard() {
     (updates?: Partial<OnboardingData>) => {
       setData((prev) => {
         const merged = updates ? { ...prev, ...updates } : prev
-        let nextData = merged
-
-        if (stepId === 'training-days') {
-          nextData = autoAssignLocationDays(merged, 'after-training-days')
-        }
+        const nextData = werkDagenBij(merged)
 
         const steps = buildStepList(nextData)
         const idx = steps.indexOf(stepId)
@@ -209,7 +217,6 @@ export default function OnboardingWizard() {
     setData((prev) => ({ ...prev, [key]: !prev[key] }))
   }, [])
 
-  const hasSelectedTrainingDay = WEEKDAYS.some((d) => data[d.train])
   const hasSelectedGymDay = WEEKDAYS.some((d) => data[d.gym])
   const hasSelectedHomeDay = WEEKDAYS.some((d) => data[d.home])
   const hasNoHomeEquipment = HOME_EQUIPMENT.every((item) => !data[item.key])
@@ -404,6 +411,7 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Hoeveel ervaring heb je met krachttraining?</h1>
+          <p className="onboarding__subtitle">Zo bepaal ik je volume en hoe snel we opbouwen.</p>
           <div className="onboarding__options">
             {(
               [
@@ -464,7 +472,9 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Hoe vaak kun je per week trainen?</h1>
-          <p className="onboarding__subtitle">Kies iets wat je vol kunt houden.</p>
+          <p className="onboarding__subtitle">
+            Hiermee verdeel ik je volume over de week en plan ik je herstel.
+          </p>
           <div className="onboarding__options">
             {[2, 3, 4, 5, 6].map((days) => (
               <OptionButton
@@ -472,7 +482,7 @@ export default function OnboardingWizard() {
                 selected={isOptionSelected(days, data.sessies_per_week)}
                 onClick={() => selectSingle('sessies_per_week', days)}
               >
-                {days} dagen
+                {days}x per week
               </OptionButton>
             ))}
           </div>
@@ -483,6 +493,9 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Hoe lang mag jouw workout duren?</h1>
+          <p className="onboarding__subtitle">
+            Dan bouw ik je trainingen zodat je ze binnen deze tijd af kunt ronden.
+          </p>
           <div className="onboarding__options">
             {(
               [
@@ -508,25 +521,18 @@ export default function OnboardingWizard() {
     case 'muscle-focus':
       return (
         <OnboardingLayout {...layoutProps}>
-          <h1 className="onboarding__title">Wil je meer focus op één spiergroep?</h1>
+          <h1 className="onboarding__title">Waar wil je de focus op leggen?</h1>
+          <p className="onboarding__subtitle">
+            Kies één spiergroep die extra volume krijgt in je schema, of train alles gelijkmatig.
+          </p>
           <div className="onboarding__options">
-            {(
-              [
-                'Ik wil alles gelijk trainen',
-                'Borst',
-                'Rug',
-                'Schouder',
-                'Biceps',
-                'Triceps',
-                'Billen/Benen',
-              ] as SpiergroepFocus[]
-            ).map((option) => (
+            {SPIERGROEPEN.map((optie) => (
               <OptionButton
-                key={option}
-                selected={isOptionSelected(option, data.focus_spiergroepen)}
-                onClick={() => selectSingle('focus_spiergroepen', option)}
+                key={optie.waarde}
+                selected={isOptionSelected(optie.waarde, data.focus_spiergroepen)}
+                onClick={() => selectSingle('focus_spiergroepen', optie.waarde)}
               >
-                {option}
+                {optie.label}
               </OptionButton>
             ))}
           </div>
@@ -556,39 +562,69 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Waar train je meestal?</h1>
+          <p className="onboarding__subtitle">
+            Dan kies ik oefeningen die passen bij wat jij tot je beschikking hebt.
+          </p>
           <div className="onboarding__options">
-            {(['Sportschool', 'Thuis', 'Beide'] as LocatieTraining[]).map((option) => (
-              <OptionButton
-                key={option}
-                icon={LOCATIE_ICONEN[option]}
-                selected={isOptionSelected(option, data.locatie_training)}
-                onClick={() => selectSingle('locatie_training', option)}
-              >
-                {option}
-              </OptionButton>
-            ))}
+            {LOCATIES.map((optie) => {
+              const gekozen =
+                pressedOption === optie.label ||
+                (data.locatie_training === optie.locatie &&
+                  (optie.locatie === 'Thuis' ||
+                    (data.soort_sportschool || 'groot') === optie.soort))
+              return (
+                <OptionButton
+                  key={optie.label}
+                  icon={optie.icon}
+                  selected={gekozen}
+                  onClick={() => {
+                    setPressedOption(optie.label)
+                    const updates: Partial<OnboardingData> = {
+                      locatie_training: optie.locatie,
+                      soort_sportschool: optie.soort,
+                    }
+                    // Kleine sportschool: aanvinken wat de meeste hebben (zoals de app)
+                    if (
+                      optie.soort === 'klein' &&
+                      !SPORTSCHOOL_TOESTELLEN.some((t) => data[t.key])
+                    ) {
+                      for (const t of SPORTSCHOOL_TOESTELLEN) updates[t.key] = t.standaard
+                    }
+                    setTimeout(() => {
+                      setPressedOption(null)
+                      navigateNext(updates)
+                    }, 300)
+                  }}
+                >
+                  {optie.label}
+                </OptionButton>
+              )
+            })}
           </div>
         </OnboardingLayout>
       )
 
-    case 'training-days':
+    case 'gym-equipment':
       return (
         <OnboardingLayout
           {...layoutProps}
-          footer={
-            <NextButton onClick={() => navigateNext()} disabled={!hasSelectedTrainingDay} />
-          }
+          footer={<NextButton label="Klopt zo" onClick={() => navigateNext()} />}
         >
-          <h1 className="onboarding__title">Op welke dagen wil je trainen?</h1>
+          <h1 className="onboarding__title">Wat heeft jouw sportschool?</h1>
+          <p className="onboarding__subtitle">
+            Ik heb alvast aangevinkt wat de meeste sportscholen hebben. Mis je iets? Vink het uit,
+            dan krijg je geen oefeningen waarvoor je dat nodig hebt.
+          </p>
           <div className="onboarding__options">
-            {WEEKDAYS.map((day) => (
+            {SPORTSCHOOL_TOESTELLEN.map((item) => (
               <OptionButton
-                key={day.train}
+                key={item.key}
                 multi
-                selected={data[day.train]}
-                onClick={() => toggleMulti(day.train)}
+                icon={item.emoji}
+                selected={data[item.key]}
+                onClick={() => toggleMulti(item.key)}
               >
-                {day.label}
+                {item.label}
               </OptionButton>
             ))}
           </div>
@@ -601,9 +637,19 @@ export default function OnboardingWizard() {
           {...layoutProps}
           footer={<NextButton onClick={() => navigateNext()} disabled={!hasSelectedGymDay} />}
         >
-          <h1 className="onboarding__title">Op welke dagen wil je in de sportschool trainen?</h1>
+          {data.locatie_training === 'Beide' ? (
+            <>
+              <h1 className="onboarding__title">Op welke dagen wil je in de sportschool trainen?</h1>
+              <p className="onboarding__subtitle">Dan plan ik je week slim in voor ritme en herstel.</p>
+            </>
+          ) : (
+            <>
+              <h1 className="onboarding__title">Op welke dagen kun je in de sportschool trainen?</h1>
+              <p className="onboarding__subtitle">Dan plan ik je gymtrainingen op die dagen.</p>
+            </>
+          )}
           <div className="onboarding__options">
-            {WEEKDAYS.filter((d) => data[d.train]).map((day) => (
+            {WEEKDAYS.map((day) => (
               <OptionButton
                 key={day.gym}
                 multi
@@ -624,8 +670,13 @@ export default function OnboardingWizard() {
           footer={<NextButton onClick={() => navigateNext()} disabled={!hasSelectedHomeDay} />}
         >
           <h1 className="onboarding__title">Op welke dagen wil je thuis trainen?</h1>
+          <p className="onboarding__subtitle">
+            {data.locatie_training === 'Beide'
+              ? 'Dan plan ik je week slim in voor ritme en herstel.'
+              : 'Dan houd ik rekening met beschikbare apparatuur en kies ik passende oefeningen.'}
+          </p>
           <div className="onboarding__options">
-            {WEEKDAYS.filter((d) => data[d.train]).map((day) => (
+            {WEEKDAYS.map((day) => (
               <OptionButton
                 key={day.home}
                 multi
@@ -639,32 +690,6 @@ export default function OnboardingWizard() {
         </OnboardingLayout>
       )
 
-    case 'activity':
-      return (
-        <OnboardingLayout {...layoutProps}>
-          <h1 className="onboarding__title">Hoe actief ben je overdag?</h1>
-          <div className="onboarding__options">
-            {(
-              [
-                'Meestal zittend',
-                'Veel staan',
-                'Een combinatie van zitten en staan',
-                'Het verschilt elke dag',
-              ] as DagelijkseActiviteit[]
-            ).map((option) => (
-              <OptionButton
-                key={option}
-                icon={ACTIVITEIT_ICONEN[option]}
-                selected={isOptionSelected(option, data.dagelijkse_activiteit)}
-                onClick={() => selectSingle('dagelijkse_activiteit', option)}
-              >
-                {option}
-              </OptionButton>
-            ))}
-          </div>
-        </OnboardingLayout>
-      )
-
     case 'equipment':
       return (
         <OnboardingLayout
@@ -672,6 +697,7 @@ export default function OnboardingWizard() {
           footer={<NextButton onClick={() => navigateNext()} />}
         >
           <h1 className="onboarding__title">Welke apparatuur heb je thuis beschikbaar?</h1>
+          <p className="onboarding__subtitle">Op basis hiervan kunnen we je thuis oefeningen aanraden.</p>
           <div className="onboarding__options onboarding__options--equipment">
             {HOME_EQUIPMENT.map((item) => (
               <OptionButton
@@ -696,7 +722,7 @@ export default function OnboardingWizard() {
                 })
               }}
             >
-              Niet van toepassing
+              Geen/niet van toepassing
             </OptionButton>
           </div>
         </OnboardingLayout>

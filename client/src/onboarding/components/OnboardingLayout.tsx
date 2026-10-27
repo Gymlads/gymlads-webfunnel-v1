@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react'
-import logoKlein from '../assets/gymlads-logo-klein.png'
 
 interface OnboardingLayoutProps {
   children: ReactNode
@@ -36,7 +35,7 @@ export default function OnboardingLayout({
 
   return (
     <div className="onboarding" style={layoutStyle}>
-      {/* Klein logo bovenaan elk scherm (zoals Fitbod), niet op de paywall (Roel 21-10) */}
+      {/* Geen logo meer boven de vragen, net als in de app (Roel 22-10) */}
       {!checkoutSuccess && !paywall && (
         <header className={`onboarding__header${paywall ? ' onboarding__header--paywall' : ''}`}>
           {showBack && onBack && (
@@ -59,9 +58,6 @@ export default function OnboardingLayout({
               </svg>
             </button>
           )}
-          <div className="onboarding__logo">
-            <img className="onboarding__logo-klein" src={logoKlein} alt="Gymlads" />
-          </div>
         </header>
       )}
 

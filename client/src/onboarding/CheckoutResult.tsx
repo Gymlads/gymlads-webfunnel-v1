@@ -102,9 +102,10 @@ export function CheckoutSuccess() {
           <li className="checkout-success__step">
             <span className="checkout-success__step-nr">3</span>
             <div className="checkout-success__step-body">
-              <p className="checkout-success__step-title">Start je eerste workout</p>
+              <p className="checkout-success__step-title">Kies je eerste workout-dag</p>
               <p className="checkout-success__step-text">
-                Je schema staat op het startscherm. Doe je eerste workout vandaag of morgen, dan
+                Je antwoorden van hier staan al in de app. Je kiest alleen nog wanneer je je eerste
+                workout doet, daarna zet je coach je schema klaar. Doe hem vandaag of morgen, dan
                 haal je {maand ? 'er meteen het meeste uit.' : 'het meeste uit je proefweek.'}
               </p>
             </div>

@@ -10,7 +10,7 @@
  */
 export type Plan = 'jaar' | 'maand'
 
-/** Standaard gekozen plan (de kop "Start vandaag voor €0,-" hoort hierbij). */
+/** Standaard gekozen plan. Geen kop boven de paywall, net als de app (27-10). */
 export const STANDAARD_PLAN: Plan = 'jaar'
 
 export const PLANNEN: Record<
@@ -46,8 +46,6 @@ export const PLANNEN: Record<
     kleineTekst: 'Je betaalt vandaag €17,99, daarna elke maand. Elke maand opzegbaar.',
   },
 }
-
-export const KOP = 'Start vandaag voor €0,-'
 
 export const FAQ_PROEF =
   'Kies je het jaarabonnement, dan probeer je Gymlads 7 dagen gratis. Vandaag betaal je €0. Zeg je op tijdens je proef, dan betaal je niks. Zeg je niet op, dan betaal je €99,99 voor een jaar. Betaal je met iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.'

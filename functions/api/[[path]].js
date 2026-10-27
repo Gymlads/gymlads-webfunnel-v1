@@ -170,6 +170,14 @@ async function createCheckoutSession(request, env, waitUntil) {
   const meting = body?.meting && typeof body.meting === 'object' ? body.meting : null
   const sessieId = typeof meting?.sessie === 'string' && UUID.test(meting.sessie) ? meting.sessie : null
   const abonnementMetadata = { plan }
+  // Kleine sportschool + toestellen (2.2.6): op het abonnement, niet in de
+  // checkout-metadata (die gaat in zijn geheel naar funnel_staging).
+  const sportschool = body?.sportschool && typeof body.sportschool === 'object' ? body.sportschool : null
+  for (const key of ['soort_sportschool', 'sportschool_toestellen']) {
+    if (typeof sportschool?.[key] === 'string' && sportschool[key]) {
+      abonnementMetadata[key] = sportschool[key].slice(0, 200)
+    }
+  }
   if (sessieId) abonnementMetadata.funnel_sessie_id = sessieId
   if (typeof meting?.utm_content === 'string' && meting.utm_content) {
     abonnementMetadata.utm_content = meting.utm_content.slice(0, 500)

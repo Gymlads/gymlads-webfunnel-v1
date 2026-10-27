@@ -16,10 +16,9 @@ export type StepId =
   | 'duration'
   | 'muscle-focus'
   | 'location'
-  | 'training-days'
+  | 'gym-equipment'
   | 'gym-days'
   | 'home-days'
-  | 'activity'
   | 'equipment'
   | 'info-feedback'
   | 'plan-ready'
@@ -27,7 +26,9 @@ export type StepId =
   | 'paywall'
 
 // Geslacht, leeftijd, dan doel (Roel 21-10-2026: volgorde niet omdraaien).
-// Lengte en gewicht vragen we niet meer in de webfunnel (v3).
+// Lengte en gewicht vragen we niet meer in de webfunnel (v3). Vanaf 27-10
+// dezelfde vragen als de app (2.2.6): geen algemene trainingsdagen en geen
+// dagelijkse activiteit meer; dagen per locatie, kleine sportschool met toestellen.
 const BASE_STEPS: StepId[] = [
   'gender',
   'age',
@@ -42,11 +43,9 @@ const BASE_STEPS: StepId[] = [
   'duration',
   'muscle-focus',
   'location',
-  'training-days',
 ]
 
 const TAIL_STEPS: StepId[] = [
-  'activity',
   'info-schedule',
   'info-feedback',
   'email',
@@ -54,22 +53,20 @@ const TAIL_STEPS: StepId[] = [
   'paywall',
 ]
 
+// Zelfde vertakking als de app (locatie.tsx): grote sportschool -> dagen;
+// kleine -> toestellen, dagen; thuis -> dagen, apparatuur; beide -> thuisdagen,
+// sportschooldagen, apparatuur.
 function getConditionalSteps(data: OnboardingData): StepId[] {
-  const steps: StepId[] = []
-
-  if (data.locatie_training === 'Sportschool' || data.locatie_training === 'Beide') {
-    steps.push('gym-days')
+  switch (data.locatie_training) {
+    case 'Sportschool':
+      return data.soort_sportschool === 'klein' ? ['gym-equipment', 'gym-days'] : ['gym-days']
+    case 'Thuis':
+      return ['home-days', 'equipment']
+    case 'Beide':
+      return ['home-days', 'gym-days', 'equipment']
+    default:
+      return []
   }
-
-  if (data.locatie_training === 'Thuis' || data.locatie_training === 'Beide') {
-    steps.push('home-days')
-  }
-
-  if (data.locatie_training === 'Thuis' || data.locatie_training === 'Beide') {
-    steps.push('equipment')
-  }
-
-  return steps
 }
 
 export function buildStepList(data: OnboardingData): StepId[] {
@@ -85,7 +82,7 @@ export function shouldShowProgress(stepId: StepId): boolean {
 }
 
 export function useOnboardingSteps(data: OnboardingData, currentStepId: StepId) {
-  const steps = useMemo(() => buildStepList(data), [data.locatie_training])
+  const steps = useMemo(() => buildStepList(data), [data.locatie_training, data.soort_sportschool])
 
   const currentIndex = steps.indexOf(currentStepId)
   const progressSteps = steps.filter(
@@ -109,30 +106,4 @@ export function useOnboardingSteps(data: OnboardingData, currentStepId: StepId) 
       return idx > 0 ? steps[idx - 1] : stepId
     },
   }
-}
-
-export function autoAssignLocationDays(
-  data: OnboardingData,
-  phase: 'after-training-days' | 'after-gym-days',
-): OnboardingData {
-  const next = { ...data }
-
-  if (phase === 'after-training-days') {
-    if (data.locatie_training === 'Sportschool') {
-      for (const day of ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'] as const) {
-        const trainKey = `train_${day}` as keyof OnboardingData
-        const gymKey = `${day}_sportschool_trainen` as keyof OnboardingData
-        ;(next[gymKey] as boolean) = Boolean(next[trainKey])
-      }
-    }
-    if (data.locatie_training === 'Thuis') {
-      for (const day of ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'] as const) {
-        const trainKey = `train_${day}` as keyof OnboardingData
-        const homeKey = `${day}_thuis_trainen` as keyof OnboardingData
-        ;(next[homeKey] as boolean) = Boolean(next[trainKey])
-      }
-    }
-  }
-
-  return next
 }

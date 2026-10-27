@@ -13,7 +13,7 @@ export type MeetStap =
   | 'goal' | 'gender' | 'age' | 'stats' | 'info-personalization' | 'info-consistency'
   | 'challenge' | 'experience' | 'info-experience' | 'info-goals' | 'info-schedule'
   | 'frequency' | 'duration' | 'muscle-focus' | 'location' | 'training-days'
-  | 'gym-days' | 'home-days' | 'activity' | 'equipment' | 'info-feedback'
+  | 'gym-days' | 'home-days' | 'activity' | 'equipment' | 'gym-equipment' | 'info-feedback'
   | 'plan-ready' | 'email' | 'paywall' | 'betaalknop' | 'betaald'
 
 const SESSIE_KEY = 'gl_meet_sessie'

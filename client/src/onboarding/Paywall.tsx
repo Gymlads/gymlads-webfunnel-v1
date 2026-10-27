@@ -8,7 +8,6 @@ import {
   GOOGLE_PLAY_URL,
   FAQ_PROEF,
   FAQ_VERSCHIL,
-  KOP,
   PLANNEN,
   PRIVACY_URL,
   type Plan,
@@ -162,10 +161,6 @@ export default function Paywall(props: PaywallProps) {
 
   return (
     <div className="paywall">
-      {/* Kop (terug in het prijsmodel van 26-10; hoort bij het jaar, dat standaard gekozen is) */}
-      <header className="paywall__header">
-        <h1 className="paywall__title">{KOP}</h1>
-      </header>
 
       <Betaalblok {...props} positie="boven" />
 

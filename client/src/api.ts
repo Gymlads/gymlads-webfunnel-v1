@@ -1,5 +1,5 @@
 import type { OnboardingData } from './types'
-import { toStripeMetadata } from './types'
+import { sportschoolAntwoorden, toStripeMetadata } from './types'
 import { meetKoppeling } from './analytics/meten'
 
 export interface CheckoutResponse {
@@ -32,6 +32,8 @@ export async function createCheckoutSession(
 ): Promise<CheckoutResponse> {
   const body = JSON.stringify({
     metadata: toStripeMetadata(data),
+    // Kleine sportschool + toestellen: apart, op het abonnement (zie types.ts)
+    sportschool: sportschoolAntwoorden(data),
     // Jaar (met proef) of maand (zonder proef); de server kiest de Stripe-prijs
     plan,
     // Alleen voor customer_email in Stripe (vooraf ingevuld), niet in de metadata
@@ -136,7 +138,7 @@ export function saveLead(data: OnboardingData, email: string, herinneringen: boo
       body: JSON.stringify({
         email,
         herinneringen,
-        antwoorden: toStripeMetadata(data),
+        antwoorden: { ...toStripeMetadata(data), ...sportschoolAntwoorden(data) },
         meting: meetKoppeling(),
       }),
       keepalive: true,
