@@ -30,7 +30,7 @@ export const PLANNEN: Record<
     label: 'Bespaar 50%',
     prijs: '€8,33',
     prijsEenheid: '/ maand',
-    onderPrijs: '€99,99 per jaar · 7 dagen gratis',
+    onderPrijs: '7 dagen gratis proef · daarna €99,99 per jaar',
     knop: 'START MIJN 7 DAGEN GRATIS',
     // ⚠️ Laten checken door een jurist (opdracht deel 4c)
     kleineTekst:
@@ -41,7 +41,7 @@ export const PLANNEN: Record<
     label: null,
     prijs: '€17,99',
     prijsEenheid: '/ maand',
-    onderPrijs: 'Elke maand opzegbaar',
+    onderPrijs: 'Geen gratis proef · elke maand opzegbaar',
     knop: 'START NU VOOR €17,99',
     kleineTekst: 'Je betaalt vandaag €17,99, daarna elke maand. Elke maand opzegbaar.',
   },
