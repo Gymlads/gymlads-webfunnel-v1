@@ -23,7 +23,7 @@ eerste jaar", "daarna €99,99", "Bespaar 30%", doorgestreepte €99,99.
 
 **Paywall** (`client/src/onboarding/Paywall.tsx`, teksten in `paywallInhoud.ts`)
 - Kop "Start vandaag voor €0,-" staat er weer (opdracht: "blijft").
-- Betaalblok boven en onder: "Kies je plan" met twee kaarten (jaar met lime rand
+- Betaalblok boven en onder: "Kies jouw plan" met twee kaarten (jaar met lime rand
   en "Bespaar 50%", maand met grijze rand). Boven en onder delen dezelfde keuze.
 - Knop en kleine tekst wisselen mee: jaar "START MIJN 7 DAGEN GRATIS", maand
   "START NU VOOR €17,99". De kleine tekst bij het jaar ("Na het eerste jaar is je

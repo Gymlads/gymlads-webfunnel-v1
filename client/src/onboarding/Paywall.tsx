@@ -49,8 +49,8 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
   const ditBlokBezig = bezig === positie
   const gekozen = PLANNEN[plan]
   return (
-    <section className="paywall__plan" aria-label="Kies je plan">
-      <h2 className="paywall__plan-title">Kies je plan</h2>
+    <section className="paywall__plan" aria-label="Kies jouw plan">
+      <h2 className="paywall__plan-title">Kies jouw plan</h2>
 
       <div className="paywall__offers" role="radiogroup" aria-label="Abonnement">
         {PLAN_VOLGORDE.map((id) => {
