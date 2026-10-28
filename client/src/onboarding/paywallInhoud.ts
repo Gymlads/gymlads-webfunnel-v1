@@ -56,6 +56,8 @@ export const PLANNEN: Record<
 /** Sterker-garantie (Roel 28-10), zelfde tekst als de app; voorwaarden op gymlads.nl. */
 export const GARANTIE = {
   titel: 'Sterker in 8 weken, gegarandeerd',
+  /** Eén rustige regel boven de plannen; de lime balk was te druk (Roel 28-10). */
+  kort: 'Sterker in 8 weken, of je geld terug',
   tekst: 'Volg je plan met je AI-coach. Word je niet sterker? Dan krijg je al je geld terug.',
 }
 

@@ -118,16 +118,13 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
   )
 }
 
-/** Sterker-garantie als lime balk boven de plannen (zoals de app, Roel 28-10). */
+/** Sterker-garantie als één rustige regel boven de plannen (zoals de app, Roel 28-10). */
 function Garantie() {
   return (
-    <div className="paywall__garantie">
-      <BadgeCheck size={24} strokeWidth={2.5} aria-hidden="true" />
-      <div>
-        <p className="paywall__garantie-titel">{GARANTIE.titel}</p>
-        <p className="paywall__garantie-tekst">{GARANTIE.tekst}</p>
-      </div>
-    </div>
+    <p className="paywall__garantie">
+      <BadgeCheck size={18} strokeWidth={2.5} aria-hidden="true" />
+      {GARANTIE.kort}
+    </p>
   )
 }
 
