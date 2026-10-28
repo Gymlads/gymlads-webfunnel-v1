@@ -81,7 +81,7 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
               </span>
               {p.proef && (
                 <span className="paywall__offer-proef">
-                  <Gift size={18} strokeWidth={2.5} aria-hidden="true" />
+                  <Gift size={15} strokeWidth={2.5} aria-hidden="true" />
                   {p.proef}
                 </span>
               )}
