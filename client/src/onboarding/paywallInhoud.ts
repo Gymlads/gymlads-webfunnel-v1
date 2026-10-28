@@ -21,6 +21,8 @@ export const PLANNEN: Record<
     prijs: string
     prijsEenheid: string
     onderPrijs: string
+    /** Lime balk in de kaart als er een gratis proef is (zoals de app, 28-10). */
+    proef: string | null
     knop: string
     kleineTekst: string
   }
@@ -28,10 +30,12 @@ export const PLANNEN: Record<
   jaar: {
     naam: 'Jaarabonnement',
     label: 'Bespaar 50%',
-    prijs: '€8,33',
-    prijsEenheid: '/ maand',
-    onderPrijs: '7 dagen gratis proef · daarna €99,99 per jaar',
-    knop: 'START MIJN 7 DAGEN GRATIS',
+    // Prijs per dag, gelijk aan de app (Roel 28-10): €99,99 / 365 = €0,27
+    prijs: '€0,27',
+    prijsEenheid: '/ dag',
+    onderPrijs: 'Daarna €99,99 per jaar',
+    proef: '7 dagen gratis uitproberen!',
+    knop: 'GA VERDER',
     // ⚠️ Laten checken door een jurist (opdracht deel 4c)
     kleineTekst:
       'Vandaag betaal je €0. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens je proef. Na het eerste jaar is je abonnement maandelijks opzegbaar.',
@@ -39,13 +43,24 @@ export const PLANNEN: Record<
   maand: {
     naam: 'Maandabonnement',
     label: null,
-    prijs: '€17,99',
-    prijsEenheid: '/ maand',
-    onderPrijs: 'Geen gratis proef · elke maand opzegbaar',
-    knop: 'START NU VOOR €17,99',
+    // 12 × €17,99 / 365 = €0,59
+    prijs: '€0,59',
+    prijsEenheid: '/ dag',
+    onderPrijs: '€17,99 per maand · geen proefperiode',
+    proef: null,
+    knop: 'GA VERDER',
     kleineTekst: 'Je betaalt vandaag €17,99, daarna elke maand. Elke maand opzegbaar.',
   },
 }
+
+/** Sterker-garantie (Roel 28-10), zelfde tekst als de app; voorwaarden op gymlads.nl. */
+export const GARANTIE = {
+  titel: 'Sterker in 8 weken, gegarandeerd',
+  tekst: 'Volg je plan met je AI-coach. Word je niet sterker? Dan krijg je al je geld terug.',
+}
+
+export const FAQ_GARANTIE =
+  'Volg je 8 weken je schema (minstens 90% van je workouts helemaal af), log je eten op 5 dagen per week en weeg je minstens 4 keer per week? Dan word je sterker: meer gewicht, meer herhalingen of meer sets dan in week 1. Lukt dat niet, mail dan binnen 14 dagen na week 8 naar info@gymlads.nl en je krijgt terug wat je hebt betaald. De volledige voorwaarden staan in artikel 18 van onze algemene voorwaarden.'
 
 export const FAQ_PROEF =
   'Kies je het jaarabonnement, dan probeer je Gymlads 7 dagen gratis. Vandaag betaal je €0. Zeg je op tijdens je proef, dan betaal je niks. Zeg je niet op, dan betaal je €99,99 voor een jaar. Betaal je met iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.'

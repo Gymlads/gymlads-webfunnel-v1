@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { Check, ChevronDown, Star } from 'lucide-react'
+import { BadgeCheck, Check, ChevronDown, Gift, Star } from 'lucide-react'
 import PaymentLogos from './components/PaymentLogos'
 import {
   AANTAL_SPORTERS,
   APP_STORE_SCORE,
   APP_STORE_URL,
   GOOGLE_PLAY_URL,
+  FAQ_GARANTIE,
   FAQ_PROEF,
+  GARANTIE,
   FAQ_VERSCHIL,
   PLANNEN,
   PRIVACY_URL,
@@ -49,6 +51,7 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
   const gekozen = PLANNEN[plan]
   return (
     <section className="paywall__plan" aria-label="Kies jouw plan">
+      <Garantie />
       <h2 className="paywall__plan-title">Kies jouw plan</h2>
 
       <div className="paywall__offers" role="radiogroup" aria-label="Abonnement">
@@ -77,6 +80,12 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
                 {p.prijs}
                 <span> {p.prijsEenheid}</span>
               </span>
+              {p.proef && (
+                <span className="paywall__offer-proef">
+                  <Gift size={18} strokeWidth={2.5} aria-hidden="true" />
+                  {p.proef}
+                </span>
+              )}
               <span className="paywall__offer-trial">{p.onderPrijs}</span>
             </button>
           )
@@ -109,10 +118,34 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
   )
 }
 
+/** Sterker-garantie als lime balk boven de plannen (zoals de app, Roel 28-10). */
+function Garantie() {
+  return (
+    <div className="paywall__garantie">
+      <BadgeCheck size={24} strokeWidth={2.5} aria-hidden="true" />
+      <div>
+        <p className="paywall__garantie-titel">{GARANTIE.titel}</p>
+        <p className="paywall__garantie-tekst">{GARANTIE.tekst}</p>
+      </div>
+    </div>
+  )
+}
+
 // Vier vragen (Roel 21-10: er waren er te veel), plus maand/jaar (Roel 26-10). Overige vragen: mail, zie onder de FAQ.
 const FAQ: Array<{ vraag: string; antwoord: React.ReactNode }> = [
   { vraag: 'Hoe werkt de gratis proef?', antwoord: FAQ_PROEF },
   { vraag: 'Wat is het verschil tussen maand en jaar?', antwoord: FAQ_VERSCHIL },
+  {
+    vraag: 'Hoe werkt de garantie?',
+    antwoord: (
+      <>
+        {FAQ_GARANTIE}{' '}
+        <a href={VOORWAARDEN_URL} target="_blank" rel="noreferrer">
+          Lees de voorwaarden
+        </a>
+      </>
+    ),
+  },
   {
     vraag: 'Hoe zeg ik mijn abonnement op?',
     antwoord: (

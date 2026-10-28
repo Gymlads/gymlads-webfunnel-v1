@@ -1821,3 +1821,46 @@
   text-align: center;
   color: var(--text-muted);
 }
+
+/* Sterker-garantie boven de plannen en proefbalk in de jaarkaart (zoals de app, Roel 28-10) */
+.paywall__garantie {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #000;
+  text-align: left;
+}
+
+.paywall__garantie svg {
+  flex-shrink: 0;
+}
+
+.paywall__garantie-titel {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.paywall__garantie-tekst {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.paywall__offer-proef {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
