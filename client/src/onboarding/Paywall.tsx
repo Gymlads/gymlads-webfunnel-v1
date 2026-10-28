@@ -51,7 +51,6 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
   const gekozen = PLANNEN[plan]
   return (
     <section className="paywall__plan" aria-label="Kies jouw plan">
-      <Garantie />
       <h2 className="paywall__plan-title">Kies jouw plan</h2>
 
       <div className="paywall__offers" role="radiogroup" aria-label="Abonnement">
@@ -113,12 +112,13 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
           gekozen.knop
         )}
       </button>
+      <Garantie />
       <PaymentLogos />
     </section>
   )
 }
 
-/** Sterker-garantie als één rustige regel boven de plannen (zoals de app, Roel 28-10). */
+/** Sterker-garantie als één regel direct onder de knop (Roel 28-10). */
 function Garantie() {
   return (
     <p className="paywall__garantie">

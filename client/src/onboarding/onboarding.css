@@ -1828,8 +1828,8 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin: 0 0 10px;
-  font-size: 0.9rem;
+  margin: 12px 0 0;
+  font-size: 13px;
   font-weight: 600;
 }
 
