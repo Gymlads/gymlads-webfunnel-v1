@@ -130,7 +130,7 @@ function Garantie() {
 
 // Vier vragen (Roel 21-10: er waren er te veel), plus maand/jaar (Roel 26-10). Overige vragen: mail, zie onder de FAQ.
 const FAQ: Array<{ vraag: string; antwoord: React.ReactNode }> = [
-  { vraag: 'Hoe werkt de gratis proef?', antwoord: FAQ_PROEF },
+  { vraag: 'Hoe werkt de proefweek?', antwoord: FAQ_PROEF },
   { vraag: 'Wat is het verschil tussen maand en jaar?', antwoord: FAQ_VERSCHIL },
   {
     vraag: 'Hoe werkt de garantie?',

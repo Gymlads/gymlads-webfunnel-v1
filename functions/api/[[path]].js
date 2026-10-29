@@ -18,10 +18,14 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
 
 // Eigen tekst bij de betaalknop van Stripe (custom_text.submit, max. 1200 tekens),
 // per plan (opdracht Roel 26-10-2026). Jaar zonder proef (shouldSkipTrial) krijgt
-// geen tekst: "vandaag €0" klopt dan niet.
+// geen tekst: "vandaag €1 voor je proefweek" klopt dan niet.
+// Betaalde proefweek (Roel 29-10, advies Max): eenmalig bedrag bij de start van
+// de jaarproef. Moet gelijk zijn aan PROEF_BEDRAG in client/src/onboarding/paywallInhoud.ts.
+const PROEF_BEDRAG_CENT = 100
+
 const STRIPE_KNOP_TEKST = {
   jaar:
-    'Je betaalt vandaag €0. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef. Kies je iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.',
+    'Je betaalt vandaag €1 voor je proefweek. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef.',
   maand: 'Je betaalt vandaag €17,99. Daarna elke maand €17,99. Elke maand opzegbaar.',
 }
 
@@ -190,7 +194,23 @@ async function createCheckoutSession(request, env, waitUntil) {
   const knopTekst = plan === 'maand' ? STRIPE_KNOP_TEKST.maand : skipTrial ? null : STRIPE_KNOP_TEKST.jaar
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    line_items: [{ price: priceId, quantity: 1 }],
+    // Jaarproef: abonnement (€0 tijdens de proef) plus de eenmalige proefweek,
+    // die Stripe meteen bij de start afschrijft.
+    line_items: [
+      { price: priceId, quantity: 1 },
+      ...(skipTrial
+        ? []
+        : [
+            {
+              price_data: {
+                currency: 'eur',
+                unit_amount: PROEF_BEDRAG_CENT,
+                product_data: { name: 'Gymlads proefweek (7 dagen)' },
+              },
+              quantity: 1,
+            },
+          ]),
+    ],
     // plan in de terug-URL: de bedankpagina toont de juiste tekst en meldt een
     // maandaankoop aan Tracklution (ook als de bank-app een andere browser opent)
     success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
