@@ -61,19 +61,20 @@ export const PLANNEN: Record<
 }
 
 /**
- * ⚠️ Upsell op de bedankpagina (Roel 29-10, advies Max). Welk product het wordt,
- * beslist Roel nog; dit is het voorstel uit de Stripe-analyse (Coach Plus).
- * Prijs moet gelijk zijn aan de Stripe-prijs in STRIPE_PRICE_ID_UPSELL.
+ * ⚠️ Upsell op de bedankpagina (Roel 29-10, advies Max): het Maaltijdplan,
+ * €4,99 per maand (thread "Maaltijdplan als maandelijkse upsell"). Staat uit tot
+ * STRIPE_PRICE_ID_UPSELL in Cloudflare staat; dat gebeurt pas als het
+ * maaltijdplan in de app zit. Prijs moet gelijk zijn aan die Stripe-prijs.
  */
 export const UPSELL = {
   label: 'Eenmalige aanbieding',
-  titel: 'Coach Plus',
-  tekst: 'Onbeperkt vragen aan je AI-coach, plus een voedingsplan dat meegroeit met je schema.',
+  titel: 'Maaltijdplan',
+  tekst: 'Een persoonlijk maaltijdplan in de app dat past bij je doel en je schema.',
   prijs: '€4,99 per maand',
   kleineTekst: 'Wordt meteen afgerekend met dezelfde betaalmethode. Elke maand opzegbaar.',
   knop: 'Ja, voeg toe',
   nee: 'Nee, bedankt',
-  gelukt: 'Coach Plus is toegevoegd!',
+  gelukt: 'Je maaltijdplan is toegevoegd!',
 }
 
 /** Sterker-garantie (Roel 28-10), zelfde tekst als de app; voorwaarden op gymlads.nl. */
