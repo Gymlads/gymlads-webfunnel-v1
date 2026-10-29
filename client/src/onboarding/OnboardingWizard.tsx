@@ -48,7 +48,7 @@ import experienceImage from './assets/04-experience.png'
 import scheduleImage from './assets/06-schedule.png'
 import planReadyImage from './assets/07-plan-ready.png'
 
-const DEFAULT_PAGE_BG = '#000000'
+const DEFAULT_PAGE_BG = '#171719'
 
 // Leeftijd als ranges (v3). De app en n8n verwachten een getal: we geven het
 // midden van de range door (24-29 -> 26).

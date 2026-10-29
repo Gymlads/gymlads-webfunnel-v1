@@ -1,5 +1,5 @@
 .onboarding {
-  --bg: #000000;
+  --bg: #171719;
   --surface: #1a1a1a;
   --surface-elevated: #242424;
   --accent: #ccff00;
@@ -270,7 +270,9 @@
   border-radius: 0;
   margin: 16px auto 0;
   display: block;
-  background: var(--bg);
+  /* De afbeeldingen hebben een puur zwarte achtergrond; 'lighten' laat die
+     opgaan in de paginakleur #171719 (Roel 29-10: overal hetzelfde zwart). */
+  mix-blend-mode: lighten;
 }
 
 .onboarding__info-stock-image--plan {
