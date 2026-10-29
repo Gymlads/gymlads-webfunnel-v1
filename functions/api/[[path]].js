@@ -201,14 +201,18 @@ async function createCheckoutSession(request, env, waitUntil) {
       ...(skipTrial
         ? []
         : [
-            {
-              price_data: {
-                currency: 'eur',
-                unit_amount: PROEF_BEDRAG_CENT,
-                product_data: { name: 'Gymlads proefweek (7 dagen)' },
-              },
-              quantity: 1,
-            },
+            // Liefst het Stripe-product "Gymlads proefweek" (zelfde als de app),
+            // anders hetzelfde bedrag los meegegeven
+            env.STRIPE_PRICE_ID_PROEF
+              ? { price: env.STRIPE_PRICE_ID_PROEF, quantity: 1 }
+              : {
+                  price_data: {
+                    currency: 'eur',
+                    unit_amount: PROEF_BEDRAG_CENT,
+                    product_data: { name: 'Gymlads proefweek (7 dagen)' },
+                  },
+                  quantity: 1,
+                },
           ]),
     ],
     // plan in de terug-URL: de bedankpagina toont de juiste tekst en meldt een
@@ -452,6 +456,7 @@ function health(env) {
     n8nConfigured: Boolean(env.N8N_WEBHOOK_URL),
     stripeConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID),
     maandConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_MAAND),
+    proefPrijsConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PROEF),
     upsellConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_UPSELL),
     // Staat de oude kortingsbon nog in Cloudflare? Wordt niet meer gebruikt; mag weg.
     oudeCouponIngesteld: Boolean(env.STRIPE_COUPON_ID),
