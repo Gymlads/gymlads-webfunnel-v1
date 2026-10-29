@@ -22,6 +22,9 @@ export type ErvaringKrachttraining =
 
 export type LocatieTraining = 'Sportschool' | 'Thuis' | 'Beide'
 
+/** Grote of kleine sportschool (zoals de app, 2.2.6). Leeg = groot. */
+export type SoortSportschool = '' | 'groot' | 'klein'
+
 export type GewensteTrainingsduur =
   | '30 minuten'
   | '45 minuten'
@@ -85,6 +88,15 @@ export interface OnboardingData {
   dipstation_thuis: boolean
   abwheel_thuis: boolean
   springtouw_thuis: boolean
+  soort_sportschool: SoortSportschool
+  sportschool_dumbbells: boolean
+  sportschool_barbell: boolean
+  sportschool_bankje: boolean
+  sportschool_kabel: boolean
+  sportschool_machines: boolean
+  sportschool_smith: boolean
+  sportschool_optrekstang: boolean
+  sportschool_dipstation: boolean
   source: string
   subscribed_int: number
 }
@@ -109,16 +121,38 @@ export const WEEKDAYS = [
   home: BooleanFieldKey
 }>
 
+// Zelfde lijst en volgorde als de app (apparatuur-thuis.tsx).
 export const HOME_EQUIPMENT = [
-  { key: 'springtouw_thuis', label: 'Springtouw' },
+  { key: 'dumbbells_thuis', label: 'Dumbbells' },
   { key: 'benchpress_thuis', label: 'Benchpress' },
-  { key: 'squatrek_thuis', label: 'Squatrek' },
-  { key: 'abwheel_thuis', label: 'Abwheel' },
-  { key: 'dumbbells_thuis', label: 'Dumbells' },
+  { key: 'squatrek_thuis', label: 'Squat rack' },
   { key: 'pullup_bar_thuis', label: 'Pull-up bar' },
+  { key: 'dipstation_thuis', label: 'Dipstation' },
+  { key: 'abwheel_thuis', label: 'Abwheel' },
+  { key: 'springtouw_thuis', label: 'Springtouw' },
 ] as const satisfies ReadonlyArray<{
   key: BooleanFieldKey
   label: string
+}>
+
+/**
+ * Toestellen in een kleine sportschool, gelijk aan de app
+ * (src/lib/sportschool-toestellen.ts). `standaard` = vooraf aangevinkt.
+ */
+export const SPORTSCHOOL_TOESTELLEN = [
+  { key: 'sportschool_dumbbells', label: 'Dumbbells', emoji: '🏋️', standaard: true },
+  { key: 'sportschool_barbell', label: 'Barbell + rek', emoji: '🏋️‍♂️', standaard: true },
+  { key: 'sportschool_bankje', label: 'Bankje', emoji: '🪑', standaard: true },
+  { key: 'sportschool_kabel', label: 'Kabelstation', emoji: '🔗', standaard: false },
+  { key: 'sportschool_machines', label: 'Machines', emoji: '⚙️', standaard: true },
+  { key: 'sportschool_smith', label: 'Smith machine', emoji: '🧱', standaard: false },
+  { key: 'sportschool_optrekstang', label: 'Optrekstang', emoji: '🤸', standaard: true },
+  { key: 'sportschool_dipstation', label: 'Dipstation', emoji: '💪', standaard: false },
+] as const satisfies ReadonlyArray<{
+  key: BooleanFieldKey
+  label: string
+  emoji: string
+  standaard: boolean
 }>
 
 export const initialOnboardingData: OnboardingData = {
@@ -162,14 +196,64 @@ export const initialOnboardingData: OnboardingData = {
   dipstation_thuis: false,
   abwheel_thuis: false,
   springtouw_thuis: false,
+  soort_sportschool: '',
+  sportschool_dumbbells: false,
+  sportschool_barbell: false,
+  sportschool_bankje: false,
+  sportschool_kabel: false,
+  sportschool_machines: false,
+  sportschool_smith: false,
+  sportschool_optrekstang: false,
+  sportschool_dipstation: false,
   source: 'web',
   subscribed_int: 0,
+}
+
+/**
+ * Sportschool-antwoorden (2.2.6) gaan NIET mee in de checkout-metadata: die
+ * gaat in zijn geheel via n8n naar funnel_staging, waar deze kolommen (nog)
+ * niet bestaan. Ze gaan apart mee (zie sportschoolAntwoorden).
+ */
+const NIET_IN_CHECKOUT = new Set<string>([
+  'soort_sportschool',
+  ...SPORTSCHOOL_TOESTELLEN.map((t) => t.key),
+])
+
+/** Kleine sportschool + toestellen, compact (voor de abonnement-metadata in Stripe). */
+export function sportschoolAntwoorden(data: OnboardingData): Record<string, string> {
+  return {
+    soort_sportschool: data.soort_sportschool,
+    sportschool_toestellen:
+      data.soort_sportschool === 'klein'
+        ? SPORTSCHOOL_TOESTELLEN.filter((t) => data[t.key])
+            .map((t) => t.key.replace('sportschool_', ''))
+            .join(',')
+        : '',
+  }
+}
+
+/**
+ * Trainingsdagen zoals de app ze vraagt: alleen per locatie. train_* (oude
+ * velden) = alle dagen samen; dagen van de andere locatie gaan uit.
+ */
+export function werkDagenBij(data: OnboardingData): OnboardingData {
+  const next = { ...data }
+  const gym = data.locatie_training === 'Sportschool' || data.locatie_training === 'Beide'
+  const thuis = data.locatie_training === 'Thuis' || data.locatie_training === 'Beide'
+  for (const d of WEEKDAYS) {
+    if (!gym) next[d.gym] = false
+    if (!thuis) next[d.home] = false
+    next[d.train] = next[d.gym] || next[d.home]
+  }
+  if (data.locatie_training === 'Thuis') next.soort_sportschool = ''
+  return next
 }
 
 export function toStripeMetadata(data: OnboardingData): Record<string, string> {
   const metadata: Record<string, string> = {}
 
   for (const [key, value] of Object.entries(data)) {
+    if (NIET_IN_CHECKOUT.has(key)) continue
     if (typeof value === 'boolean') {
       metadata[key] = value ? 'true' : 'false'
     } else if (value === null || value === '') {

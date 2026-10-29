@@ -29,10 +29,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 20px 14px;
-  padding-top: max(28px, calc(env(safe-area-inset-top) + 16px));
+  padding: 8px 20px 6px;
+  padding-top: max(16px, calc(env(safe-area-inset-top) + 8px));
   position: relative;
-  min-height: 88px;
+  min-height: 64px;
   background: var(--bg);
   flex-shrink: 0;
 }
@@ -81,6 +81,13 @@
   padding: 0;
 }
 
+.onboarding__logo-klein {
+  height: 15px;
+  width: auto;
+  display: block;
+  opacity: 0.9;
+}
+
 .onboarding__logo-image {
   height: 72px;
   width: auto;
@@ -112,10 +119,15 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 36px 24px 28px;
+  padding: 28px 24px 28px;
   overflow-y: auto;
+  scrollbar-width: none;
   background: var(--bg);
   min-height: 0;
+}
+
+.onboarding__content::-webkit-scrollbar {
+  display: none;
 }
 
 .onboarding__content--center {
@@ -263,7 +275,7 @@
 
 .onboarding__info-stock-image--plan {
   max-width: 400px;
-  max-height: 48vh;
+  max-height: 38vh;
   width: 100%;
   height: auto;
   object-fit: contain;
@@ -326,37 +338,52 @@
 
 .onboarding__option {
   width: 100%;
-  padding: 18px 20px;
-  border-radius: 10px;
-  border: 2px solid var(--field-border);
-  background: transparent;
+  min-height: 56px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: #2c2c2e;
   color: var(--text);
-  font-size: 0.95rem;
-  font-weight: 400;
+  font-size: 0.98rem;
+  font-weight: 500;
+  line-height: 1.3;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, color 0.15s;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.onboarding__option:hover {
-  border-color: var(--field-border-hover);
+.onboarding__option--icon {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.onboarding__option-icon {
+  flex-shrink: 0;
+  width: 26px;
+  font-size: 1.35rem;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Alleen met een muis: op telefoons blijft :hover anders "hangen" op het volgende scherm */
+@media (hover: hover) {
+  .onboarding__option:hover {
+    border-color: var(--field-border);
+  }
 }
 
 .onboarding__option--selected,
-.onboarding__option--selected:hover {
-  border: 2px solid var(--accent);
-  background-color: var(--accent);
-  opacity: 1;
-  color: #000;
-  font-weight: 400;
-}
-
+.onboarding__option--selected:hover,
 .onboarding__option--border-selected,
 .onboarding__option--border-selected:hover {
-  border: 2px solid var(--accent);
-  background-color: transparent;
+  border-color: var(--accent);
+  background: #2c2c2e;
   color: var(--text);
-  font-weight: 400;
 }
 
 .onboarding__footer {
@@ -1003,7 +1030,8 @@
 }
 
 .checkout-success__logo {
-  height: 72px;
+  height: 30px;
+  max-width: 100%;
   width: auto;
   display: block;
   object-fit: contain;
@@ -1164,4 +1192,662 @@
 
 .checkout-success__step .checkout-success__stores {
   margin-top: 10px;
+}
+
+/* ---------------------------------------------------------------------------
+   E-mailstap (v3)
+   --------------------------------------------------------------------------- */
+
+.email-stap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100%;
+  gap: 24px;
+}
+
+.email-stap__body {
+  flex: 1;
+}
+
+.email-stap__label {
+  display: block;
+  margin: 20px 0 8px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.email-stap__input {
+  min-height: 56px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: #2c2c2e;
+  font-size: 1rem;
+}
+
+.email-stap__input--fout {
+  border-color: #ff6b6b;
+}
+
+.email-stap__fout {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #ff8a8a;
+}
+
+.email-stap__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 20px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.email-stap__check input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.email-stap__box {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--field-border-hover);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.email-stap__check input:checked + .email-stap__box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.email-stap__check input:checked + .email-stap__box::after {
+  content: '';
+  width: 6px;
+  height: 11px;
+  border: solid #000;
+  border-width: 0 2.5px 2.5px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+
+.email-stap__check input:focus-visible + .email-stap__box {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.email-stap__footer {
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.email-stap__btn {
+  letter-spacing: 0.02em;
+  min-height: 56px;
+}
+
+.email-stap__privacy {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.email-stap__privacy a,
+.checkout-cancelled__help a {
+  color: var(--text);
+}
+
+.checkout-cancelled__help {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   Paywall v3 (opbouw zoals Flitsboek, huisstijl Gymlads)
+   --------------------------------------------------------------------------- */
+
+.onboarding__content--paywall {
+  padding-top: 12px;
+}
+
+.paywall {
+  --card: #2c2c2e;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.paywall__header {
+  text-align: center;
+}
+
+.paywall__title {
+  margin: 0 0 10px;
+  font-size: clamp(1.8rem, 7vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.paywall__lead {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: #c7c7cc;
+}
+
+.paywall__plan {
+  padding: 20px 16px 16px;
+  border-radius: 20px;
+  background: var(--card);
+}
+
+.paywall__plan-title {
+  margin: 0 0 14px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.paywall__offers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Plankaart (knop). Gekozen = lime rand; niet gekozen = grijze rand. */
+.paywall__offer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+  padding: 14px 14px 12px;
+  border: 2px solid #48484a;
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.paywall__offer--aan {
+  border-color: var(--accent);
+  background: rgba(204, 255, 0, 0.06);
+}
+
+.paywall__offer--maand {
+  padding: 11px 14px 10px;
+}
+
+.paywall__offer--maand .paywall__offer-daily {
+  font-size: 1.5rem;
+}
+
+.paywall__offer:disabled {
+  cursor: default;
+}
+
+.paywall__offer-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.paywall__offer-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.paywall__offer-price {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.paywall__offer-old {
+  margin-left: 0;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.paywall__radio {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #636366;
+  color: #000;
+}
+
+.paywall__offer--aan .paywall__radio {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.paywall__offer-trial {
+  display: block;
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #c7c7cc;
+}
+
+.paywall__offer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.paywall__offer-daily {
+  display: block;
+  margin: 8px 0 0;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.paywall__offer-daily span {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.paywall__offer-badge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.paywall__offer-badge--hoek {
+  position: absolute;
+  top: -11px;
+  right: 14px;
+  padding: 3px 10px;
+}
+
+.paywall__offer--jaar .paywall__offer-top {
+  margin-top: 4px;
+}
+
+.paywall__plan .paywall__smallprint {
+  margin: 14px 2px 14px;
+}
+
+.paywall__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  letter-spacing: 0.02em;
+  font-weight: 800;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s, background 0.15s;
+}
+
+.paywall__cta:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.paywall__cta:disabled {
+  opacity: 0.55;
+}
+
+.paywall__cta--bezig:disabled {
+  opacity: 1;
+}
+
+.paywall__spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(0, 0, 0, 0.25);
+  border-top-color: #000;
+  animation: paywall-draai 0.7s linear infinite;
+}
+
+@keyframes paywall-draai {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.paywall__smallprint {
+  margin: 12px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #a1a1a6;
+  text-align: center;
+}
+
+.paywall__pm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 8px;
+  margin: 12px auto 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(52, 199, 89, 0.45);
+  border-radius: 10px;
+  background: rgba(52, 199, 89, 0.12);
+}
+
+.paywall__pm-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #7ee29a;
+}
+
+.paywall__pm-title svg {
+  color: #34c759;
+}
+
+.paywall__pm-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.paywall__pm-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 22px;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.paywall__card {
+  padding: 20px 18px;
+  border-radius: 18px;
+  background: var(--card);
+}
+
+.paywall__card--rand {
+  border: 1.5px solid rgba(204, 255, 0, 0.45);
+}
+
+.paywall__h2--groot {
+  font-size: 1.6rem;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.paywall__h2 {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.paywall__h2--center {
+  text-align: center;
+}
+
+.paywall__checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.paywall__checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.paywall__check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 0;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+}
+
+.paywall__score {
+  margin: -6px 0 14px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #c7c7cc;
+}
+
+.paywall__reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paywall__review {
+  margin: 0;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--card);
+}
+
+.paywall__review-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.paywall__stars {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--accent);
+}
+
+.paywall__review-text {
+  margin: 10px 0 14px;
+  font-size: 0.93rem;
+  line-height: 1.5;
+  color: #e5e5ea;
+}
+
+.paywall__review-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.paywall__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.paywall__social {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 8px;
+}
+
+.paywall__social-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+.paywall__social-title {
+  margin: 0 0 10px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.paywall__social-getal {
+  display: block;
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 6px;
+  color: var(--accent);
+}
+
+.paywall__social-sub {
+  margin: 0;
+  font-size: 1rem;
+  color: #c7c7cc;
+}
+
+/* Rijtje leden-foto's onder "1.000+" (zoals Flitsboek) */
+.paywall__leden {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.paywall__leden img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #171719;
+  margin-left: -10px;
+}
+
+.paywall__leden img:first-child {
+  margin-left: 0;
+}
+
+.paywall__faq {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paywall__faq-item {
+  border-radius: 14px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.paywall__faq-q {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.paywall__faq-arrow {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.paywall__faq-item--open .paywall__faq-arrow {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+.paywall__faq-a {
+  padding: 0 16px 16px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #c7c7cc;
+}
+
+.paywall__faq-meer {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #c7c7cc;
+}
+
+.paywall__faq-a a,
+.paywall__faq-meer a,
+.paywall__legal a {
+  color: var(--text);
+}
+
+.paywall__legal {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* Sterker-garantie boven de plannen en proefbalk in de jaarkaart (zoals de app, Roel 28-10) */
+.paywall__garantie {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.paywall__garantie svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.paywall__offer-proef {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 2px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.82rem;
+  font-weight: 800;
 }

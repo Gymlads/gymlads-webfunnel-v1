@@ -1,11 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react'
-import GymladsLogo from './GymladsLogo'
 
 interface OnboardingLayoutProps {
   children: ReactNode
   progress?: { current: number; total: number }
   showBack?: boolean
-  showLogo?: boolean
   pageBg?: string
   onBack?: () => void
   footer?: ReactNode
@@ -21,7 +19,6 @@ export default function OnboardingLayout({
   children,
   progress,
   showBack,
-  showLogo,
   pageBg,
   onBack,
   footer,
@@ -38,8 +35,9 @@ export default function OnboardingLayout({
 
   return (
     <div className="onboarding" style={layoutStyle}>
-      {(showBack || showLogo || progress) && (
-        <header className="onboarding__header">
+      {/* Geen logo meer boven de vragen, net als in de app (Roel 22-10) */}
+      {!checkoutSuccess && !paywall && (
+        <header className={`onboarding__header${paywall ? ' onboarding__header--paywall' : ''}`}>
           {showBack && onBack && (
             <button type="button" className="onboarding__back" onClick={onBack} aria-label="Terug">
               <svg
@@ -59,11 +57,6 @@ export default function OnboardingLayout({
                 />
               </svg>
             </button>
-          )}
-          {showLogo && (
-            <div className="onboarding__logo">
-              <GymladsLogo />
-            </div>
           )}
         </header>
       )}

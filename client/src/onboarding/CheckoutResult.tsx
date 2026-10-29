@@ -3,12 +3,13 @@ import { confirmDemoCheckout, fetchCheckoutRedeem } from '../api'
 import type { OnboardingData } from '../types'
 import { toStripeMetadata } from '../types'
 import { pushGtmEvent } from '../analytics/gtm'
-import { setTracklutionContactInfo } from '../analytics/tracklution'
+import { setTracklutionContactInfo, trackTracklutionSubscribe } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
 import OnboardingLayout from './components/OnboardingLayout'
 import NextButton from './components/NextButton'
 import GymladsLogo from './components/GymladsLogo'
 import StoreDownloadButtons from './components/StoreDownloadButtons'
+import { leesAntwoorden, wisAntwoorden } from './bewaren'
 import './onboarding.css'
 
 const PENDING_CHECKOUT_KEY = 'onboarding_checkout'
@@ -30,15 +31,19 @@ function readPendingCheckout(): PendingCheckout | null {
 
 export function CheckoutSuccess() {
   const [email, setEmail] = useState<string | null>(null)
+  // plan staat in de terug-URL van Stripe (functions/api: success_url)
+  const [maand] = useState(() => new URLSearchParams(window.location.search).get('plan') === 'maand')
 
   useEffect(() => {
     sessionStorage.removeItem(PENDING_CHECKOUT_KEY)
+    wisAntwoorden()
 
     const sessionId = new URLSearchParams(window.location.search).get('session_id')
     meetStap('betaald', undefined, undefined, { alleenBestaand: true })
     pushGtmEvent('checkout_success', {
       page_path: '/checkout/success',
       stripe_session_id: sessionId ?? undefined,
+      plan: maand ? 'month' : 'year',
     })
 
     // E-mailadres uit de Stripe-sessie: tonen in stap 2 en doorgeven aan
@@ -50,6 +55,8 @@ export function CheckoutSuccess() {
             setEmail(result.email)
             setTracklutionContactInfo(result.email)
           }
+          // Na ContactInfo, zodat Tracklution de aankoop aan dit bezoek koppelt
+          if (maand && !result.demo) trackTracklutionSubscribe(sessionId)
         })
         .catch(() => {})
     }
@@ -59,7 +66,9 @@ export function CheckoutSuccess() {
     <OnboardingLayout centered checkoutSuccess>
       <div className="checkout-success">
         <GymladsLogo className="checkout-success__logo" />
-        <h1 className="checkout-success__title">Je proefweek is gestart!</h1>
+        <h1 className="checkout-success__title">
+          {maand ? 'Je abonnement is gestart!' : 'Je proefweek is gestart!'}
+        </h1>
         <p className="checkout-success__subtitle">
           Je coach zet je persoonlijke schema voor je klaar. Nog 3 stappen en je doet vandaag je
           eerste workout.
@@ -86,17 +95,18 @@ export function CheckoutSuccess() {
                 ) : (
                   '.'
                 )}{' '}
-                Dan staan je antwoorden en je proefweek meteen klaar.
+                Dan staan je antwoorden en {maand ? 'je abonnement' : 'je proefweek'} meteen klaar.
               </p>
             </div>
           </li>
           <li className="checkout-success__step">
             <span className="checkout-success__step-nr">3</span>
             <div className="checkout-success__step-body">
-              <p className="checkout-success__step-title">Start je eerste workout</p>
+              <p className="checkout-success__step-title">Kies je eerste workout-dag</p>
               <p className="checkout-success__step-text">
-                Je schema staat op het startscherm. Doe je eerste workout vandaag of morgen, dan
-                haal je het meeste uit je proefweek.
+                Je antwoorden van hier staan al in de app. Je kiest alleen nog wanneer je je eerste
+                workout doet, daarna zet je coach je schema klaar. Doe hem vandaag of morgen, dan
+                haal je {maand ? 'er meteen het meeste uit.' : 'het meeste uit je proefweek.'}
               </p>
             </div>
           </li>
@@ -107,16 +117,34 @@ export function CheckoutSuccess() {
 }
 
 export function CheckoutCancelled() {
+  // Antwoorden nog op dit toestel? Dan brengt "Probeer opnieuw" je terug naar
+  // je plan (paywall), anders begin je opnieuw bij de eerste vraag.
+  const [heeftAntwoorden] = useState(() => leesAntwoorden() !== null)
+
+  useEffect(() => {
+    pushGtmEvent('checkout_cancelled', { page_path: '/checkout/cancelled', heeft_antwoorden: heeftAntwoorden })
+  }, [heeftAntwoorden])
+
   return (
     <OnboardingLayout
       centered
       footer={
-        <NextButton label="Terug naar onboarding" onClick={() => (window.location.href = '/')} />
+        <NextButton
+          label="Probeer opnieuw"
+          onClick={() => (window.location.href = heeftAntwoorden ? '/?terug=paywall' : '/')}
+        />
       }
     >
-      <h1 className="onboarding__title">Betaling geannuleerd</h1>
+      <h1 className="onboarding__title">Geen zorgen, er is niets betaald</h1>
       <p className="onboarding__body-text">
-        Je bent teruggekeerd zonder te betalen. Je kunt opnieuw beginnen wanneer je wilt.
+        Je hebt de betaalpagina gesloten voordat je proef startte.{' '}
+        {heeftAntwoorden
+          ? 'Je plan staat nog voor je klaar. Tik op "Probeer opnieuw" om verder te gaan waar je was.'
+          : 'Tik op "Probeer opnieuw" om je plan opnieuw te maken. Het duurt maar een paar minuten.'}
+      </p>
+      <p className="onboarding__body-text checkout-cancelled__help">
+        Lukt het betalen niet? Mail ons op <a href="mailto:info@gymlads.nl">info@gymlads.nl</a>, dan
+        helpen we je.
       </p>
     </OnboardingLayout>
   )
