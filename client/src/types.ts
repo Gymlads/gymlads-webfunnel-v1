@@ -214,6 +214,8 @@ export const initialOnboardingData: OnboardingData = {
  * gaat in zijn geheel via n8n naar funnel_staging, waar deze kolommen (nog)
  * niet bestaan. Ze gaan apart mee (zie sportschoolAntwoorden).
  */
+const LEEG_WEGLATEN = new Set<string>(['lengte', 'gewicht'])
+
 const NIET_IN_CHECKOUT = new Set<string>([
   'soort_sportschool',
   ...SPORTSCHOOL_TOESTELLEN.map((t) => t.key),
@@ -254,6 +256,10 @@ export function toStripeMetadata(data: OnboardingData): Record<string, string> {
 
   for (const [key, value] of Object.entries(data)) {
     if (NIET_IN_CHECKOUT.has(key)) continue
+    // Lengte en gewicht vraagt de web niet meer. Leeg meesturen ("") liet
+    // n8n Link User vastlopen: onboarding.lengte/gewicht zijn getallen en
+    // Supabase weigert "" (29-10, test2910). Leeg = weglaten, wordt null.
+    if (LEEG_WEGLATEN.has(key) && (value === null || value === '')) continue
     if (typeof value === 'boolean') {
       metadata[key] = value ? 'true' : 'false'
     } else if (value === null || value === '') {
