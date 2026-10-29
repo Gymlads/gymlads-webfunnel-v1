@@ -92,11 +92,11 @@ export interface CheckoutRedeemResponse {
 }
 
 /** Upsell met één klik: rekent af met de betaalmethode van de net gestarte proef. */
-export async function koopUpsell(sessionId: string): Promise<void> {
+export async function koopUpsell(sessionId: string, directStart: boolean): Promise<void> {
   const response = await fetch('/api/upsell', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_id: sessionId }),
+    body: JSON.stringify({ session_id: sessionId, direct_start: directStart }),
   })
   const result = await parseJsonResponse<{ ok?: boolean; error?: string }>(response)
   if (!response.ok || !result.ok) throw new Error(result.error ?? 'Betaling niet gelukt')

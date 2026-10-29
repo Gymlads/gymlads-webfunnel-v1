@@ -34,6 +34,7 @@ type UpsellStand = 'verborgen' | 'aanbod' | 'bezig' | 'gekocht' | 'fout'
 
 /** Upsell met één klik, direct onder de titel (alleen als Stripe hem klaar heeft staan). */
 function UpsellKaart({ sessionId, stand, setStand }: { sessionId: string; stand: UpsellStand; setStand: (s: UpsellStand) => void }) {
+  const [directStart, setDirectStart] = useState(false)
   if (stand === 'verborgen') return null
   if (stand === 'gekocht') return <p className="checkout-upsell__gelukt">{UPSELL.gelukt}</p>
 
@@ -41,7 +42,7 @@ function UpsellKaart({ sessionId, stand, setStand }: { sessionId: string; stand:
     setStand('bezig')
     pushGtmEvent('upsell_klik', { page_path: '/checkout/success' })
     try {
-      await koopUpsell(sessionId)
+      await koopUpsell(sessionId, directStart)
       setStand('gekocht')
       pushGtmEvent('upsell_gekocht', { page_path: '/checkout/success' })
     } catch {
@@ -55,7 +56,16 @@ function UpsellKaart({ sessionId, stand, setStand }: { sessionId: string; stand:
       <p className="checkout-upsell__titel">{UPSELL.titel}</p>
       <p className="checkout-upsell__tekst">{UPSELL.tekst}</p>
       <p className="checkout-upsell__prijs">{UPSELL.prijs}</p>
-      <button type="button" className="onboarding__btn checkout-upsell__knop" disabled={stand === 'bezig'} onClick={koop}>
+      <label className="checkout-upsell__vinkje">
+        <input type="checkbox" checked={directStart} onChange={(e) => setDirectStart(e.target.checked)} />
+        <span>{UPSELL.directStart}</span>
+      </label>
+      <button
+        type="button"
+        className="onboarding__btn checkout-upsell__knop"
+        disabled={stand === 'bezig' || !directStart}
+        onClick={koop}
+      >
         {stand === 'bezig' ? 'Even geduld…' : UPSELL.knop}
       </button>
       {stand === 'fout' && (

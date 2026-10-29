@@ -75,6 +75,10 @@ export const UPSELL = {
   knop: 'Ja, voeg toe',
   nee: 'Nee, bedankt',
   gelukt: 'Je voedingsschema is toegevoegd!',
+  // ⚠️ Concept (29-10): verplicht vinkje, afstand van herroepingsrecht. Tekst
+  // wacht op Roels OK en een jurist; staat in metadata direct_start(_at).
+  directStart:
+    'Ik wil dat mijn voedingsschema direct start. Ik weet dat ik daardoor geen recht meer heb om binnen 14 dagen te herroepen.',
 }
 
 /** Sterker-garantie (Roel 28-10), zelfde tekst als de app; voorwaarden op gymlads.nl. */

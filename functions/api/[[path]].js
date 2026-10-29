@@ -322,6 +322,9 @@ async function upsell(request, env) {
     return json({ error: 'Niet beschikbaar' }, 400)
   }
 
+  // Verplicht vinkje "direct starten" (afstand herroepingsrecht, Roel 29-10)
+  if (body?.direct_start !== true) return json({ error: 'Vink eerst aan dat je direct wilt starten' }, 400)
+
   const session = await stripe.checkout.sessions.retrieve(sessionId)
   // Alleen direct na een geslaagde aankoop, en alleen voor deze klant
   const teOud = Date.now() / 1000 - session.created > UPSELL_MAX_LEEFTIJD_S
@@ -335,7 +338,13 @@ async function upsell(request, env) {
   if (!pm) return json({ error: 'Geen betaalmethode gevonden' }, 402)
 
   const price = await stripe.prices.retrieve(priceId, { expand: ['product'] })
-  const metadata = { plan: 'upsell', checkout_sessie: sessionId, hoofd_abonnement: sub?.id ?? '' }
+  const metadata = {
+    plan: 'upsell',
+    checkout_sessie: sessionId,
+    hoofd_abonnement: sub?.id ?? '',
+    direct_start: 'true',
+    direct_start_at: new Date().toISOString(),
+  }
   // Zelfde sessie = zelfde sleutel: dubbel tikken rekent nooit twee keer af
   const idempotencyKey = `upsell-${sessionId}`
   let gekocht
