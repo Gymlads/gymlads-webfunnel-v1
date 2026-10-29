@@ -1,5 +1,5 @@
 .onboarding {
-  --bg: #000000;
+  --bg: #171719;
   --surface: #1a1a1a;
   --surface-elevated: #242424;
   --accent: #ccff00;
@@ -1850,4 +1850,11 @@
   color: #000;
   font-size: 0.82rem;
   font-weight: 800;
+}
+
+/* Achtergrond overal #171719 (Roel 29-10). De afbeeldingen hebben een zwarte
+   achtergrond; met 'lighten' valt dat zwart weg tegen de pagina. */
+.onboarding__info-stock-image,
+.onboarding__rating-laurel-branch {
+  mix-blend-mode: lighten;
 }
