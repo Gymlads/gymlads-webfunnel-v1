@@ -1859,33 +1859,71 @@
   mix-blend-mode: lighten;
 }
 
-/* Upsell met één klik op de bedankpagina (29-10) */
-.checkout-upsell {
-  margin: 24px 0 8px;
-  padding: 20px;
-  border: 2px solid #ccff00;
+/* Upsell met één klik na de start van de proef (ontwerp A, 29-10) */
+.checkout-upsell { width: 100%; max-width: 420px; margin: 0 auto; text-align: left; }
+.checkout-upsell__boven { margin: 0 0 10px; color: #ccff00; font-size: 14px; font-weight: 600; text-align: center; }
+.checkout-upsell__kop { margin: 0 0 22px; color: #fff; font-size: 24px; font-weight: 800; line-height: 1.2; text-align: center; }
+.checkout-upsell__kaart {
+  position: relative;
+  padding: 26px 16px 14px;
+  border: 1.5px solid #ccff00;
   border-radius: 20px;
   background: #2c2c2e;
-  text-align: left;
 }
 .checkout-upsell__label {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
+  position: absolute;
+  top: -11px;
+  left: 16px;
+  padding: 3px 9px;
+  border-radius: 6px;
   background: #ccff00;
   color: #171719;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
-.checkout-upsell__titel { margin: 12px 0 4px; font-size: 20px; font-weight: 700; color: #fff; }
-.checkout-upsell__tekst { margin: 0 0 8px; color: #c7c7cc; font-size: 15px; line-height: 1.4; }
-.checkout-upsell__prijs { margin: 0 0 16px; color: #fff; font-size: 17px; font-weight: 600; }
+.checkout-upsell__product { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+.checkout-upsell__icoon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border: 1px solid rgba(204, 255, 0, 0.35);
+  border-radius: 14px;
+  background: rgba(204, 255, 0, 0.15);
+  font-size: 30px;
+}
+.checkout-upsell__titel { margin: 0; color: #fff; font-size: 19px; font-weight: 700; }
+.checkout-upsell__ondertitel { margin: 2px 0 0; color: #8e8e93; font-size: 14px; }
+.checkout-upsell__voorbeeld { margin-bottom: 14px; padding: 12px; border-radius: 14px; background: #1f1f21; }
+.checkout-upsell__voorbeeld-kop { margin: 0 0 8px; color: #8e8e93; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.checkout-upsell__maaltijd { display: flex; gap: 10px; align-items: center; padding: 5px 0; }
+.checkout-upsell__maaltijd-icoon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 9px;
+  background: #3a3a3c;
+  font-size: 18px;
+}
+.checkout-upsell__maaltijd-naam { flex: 1; color: #fff; font-size: 14px; line-height: 1.3; }
+.checkout-upsell__maaltijd-kcal { flex: none; color: #8e8e93; font-size: 13px; }
+.checkout-upsell__voordelen { margin: 0 0 14px; padding: 0; list-style: none; }
+.checkout-upsell__voordelen li { position: relative; margin: 0 0 8px; padding-left: 24px; color: #fff; font-size: 15px; line-height: 1.35; }
+.checkout-upsell__voordelen li::before { content: '✓'; position: absolute; left: 2px; color: #ccff00; font-weight: 800; }
+.checkout-upsell__prijsregel { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 12px; }
+.checkout-upsell__prijs { margin: 0; color: #fff; font-size: 28px; font-weight: 800; }
+.checkout-upsell__prijs span { color: #8e8e93; font-size: 14px; font-weight: 500; }
+.checkout-upsell__opzegbaar { margin: 0; color: #8e8e93; font-size: 13px; }
 .checkout-upsell__knop { width: 100%; }
-.checkout-upsell__klein { margin: 10px 0 0; color: #8e8e93; font-size: 12px; line-height: 1.4; }
-.checkout-upsell__fout { margin: 10px 0 0; color: #ff6b6b; font-size: 14px; }
+.checkout-upsell__klein { margin: 10px 0 0; color: #8e8e93; font-size: 12px; line-height: 1.4; text-align: center; }
+.checkout-upsell__fout { margin: 10px 0 0; color: #ff6b6b; font-size: 14px; text-align: center; }
 .checkout-upsell__nee {
   display: block;
-  margin: 8px auto 0;
+  margin: 16px auto 0;
   background: none;
   border: 0;
   color: #8e8e93;

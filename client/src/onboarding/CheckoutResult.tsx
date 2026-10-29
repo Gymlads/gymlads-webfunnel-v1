@@ -32,11 +32,12 @@ function readPendingCheckout(): PendingCheckout | null {
 
 type UpsellStand = 'verborgen' | 'aanbod' | 'bezig' | 'gekocht' | 'fout'
 
-/** Upsell met één klik, direct onder de titel (alleen als Stripe hem klaar heeft staan). */
-function UpsellKaart({ sessionId, stand, setStand }: { sessionId: string; stand: UpsellStand; setStand: (s: UpsellStand) => void }) {
-  if (stand === 'verborgen') return null
-  if (stand === 'gekocht') return <p className="checkout-upsell__gelukt">{UPSELL.gelukt}</p>
-
+/**
+ * Upsell met één klik (ontwerp A, Roel 29-10): eigen scherm direct na de start
+ * van de proef, alleen als Stripe hem klaar heeft staan. Ja of nee brengt je
+ * daarna naar de gewone bedankpagina.
+ */
+function UpsellScherm({ sessionId, stand, setStand }: { sessionId: string; stand: UpsellStand; setStand: (s: UpsellStand) => void }) {
   async function koop() {
     setStand('bezig')
     pushGtmEvent('upsell_klik', { page_path: '/checkout/success' })
@@ -50,27 +51,75 @@ function UpsellKaart({ sessionId, stand, setStand }: { sessionId: string; stand:
   }
 
   return (
-    <div className="checkout-upsell">
-      <span className="checkout-upsell__label">{UPSELL.label}</span>
-      <p className="checkout-upsell__titel">{UPSELL.titel}</p>
-      <p className="checkout-upsell__tekst">{UPSELL.tekst}</p>
-      <p className="checkout-upsell__prijs">{UPSELL.prijs}</p>
-      <button
-        type="button"
-        className="onboarding__btn checkout-upsell__knop"
-        disabled={stand === 'bezig'}
-        onClick={koop}
-      >
-        {stand === 'bezig' ? 'Even geduld…' : UPSELL.knop}
-      </button>
-      {stand === 'fout' && (
-        <p className="checkout-upsell__fout">Dat lukte niet. Er is niets extra afgeschreven.</p>
-      )}
-      <p className="checkout-upsell__klein">{UPSELL.kleineTekst}</p>
-      <button type="button" className="checkout-upsell__nee" onClick={() => setStand('verborgen')}>
-        {UPSELL.nee}
-      </button>
-    </div>
+    <OnboardingLayout centered checkoutSuccess>
+      <div className="checkout-upsell">
+        <p className="checkout-upsell__boven">✓ {UPSELL.bovenregel}</p>
+        <h1 className="checkout-upsell__kop">{UPSELL.kop}</h1>
+
+        <div className="checkout-upsell__kaart">
+          <span className="checkout-upsell__label">{UPSELL.label}</span>
+          <div className="checkout-upsell__product">
+            <span className="checkout-upsell__icoon" aria-hidden>
+              {UPSELL.icoon}
+            </span>
+            <div>
+              <p className="checkout-upsell__titel">{UPSELL.titel}</p>
+              <p className="checkout-upsell__ondertitel">{UPSELL.ondertitel}</p>
+            </div>
+          </div>
+
+          <div className="checkout-upsell__voorbeeld">
+            <p className="checkout-upsell__voorbeeld-kop">{UPSELL.voorbeeldKop}</p>
+            {UPSELL.voorbeeld.map((maaltijd) => (
+              <div key={maaltijd.naam} className="checkout-upsell__maaltijd">
+                <span className="checkout-upsell__maaltijd-icoon" aria-hidden>
+                  {maaltijd.icoon}
+                </span>
+                <span className="checkout-upsell__maaltijd-naam">{maaltijd.naam}</span>
+                <span className="checkout-upsell__maaltijd-kcal">{maaltijd.kcal} kcal</span>
+              </div>
+            ))}
+          </div>
+
+          <ul className="checkout-upsell__voordelen">
+            {UPSELL.voordelen.map((voordeel) => (
+              <li key={voordeel}>{voordeel}</li>
+            ))}
+          </ul>
+
+          <div className="checkout-upsell__prijsregel">
+            <p className="checkout-upsell__prijs">
+              {UPSELL.prijs} <span>{UPSELL.prijsEenheid}</span>
+            </p>
+            <p className="checkout-upsell__opzegbaar">{UPSELL.opzegbaar}</p>
+          </div>
+
+          <button
+            type="button"
+            className="onboarding__btn checkout-upsell__knop"
+            disabled={stand === 'bezig'}
+            onClick={koop}
+          >
+            {stand === 'bezig' ? 'Even geduld…' : UPSELL.knop}
+          </button>
+          {stand === 'fout' && (
+            <p className="checkout-upsell__fout">Dat lukte niet. Er is niets extra afgeschreven.</p>
+          )}
+          <p className="checkout-upsell__klein">{UPSELL.kleineTekst}</p>
+        </div>
+
+        <button
+          type="button"
+          className="checkout-upsell__nee"
+          onClick={() => {
+            pushGtmEvent('upsell_nee', { page_path: '/checkout/success' })
+            setStand('verborgen')
+          }}
+        >
+          {UPSELL.nee}
+        </button>
+      </div>
+    </OnboardingLayout>
   )
 }
 
@@ -110,6 +159,10 @@ export function CheckoutSuccess() {
     }
   }, [])
 
+  if (sessionId && (upsell === 'aanbod' || upsell === 'bezig' || upsell === 'fout')) {
+    return <UpsellScherm sessionId={sessionId} stand={upsell} setStand={setUpsell} />
+  }
+
   return (
     <OnboardingLayout centered checkoutSuccess>
       <div className="checkout-success">
@@ -122,7 +175,7 @@ export function CheckoutSuccess() {
           eerste workout.
         </p>
 
-        {sessionId && <UpsellKaart sessionId={sessionId} stand={upsell} setStand={setUpsell} />}
+        {upsell === 'gekocht' && <p className="checkout-upsell__gelukt">{UPSELL.gelukt}</p>}
 
         <ol className="checkout-success__steps">
           <li className="checkout-success__step">

@@ -61,22 +61,38 @@ export const PLANNEN: Record<
 }
 
 /**
- * ⚠️ Upsell op de bedankpagina (Roel 29-10, advies Max): het Voedingsschema,
+ * ⚠️ Upsell op de bedankpagina (Roel 29-10, advies Max, ontwerp A uit
+ * ideeen/voedingsschema/upsell-varianten.png): het Voedingsschema,
  * €4,99 per maand (thread "Maaltijdplan als maandelijkse upsell"). Staat uit tot
  * STRIPE_PRICE_ID_UPSELL in Cloudflare staat; dat gebeurt pas als het
  * voedingsschema in de app zit. Prijs moet gelijk zijn aan die Stripe-prijs.
  */
 export const UPSELL = {
-  label: 'Eenmalige aanbieding',
+  bovenregel: 'Je proefweek is gestart',
+  kop: 'Haal meer uit je training met het juiste eten',
+  label: 'NIEUW',
+  icoon: '🥗',
   titel: 'Voedingsschema',
-  tekst: 'Een persoonlijk voedingsschema in de app dat past bij je doel en je training.',
-  prijs: '€4,99 per maand',
+  ondertitel: 'Elke week een menu op maat',
+  voorbeeldKop: 'Voorbeeld: jouw dinsdag',
+  voorbeeld: [
+    { icoon: '🥣', naam: 'Kwark met havermout en bessen', kcal: 410 },
+    { icoon: '🌯', naam: 'Wraps met kip en hummus', kcal: 560 },
+    { icoon: '🍗', naam: 'Kip teriyaki met rijst', kcal: 595 },
+  ],
+  voordelen: [
+    'Precies jouw calorieën en eiwit, uitgerekend',
+    'Recepten en boodschappenlijst per week',
+    'Afvinken en je ziet het in je dagboek',
+  ],
+  prijs: '€4,99',
+  prijsEenheid: '/maand',
+  opzegbaar: 'Maandelijks opzegbaar',
   // Geen vinkje (Roel 29-10): de knop zelf zegt "direct", en één regel eronder
   // over het herroepingsrecht. Klik = direct_start in de Stripe-metadata.
-  kleineTekst:
-    'Je voedingsschema start meteen. Daardoor vervalt je recht om binnen 14 dagen te herroepen. Wordt afgerekend met dezelfde betaalmethode, elke maand opzegbaar.',
   knop: 'START DIRECT VOOR €4,99',
-  nee: 'Nee, bedankt',
+  kleineTekst: 'Je voedingsschema start meteen. Daardoor vervalt je recht om binnen 14 dagen te herroepen.',
+  nee: 'Nee, ik eet zonder plan',
   gelukt: 'Je voedingsschema is toegevoegd!',
 }
 
