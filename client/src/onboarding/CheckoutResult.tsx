@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { confirmDemoCheckout, fetchCheckoutRedeem } from '../api'
+import { confirmDemoCheckout, fetchCheckoutRedeem, koopUpsell } from '../api'
 import type { OnboardingData } from '../types'
 import { toStripeMetadata } from '../types'
 import { pushGtmEvent } from '../analytics/gtm'
@@ -10,6 +10,7 @@ import NextButton from './components/NextButton'
 import GymladsLogo from './components/GymladsLogo'
 import StoreDownloadButtons from './components/StoreDownloadButtons'
 import { leesAntwoorden, wisAntwoorden } from './bewaren'
+import { UPSELL } from './paywallInhoud'
 import './onboarding.css'
 
 const PENDING_CHECKOUT_KEY = 'onboarding_checkout'
@@ -29,8 +30,49 @@ function readPendingCheckout(): PendingCheckout | null {
   }
 }
 
+type UpsellStand = 'verborgen' | 'aanbod' | 'bezig' | 'gekocht' | 'fout'
+
+/** Upsell met één klik, direct onder de titel (alleen als Stripe hem klaar heeft staan). */
+function UpsellKaart({ sessionId, stand, setStand }: { sessionId: string; stand: UpsellStand; setStand: (s: UpsellStand) => void }) {
+  if (stand === 'verborgen') return null
+  if (stand === 'gekocht') return <p className="checkout-upsell__gelukt">{UPSELL.gelukt}</p>
+
+  async function koop() {
+    setStand('bezig')
+    pushGtmEvent('upsell_klik', { page_path: '/checkout/success' })
+    try {
+      await koopUpsell(sessionId)
+      setStand('gekocht')
+      pushGtmEvent('upsell_gekocht', { page_path: '/checkout/success' })
+    } catch {
+      setStand('fout')
+    }
+  }
+
+  return (
+    <div className="checkout-upsell">
+      <span className="checkout-upsell__label">{UPSELL.label}</span>
+      <p className="checkout-upsell__titel">{UPSELL.titel}</p>
+      <p className="checkout-upsell__tekst">{UPSELL.tekst}</p>
+      <p className="checkout-upsell__prijs">{UPSELL.prijs}</p>
+      <button type="button" className="onboarding__btn checkout-upsell__knop" disabled={stand === 'bezig'} onClick={koop}>
+        {stand === 'bezig' ? 'Even geduld…' : UPSELL.knop}
+      </button>
+      {stand === 'fout' && (
+        <p className="checkout-upsell__fout">Dat lukte niet. Er is niets extra afgeschreven.</p>
+      )}
+      <p className="checkout-upsell__klein">{UPSELL.kleineTekst}</p>
+      <button type="button" className="checkout-upsell__nee" onClick={() => setStand('verborgen')}>
+        {UPSELL.nee}
+      </button>
+    </div>
+  )
+}
+
 export function CheckoutSuccess() {
   const [email, setEmail] = useState<string | null>(null)
+  const [sessionId] = useState(() => new URLSearchParams(window.location.search).get('session_id'))
+  const [upsell, setUpsell] = useState<UpsellStand>('verborgen')
   // plan staat in de terug-URL van Stripe (functions/api: success_url)
   const [maand] = useState(() => new URLSearchParams(window.location.search).get('plan') === 'maand')
 
@@ -57,6 +99,7 @@ export function CheckoutSuccess() {
           }
           // Na ContactInfo, zodat Tracklution de aankoop aan dit bezoek koppelt
           if (maand && !result.demo) trackTracklutionSubscribe(sessionId)
+          if (result.upsell && !result.demo) setUpsell('aanbod')
         })
         .catch(() => {})
     }
@@ -73,6 +116,8 @@ export function CheckoutSuccess() {
           Je coach zet je persoonlijke schema voor je klaar. Nog 3 stappen en je doet vandaag je
           eerste workout.
         </p>
+
+        {sessionId && <UpsellKaart sessionId={sessionId} stand={upsell} setStand={setUpsell} />}
 
         <ol className="checkout-success__steps">
           <li className="checkout-success__step">

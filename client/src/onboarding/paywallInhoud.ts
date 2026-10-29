@@ -60,6 +60,22 @@ export const PLANNEN: Record<
   },
 }
 
+/**
+ * ⚠️ Upsell op de bedankpagina (Roel 29-10, advies Max). Welk product het wordt,
+ * beslist Roel nog; dit is het voorstel uit de Stripe-analyse (Coach Plus).
+ * Prijs moet gelijk zijn aan de Stripe-prijs in STRIPE_PRICE_ID_UPSELL.
+ */
+export const UPSELL = {
+  label: 'Eenmalige aanbieding',
+  titel: 'Coach Plus',
+  tekst: 'Onbeperkt vragen aan je AI-coach, plus een voedingsplan dat meegroeit met je schema.',
+  prijs: '€4,99 per maand',
+  kleineTekst: 'Wordt meteen afgerekend met dezelfde betaalmethode. Elke maand opzegbaar.',
+  knop: 'Ja, voeg toe',
+  nee: 'Nee, bedankt',
+  gelukt: 'Coach Plus is toegevoegd!',
+}
+
 /** Sterker-garantie (Roel 28-10), zelfde tekst als de app; voorwaarden op gymlads.nl. */
 export const GARANTIE = {
   titel: 'Sterker in 8 weken, gegarandeerd',

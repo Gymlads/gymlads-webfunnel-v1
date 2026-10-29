@@ -87,6 +87,19 @@ export interface CheckoutRedeemResponse {
   qrDataUrl: string
   email: string | null
   demo: boolean
+  /** Staat er een upsell klaar in Stripe (STRIPE_PRICE_ID_UPSELL)? */
+  upsell?: boolean
+}
+
+/** Upsell met één klik: rekent af met de betaalmethode van de net gestarte proef. */
+export async function koopUpsell(sessionId: string): Promise<void> {
+  const response = await fetch('/api/upsell', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId }),
+  })
+  const result = await parseJsonResponse<{ ok?: boolean; error?: string }>(response)
+  if (!response.ok || !result.ok) throw new Error(result.error ?? 'Betaling niet gelukt')
 }
 
 export async function fetchCheckoutRedeem(
