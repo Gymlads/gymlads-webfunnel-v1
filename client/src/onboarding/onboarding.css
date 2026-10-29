@@ -1894,14 +1894,3 @@
   cursor: pointer;
 }
 .checkout-upsell__gelukt { margin: 20px 0 0; color: #ccff00; font-weight: 700; text-align: center; }
-.checkout-upsell__vinkje {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin: 0 0 14px;
-  color: #c7c7cc;
-  font-size: 13px;
-  line-height: 1.4;
-  cursor: pointer;
-}
-.checkout-upsell__vinkje input { margin-top: 2px; width: 18px; height: 18px; accent-color: #ccff00; flex: none; }

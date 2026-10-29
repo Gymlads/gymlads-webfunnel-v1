@@ -322,8 +322,8 @@ async function upsell(request, env) {
     return json({ error: 'Niet beschikbaar' }, 400)
   }
 
-  // Verplicht vinkje "direct starten" (afstand herroepingsrecht, Roel 29-10)
-  if (body?.direct_start !== true) return json({ error: 'Vink eerst aan dat je direct wilt starten' }, 400)
+  // Knop "start direct" met de regel over het herroepingsrecht (Roel 29-10)
+  if (body?.direct_start !== true) return json({ error: 'Niet beschikbaar' }, 400)
 
   const session = await stripe.checkout.sessions.retrieve(sessionId)
   // Alleen direct na een geslaagde aankoop, en alleen voor deze klant

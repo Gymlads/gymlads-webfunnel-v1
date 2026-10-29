@@ -71,14 +71,13 @@ export const UPSELL = {
   titel: 'Voedingsschema',
   tekst: 'Een persoonlijk voedingsschema in de app dat past bij je doel en je training.',
   prijs: '€4,99 per maand',
-  kleineTekst: 'Wordt meteen afgerekend met dezelfde betaalmethode. Elke maand opzegbaar.',
-  knop: 'Ja, voeg toe',
+  // Geen vinkje (Roel 29-10): de knop zelf zegt "direct", en één regel eronder
+  // over het herroepingsrecht. Klik = direct_start in de Stripe-metadata.
+  kleineTekst:
+    'Je voedingsschema start meteen. Daardoor vervalt je recht om binnen 14 dagen te herroepen. Wordt afgerekend met dezelfde betaalmethode, elke maand opzegbaar.',
+  knop: 'START DIRECT VOOR €4,99',
   nee: 'Nee, bedankt',
   gelukt: 'Je voedingsschema is toegevoegd!',
-  // ⚠️ Concept (29-10): verplicht vinkje, afstand van herroepingsrecht. Tekst
-  // wacht op Roels OK en een jurist; staat in metadata direct_start(_at).
-  directStart:
-    'Ik wil dat mijn voedingsschema direct start. Ik weet dat ik daardoor geen recht meer heb om binnen 14 dagen te herroepen.',
 }
 
 /** Sterker-garantie (Roel 28-10), zelfde tekst als de app; voorwaarden op gymlads.nl. */
