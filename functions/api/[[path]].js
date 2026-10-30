@@ -18,10 +18,14 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
 
 // Eigen tekst bij de betaalknop van Stripe (custom_text.submit, max. 1200 tekens),
 // per plan (opdracht Roel 26-10-2026). Jaar zonder proef (shouldSkipTrial) krijgt
-// geen tekst: "vandaag €0" klopt dan niet.
+// geen tekst: "vandaag €1 voor je proefweek" klopt dan niet.
+// Betaalde proefweek (Roel 29-10, advies Max): eenmalig bedrag bij de start van
+// de jaarproef. Moet gelijk zijn aan PROEF_BEDRAG in client/src/onboarding/paywallInhoud.ts.
+const PROEF_BEDRAG_CENT = 100
+
 const STRIPE_KNOP_TEKST = {
   jaar:
-    'Je betaalt vandaag €0. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef. Kies je iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.',
+    'Je betaalt vandaag €1 voor je proefweek. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef.',
   maand: 'Je betaalt vandaag €17,99. Daarna elke maand €17,99. Elke maand opzegbaar.',
 }
 
@@ -190,7 +194,27 @@ async function createCheckoutSession(request, env, waitUntil) {
   const knopTekst = plan === 'maand' ? STRIPE_KNOP_TEKST.maand : skipTrial ? null : STRIPE_KNOP_TEKST.jaar
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    line_items: [{ price: priceId, quantity: 1 }],
+    // Jaarproef: abonnement (€0 tijdens de proef) plus de eenmalige proefweek,
+    // die Stripe meteen bij de start afschrijft.
+    line_items: [
+      { price: priceId, quantity: 1 },
+      ...(skipTrial
+        ? []
+        : [
+            // Liefst het Stripe-product "Gymlads proefweek" (zelfde als de app),
+            // anders hetzelfde bedrag los meegegeven
+            env.STRIPE_PRICE_ID_PROEF
+              ? { price: env.STRIPE_PRICE_ID_PROEF, quantity: 1 }
+              : {
+                  price_data: {
+                    currency: 'eur',
+                    unit_amount: PROEF_BEDRAG_CENT,
+                    product_data: { name: 'Gymlads proefweek (7 dagen)' },
+                  },
+                  quantity: 1,
+                },
+          ]),
+    ],
     // plan in de terug-URL: de bedankpagina toont de juiste tekst en meldt een
     // maandaankoop aan Tracklution (ook als de bank-app een andere browser opent)
     success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
@@ -262,7 +286,119 @@ async function checkoutRedeem(request, env) {
   const email = session.customer_details?.email ?? session.customer_email ?? null
   const params = new URLSearchParams({ session_id: sessionId })
   if (email) params.set('email', email)
-  return json({ redeemUrl: `${redeemBase}?${params}`, qrDataUrl: '', email, demo: false })
+  return json({
+    redeemUrl: `${redeemBase}?${params}`,
+    qrDataUrl: '',
+    email,
+    demo: false,
+    upsell: Boolean(env.STRIPE_PRICE_ID_UPSELL) && session.status === 'complete',
+  })
+}
+
+// Upsell met één klik op de bedankpagina (Roel 29-10, advies Max). Rekent het
+// product uit STRIPE_PRICE_ID_UPSELL meteen af met de betaalmethode van de net
+// gestarte proef. Eenmalige prijs = losse betaling; terugkerende prijs = apart
+// abonnement met metadata plan=upsell. Zonder die variabele toont de pagina niets.
+const UPSELL_MAX_LEEFTIJD_S = 2 * 60 * 60
+
+async function betaalmethodeVanSessie(stripe, session) {
+  const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id
+  const sub = subId ? await stripe.subscriptions.retrieve(subId) : null
+  const pm = sub?.default_payment_method
+  if (pm) return { sub, pm: typeof pm === 'string' ? pm : pm.id }
+  const klant = await stripe.customers.retrieve(session.customer)
+  const klantPm = klant?.invoice_settings?.default_payment_method
+  if (klantPm) return { sub, pm: typeof klantPm === 'string' ? klantPm : klantPm.id }
+  const lijst = await stripe.paymentMethods.list({ customer: session.customer, limit: 1 })
+  return { sub, pm: lijst.data[0]?.id ?? null }
+}
+
+async function upsell(request, env) {
+  const body = await request.json().catch(() => null)
+  const sessionId = typeof body?.session_id === 'string' ? body.session_id : ''
+  const stripe = getStripe(env)
+  const priceId = env.STRIPE_PRICE_ID_UPSELL
+  if (!stripe || !priceId || !sessionId.startsWith('cs_')) {
+    return json({ error: 'Niet beschikbaar' }, 400)
+  }
+
+  // Knop "start direct" met de regel over het herroepingsrecht (Roel 29-10)
+  if (body?.direct_start !== true) return json({ error: 'Niet beschikbaar' }, 400)
+
+  const session = await stripe.checkout.sessions.retrieve(sessionId)
+  // Alleen direct na een geslaagde aankoop, en alleen voor deze klant
+  const teOud = Date.now() / 1000 - session.created > UPSELL_MAX_LEEFTIJD_S
+  if (session.status !== 'complete' || !session.customer || teOud) {
+    return json({ error: 'Deze aanbieding is verlopen' }, 410)
+  }
+  const customer = typeof session.customer === 'string' ? session.customer : session.customer.id
+
+  const { sub, pm } = await betaalmethodeVanSessie(stripe, { ...session, customer })
+  if (sub?.metadata?.upsell_gekocht) return json({ ok: true, alGekocht: true })
+  if (!pm) return json({ error: 'Geen betaalmethode gevonden' }, 402)
+
+  const price = await stripe.prices.retrieve(priceId, { expand: ['product'] })
+  const metadata = {
+    plan: 'upsell',
+    checkout_sessie: sessionId,
+    hoofd_abonnement: sub?.id ?? '',
+    direct_start: 'true',
+    direct_start_at: new Date().toISOString(),
+  }
+  // Zelfde sessie = zelfde sleutel: dubbel tikken rekent nooit twee keer af
+  const idempotencyKey = `upsell-${sessionId}`
+  let gekocht
+
+  if (price.type === 'recurring') {
+    const upsellSub = await stripe.subscriptions.create(
+      {
+        customer,
+        items: [{ price: priceId }],
+        default_payment_method: pm,
+        off_session: true,
+        payment_behavior: 'allow_incomplete',
+        metadata,
+      },
+      { idempotencyKey },
+    )
+    // SEPA (iDEAL) wordt pas na een paar dagen bevestigd: dan is "incomplete" normaal
+    const methode = await stripe.paymentMethods.retrieve(pm)
+    const gelukt = upsellSub.status === 'active' || (upsellSub.status === 'incomplete' && methode.type === 'sepa_debit')
+    if (!gelukt) {
+      await stripe.subscriptions.cancel(upsellSub.id).catch(() => {})
+      return json({ error: 'Betaling niet gelukt' }, 402)
+    }
+    gekocht = upsellSub.id
+  } else {
+    const productNaam = typeof price.product === 'object' ? price.product.name : 'Gymlads upsell'
+    const betaling = await stripe.paymentIntents
+      .create(
+        {
+          amount: price.unit_amount,
+          currency: price.currency,
+          customer,
+          payment_method: pm,
+          off_session: true,
+          confirm: true,
+          description: productNaam,
+          metadata,
+        },
+        { idempotencyKey },
+      )
+      .catch((error) => ({ status: 'mislukt', error }))
+    if (betaling.status !== 'succeeded' && betaling.status !== 'processing') {
+      console.error('[upsell] betaling:', betaling.error?.message ?? betaling.status)
+      return json({ error: 'Betaling niet gelukt' }, 402)
+    }
+    gekocht = betaling.id
+  }
+
+  if (sub) {
+    await stripe.subscriptions
+      .update(sub.id, { metadata: { upsell_gekocht: gekocht } })
+      .catch((error) => console.error('[upsell] markeren:', error))
+  }
+  return json({ ok: true })
 }
 
 async function stripeWebhook(request, env) {
@@ -329,6 +465,8 @@ function health(env) {
     n8nConfigured: Boolean(env.N8N_WEBHOOK_URL),
     stripeConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID),
     maandConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_MAAND),
+    proefPrijsConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PROEF),
+    upsellConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_UPSELL),
     // Staat de oude kortingsbon nog in Cloudflare? Wordt niet meer gebruikt; mag weg.
     oudeCouponIngesteld: Boolean(env.STRIPE_COUPON_ID),
     stripeWebhookConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET),
@@ -352,6 +490,8 @@ export async function onRequest({ request, env, waitUntil }) {
         return await lead(request, opAchtergrond)
       case 'GET /api/checkout-redeem':
         return await checkoutRedeem(request, env)
+      case 'POST /api/upsell':
+        return await upsell(request, env)
       case 'POST /api/stripe-webhook':
         return await stripeWebhook(request, env)
       default:

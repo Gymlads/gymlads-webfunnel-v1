@@ -10,6 +10,13 @@
  */
 export type Plan = 'jaar' | 'maand'
 
+/**
+ * Betaalde proefweek (Roel 29-10, advies Max): wie het jaar kiest, betaalt bij de
+ * start eenmalig dit bedrag. Moet gelijk zijn aan PROEF_BEDRAG_CENT in
+ * functions/api/[[path]].js (dat is wat Stripe echt afschrijft).
+ */
+export const PROEF_BEDRAG = '€1'
+
 /** Standaard gekozen plan. Geen kop boven de paywall, net als de app (27-10). */
 export const STANDAARD_PLAN: Plan = 'jaar'
 
@@ -21,7 +28,7 @@ export const PLANNEN: Record<
     prijs: string
     prijsEenheid: string
     onderPrijs: string
-    /** Lime balk in de kaart als er een gratis proef is (zoals de app, 28-10). */
+    /** Lime balk in de kaart als er een proef is (zoals de app, 28-10). */
     proef: string | null
     knop: string
     kleineTekst: string
@@ -33,12 +40,12 @@ export const PLANNEN: Record<
     // Prijs per dag, gelijk aan de app (Roel 28-10): €99,99 / 365 = €0,27
     prijs: '€0,27',
     prijsEenheid: '/ dag',
-    onderPrijs: 'Daarna €99,99 per jaar',
-    proef: '7 dagen gratis uitproberen!',
+    onderPrijs: 'Daarna automatisch €99,99 per jaar',
+    proef: `7 dagen uitproberen voor ${PROEF_BEDRAG}!`,
     knop: 'GA VERDER',
     // ⚠️ Laten checken door een jurist (opdracht deel 4c)
     kleineTekst:
-      'Vandaag betaal je €0. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens je proef. Na het eerste jaar is je abonnement maandelijks opzegbaar.',
+      `Vandaag betaal je ${PROEF_BEDRAG} voor je proefweek. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens je proef. Na het eerste jaar is je abonnement maandelijks opzegbaar.`,
   },
   maand: {
     naam: 'Maandabonnement',
@@ -53,6 +60,42 @@ export const PLANNEN: Record<
   },
 }
 
+/**
+ * ⚠️ Upsell op de bedankpagina (Roel 29-10, advies Max, ontwerp A uit
+ * ideeen/voedingsschema/upsell-varianten.png): het Voedingsschema,
+ * €4,99 per maand (thread "Maaltijdplan als maandelijkse upsell"). Staat uit tot
+ * STRIPE_PRICE_ID_UPSELL in Cloudflare staat; dat gebeurt pas als het
+ * voedingsschema in de app zit. Prijs moet gelijk zijn aan die Stripe-prijs.
+ */
+export const UPSELL = {
+  bovenregel: 'Je proefweek is gestart',
+  kop: 'Haal meer uit je training met het juiste eten',
+  label: 'NIEUW',
+  icoon: '🥗',
+  titel: 'Voedingsschema',
+  ondertitel: 'Elke week een menu op maat',
+  voorbeeldKop: 'Voorbeeld: jouw dinsdag',
+  voorbeeld: [
+    { icoon: '🥣', naam: 'Kwark met havermout en bessen', kcal: 410 },
+    { icoon: '🌯', naam: 'Wraps met kip en hummus', kcal: 560 },
+    { icoon: '🍗', naam: 'Kip teriyaki met rijst', kcal: 595 },
+  ],
+  voordelen: [
+    'Precies jouw calorieën en eiwit, uitgerekend',
+    'Recepten en boodschappenlijst per week',
+    'Afvinken en je ziet het in je dagboek',
+  ],
+  prijs: '€4,99',
+  prijsEenheid: '/maand',
+  opzegbaar: 'Maandelijks opzegbaar',
+  // Geen vinkje (Roel 29-10): de knop zelf zegt "direct", en één regel eronder
+  // over het herroepingsrecht. Klik = direct_start in de Stripe-metadata.
+  knop: 'START DIRECT VOOR €4,99',
+  kleineTekst: 'Je voedingsschema start meteen. Daardoor vervalt je recht om binnen 14 dagen te herroepen.',
+  nee: 'Nee, ik eet zonder plan',
+  gelukt: 'Je voedingsschema is toegevoegd!',
+}
+
 /** Sterker-garantie (Roel 28-10), zelfde tekst als de app; voorwaarden op gymlads.nl. */
 export const GARANTIE = {
   titel: 'Sterker in 8 weken, gegarandeerd',
@@ -64,11 +107,10 @@ export const GARANTIE = {
 export const FAQ_GARANTIE =
   'Volg je 8 weken je schema (minstens 90% van je workouts helemaal af), log je eten op 5 dagen per week en weeg je minstens 4 keer per week? Dan word je sterker: meer gewicht, meer herhalingen of meer sets dan in week 1. Lukt dat niet, mail dan binnen 14 dagen na week 8 naar info@gymlads.nl en je krijgt terug wat je hebt betaald. De volledige voorwaarden staan in artikel 18 van onze algemene voorwaarden.'
 
-export const FAQ_PROEF =
-  'Kies je het jaarabonnement, dan probeer je Gymlads 7 dagen gratis. Vandaag betaal je €0. Zeg je op tijdens je proef, dan betaal je niks. Zeg je niet op, dan betaal je €99,99 voor een jaar. Betaal je met iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.'
+export const FAQ_PROEF = `Kies je het jaarabonnement, dan probeer je Gymlads 7 dagen voor ${PROEF_BEDRAG}. Die ${PROEF_BEDRAG} betaal je vandaag. Zeg je op tijdens je proef, dan betaal je verder niks. Zeg je niet op, dan betaal je na 7 dagen €99,99 voor een jaar.`
 
 export const FAQ_VERSCHIL =
-  'Met het jaarabonnement probeer je Gymlads eerst 7 dagen gratis, en betaal je daarna €99,99 per jaar. Dat is €8,33 per maand. Met het maandabonnement betaal je €17,99 per maand, zonder proefperiode, en zeg je elke maand op.'
+  `Met het jaarabonnement probeer je Gymlads eerst 7 dagen voor ${PROEF_BEDRAG}, en betaal je daarna €99,99 per jaar. Dat is €8,33 per maand. Met het maandabonnement betaal je €17,99 per maand, zonder proefperiode, en zeg je elke maand op.`
 
 /**
  * ⚠️ Logo's onder de knop: alleen methodes die echt aanstaan in Stripe.
