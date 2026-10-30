@@ -14,11 +14,15 @@ Tracking via eigen subdomein `c.gymlads.nl` (CNAME naar `c.octani.st`, Cloudflar
 Alleen actief als de Cloudflare-variabele `OCTANIST_API_KEY` bestaat (Octanist → Settings → API / MCP).
 Zonder sleutel gebeurt er niets. `/api/health` toont `octanistConfigured`.
 
-## Later (n8n)
+## Betalingen -> Won (zonder n8n, dus 0 n8n-credits)
 
-Echte betalingen (proef €1, jaar na proef, maand, upsell) zet n8n met
-`PATCH https://octanist.com/api/leads` (`externalId` of `email`, `status: "won"`, `value`) op Won.
-Won gaat als Purchase naar Meta. Eerst bij Octanist navragen of een lead vaker Won kan worden.
+`POST /api/octanist-stripe` is een eigen Stripe-webhook (alleen `invoice.paid`), gecontroleerd
+met `OCTANIST_STRIPE_WEBHOOK_SECRET`. Per betaalde factuur met bedrag > 0:
+1. `POST /api/leads` (idempotent) met `externalId` = abonnement (upsell: `hoofd_abonnement`),
+   e-mail en de Octanist-sessie van het abonnement;
+2. `PATCH /api/leads` met `status: "won"`, `value` (bedrag in euro) en een notitie.
+Dit dekt proef €1, jaar na de proef, maand, upsell, verlengingen en app-klanten.
+Bij een fout antwoordt de functie 500, zodat Stripe het later opnieuw probeert.
 
 **Let op:** koppel Meta pas in Octanist als Tracklution stopt met StartTrial/Purchase naar Meta,
 anders telt Meta dubbel.
