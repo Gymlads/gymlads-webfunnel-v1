@@ -29,7 +29,7 @@ anders telt Meta dubbel.
 
 ## Instellen en live zetten
 
-- Test (30-10-2026): Cloudflare **Preview** heeft `OCTANIST_API_KEY` (Octanist-sleutel "Webfunnel Cloudflare")
+- Test (30-10-2026), namen precies zo (hoofdletters, underscores): Cloudflare **Preview** heeft `OCTANIST_API_KEY` (Octanist-sleutel "Webfunnel Cloudflare")
   en `OCTANIST_STRIPE_WEBHOOK_SECRET`; Stripe-bestemming "Octanist (test)" (alleen `invoice.paid`,
   API-versie 2026-01-28.clover) wijst naar de preview-URL `/api/octanist-stripe`.
 - Live: dezelfde twee secrets bij **Production** zetten, en de URL van de Stripe-bestemming veranderen
