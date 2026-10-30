@@ -25,8 +25,9 @@ const PROEF_BEDRAG_CENT = 100
 
 const STRIPE_KNOP_TEKST = {
   jaar:
-    'Je betaalt vandaag €1 voor je proefweek. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef.',
-  maand: 'Je betaalt vandaag €17,99. Daarna elke maand €17,99. Elke maand opzegbaar.',
+    'Je betaalt vandaag €1 voor je proefweek. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef. Je abonnement start direct na betaling. Daarmee vervalt je herroepingsrecht van 14 dagen.',
+  maand:
+    'Je betaalt vandaag €17,99. Daarna elke maand €17,99. Elke maand opzegbaar. Je abonnement start direct na betaling. Daarmee vervalt je herroepingsrecht van 14 dagen.',
 }
 
 function geldigEmail(waarde) {
