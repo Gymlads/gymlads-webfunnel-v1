@@ -195,7 +195,7 @@ async function createCheckoutSession(request, env, waitUntil) {
 
   const clientUrl = resolveClientUrl(request, env, body?.clientOrigin)
   // E-mail uit de e-mailstap: op de betaalpagina al ingevuld. Bewust GEEN
-  // client_reference_id: n8n en Tracklution zien een web-checkout dan als app-checkout.
+  // client_reference_id: n8n ziet een web-checkout dan als app-checkout.
   const customerEmail = geldigEmail(body?.email)
   const knopTekst = plan === 'maand' ? STRIPE_KNOP_TEKST.maand : skipTrial ? null : STRIPE_KNOP_TEKST.jaar
   const session = await stripe.checkout.sessions.create({
@@ -221,8 +221,8 @@ async function createCheckoutSession(request, env, waitUntil) {
                 },
           ]),
     ],
-    // plan in de terug-URL: de bedankpagina toont de juiste tekst en meldt een
-    // maandaankoop aan Tracklution (ook als de bank-app een andere browser opent)
+    // plan in de terug-URL: de bedankpagina toont de juiste tekst (ook als de
+    // bank-app een andere browser opent)
     success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
     cancel_url: `${clientUrl}/checkout/cancelled`,
     phone_number_collection: { enabled: false },
@@ -279,11 +279,11 @@ async function lead(request, waitUntil) {
   return new Response(null, { status: 204 })
 }
 
-// Alleen het e-mailadres van de sessie (voor Tracklution ContactInfo); de QR-code
+// Alleen het e-mailadres van de sessie (voor de bedankpagina); de QR-code
 // van de Express-versie gebruikt de webfunnel niet.
 // Proef of maand gestart: lead in Octanist aanmaken (alleen als OCTANIST_API_KEY
 // bestaat). externalId = Stripe-abonnement, dus herladen maakt geen tweede lead;
-// n8n zet de lead later op Won met het bedrag. Fouten raken de klant nooit.
+// de Stripe-webhook (octanistStripe) zet de status. Fouten raken de klant nooit.
 async function octanistLead(env, session, email) {
   const abonnement = typeof session.subscription === 'object' ? session.subscription : null
   if (!abonnement?.id) return

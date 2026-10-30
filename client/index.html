@@ -15,44 +15,28 @@
       })(window, document, 'script', 'dataLayer', 'GTM-PSMN97ZP')
     </script>
     <!-- End Google Tag Manager -->
-    <!-- Tracklution -->
+    <!-- Meta Pixel (alleen bezoeken; aankopen gaan via Octanist) -->
     <script>
-      !(function (t, l, r, o, c, k, s) {
-        if (t.tlq) return
-        c = t.tlq = function () {
-          c.callMethod ? c.callMethod(arguments) : c.queue.push(arguments)
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
         }
-        if (!t._tlq) t._tlq = c
-        c.push = c
-        c.loaded = !0
-        c.version = '1.0'
-        c.src = o
-        c.queue = []
-        k = l.createElement(r)
-        k.async = !0
-        c.pd = false
-        c.tools = null
-        k.src = o
-        s = l.getElementsByTagName(r)[0]
-        s.parentNode.insertBefore(k, s)
-        k.onerror = function () {
-          o = 'https://main-42377.trlution.com/js/script-dynamic.js?version=1785491813727'
-          t._tlq.src = o
-          k = l.createElement(r)
-          k.async = !0
-          k.src = o
-          s.parentNode.insertBefore(k, s)
-        }
-      })(
-        window,
-        document,
-        'script',
-        'https://tralut.gymlads.nl/js/script-dynamic.js?version=1785491813727',
-      )
-
-      tlq('init', 'LS-98875324-1')
+        if (!f._fbq) f._fbq = n
+        n.push = n
+        n.loaded = !0
+        n.version = '2.0'
+        n.queue = []
+        t = b.createElement(e)
+        t.async = !0
+        t.src = v
+        s = b.getElementsByTagName(e)[0]
+        s.parentNode.insertBefore(t, s)
+      })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js')
+      fbq('init', '1123007803324591')
+      fbq('track', 'PageView')
     </script>
-    <!-- End Tracklution -->
+    <!-- End Meta Pixel -->
     <!-- Octanist -->
     <script
       async
@@ -84,11 +68,13 @@
       ></iframe
     ></noscript>
     <!-- End Google Tag Manager (noscript) -->
-    <!-- Tracklution PageView -->
-    <script>
-      tlq('track', 'PageView')
-    </script>
-    <!-- End Tracklution PageView -->
+    <noscript
+      ><img
+        height="1"
+        width="1"
+        style="display: none"
+        src="https://www.facebook.com/tr?id=1123007803324591&ev=PageView&noscript=1"
+    /></noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -4,7 +4,7 @@ Tracking via eigen subdomein `c.gymlads.nl` (CNAME naar `c.octani.st`, Cloudflar
 
 ## Wat de webfunnel doet
 
-1. `client/index.html` laadt het Octanist-script (async, naast Tracklution en GTM).
+1. `client/index.html` laadt het Octanist-script (async, naast GTM en de Meta-pixel).
 2. Bij "naar betalen" stuurt de browser `window.OCT.getSessionId()` mee; de server zet die als
    `octanist_sessie` op het Stripe-abonnement (niet in de checkout-metadata, die gaat naar n8n).
 3. Op de bedankpagina (`GET /api/checkout-redeem`) maakt de server een lead aan:
@@ -28,8 +28,11 @@ Keuze Roel 30-10-2026: alleen echte betalingen tellen als Purchase, de €1 is s
 Mapping in Octanist → Meta: Qualified Lead = StartTrial, Converted = Purchase.
 Bij een fout antwoordt de functie 500, zodat Stripe het later opnieuw probeert.
 
-**Let op:** koppel Meta pas in Octanist als Tracklution stopt met StartTrial/Purchase naar Meta,
-anders telt Meta dubbel.
+**Meta (30-10-2026):** Octanist is gekoppeld aan Pixel Gymlads (1123007803324591), Qualified Lead =
+StartTrial, Converted = Purchase, enhanced conversions + alle leads aan, geen backfill. Tracklution is
+eruit (script, PageView, ContactInfo, Subscribe weg; Stripe-koppeling in Tracklution uitzetten). De
+standaard Meta-pixel in `client/index.html` stuurt alleen PageView en zet de `_fbp`/`_fbc`-cookies
+die Octanist gebruikt. Alleen Octanist stuurt aankopen naar Meta, dus niets telt dubbel.
 
 ## Instellen en live zetten
 
