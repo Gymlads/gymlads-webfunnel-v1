@@ -590,6 +590,8 @@ function health(env) {
     proefPrijsConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PROEF),
     octanistConfigured: Boolean(env.OCTANIST_API_KEY),
     octanistStripeConfigured: Boolean(env.OCTANIST_API_KEY && env.OCTANIST_STRIPE_WEBHOOK_SECRET),
+    // Alleen namen (nooit waarden), om tikfouten in Cloudflare te vinden
+    octanistNamen: Object.keys(env).filter((k) => /octanist/i.test(k)),
     upsellConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_UPSELL),
     // Staat de oude kortingsbon nog in Cloudflare? Wordt niet meer gebruikt; mag weg.
     oudeCouponIngesteld: Boolean(env.STRIPE_COUPON_ID),
