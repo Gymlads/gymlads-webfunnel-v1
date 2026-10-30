@@ -12,7 +12,7 @@ Tracking via eigen subdomein `c.gymlads.nl` (CNAME naar `c.octani.st`, Cloudflar
    `sessionId`. Herladen maakt geen tweede lead (externalId is idempotent).
 
 Alleen actief als de Cloudflare-variabele `OCTANIST_API_KEY` bestaat (Octanist → Settings → API / MCP).
-Zonder sleutel gebeurt er niets. `/api/health` toont `octanistConfigured`.
+Zonder sleutel gebeurt er niets. `/api/health` toont `octanistConfigured` en `octanistStripeConfigured`.
 
 ## Betalingen -> Won (zonder n8n, dus 0 n8n-credits)
 
