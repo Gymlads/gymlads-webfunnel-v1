@@ -40,7 +40,7 @@ export const PLANNEN: Record<
     // Prijs per dag, gelijk aan de app (Roel 28-10): €99,99 / 365 = €0,27
     prijs: '€0,27',
     prijsEenheid: '/ dag',
-    onderPrijs: 'Daarna €99,99 per jaar',
+    onderPrijs: 'Daarna automatisch €99,99 per jaar',
     proef: `7 dagen uitproberen voor ${PROEF_BEDRAG}!`,
     knop: 'GA VERDER',
     // ⚠️ Laten checken door een jurist (opdracht deel 4c)
