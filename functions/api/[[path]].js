@@ -226,6 +226,8 @@ async function createCheckoutSession(request, env, waitUntil) {
     success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
     cancel_url: `${clientUrl}/checkout/cancelled`,
     phone_number_collection: { enabled: false },
+    // Altijd Nederlands (anders toont Stripe bij een Engelse browser 'per year')
+    locale: 'nl',
     ...(customerEmail ? { customer_email: customerEmail } : {}),
     ...(knopTekst ? { custom_text: { submit: { message: knopTekst } } } : {}),
     // Geen kortingsbon meer (prijsmodel 26-10: €99,99 is de echte jaarprijs).
