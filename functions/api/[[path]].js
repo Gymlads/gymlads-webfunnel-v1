@@ -14,6 +14,7 @@ const FUNNEL_HOST = 'cloudflare'
 const SUPABASE_URL = 'https://igcmunshswzaxxtccxij.supabase.co'
 const SUPABASE_PUBLIEKE_SLEUTEL = 'sb_publishable_KDytEfGmM-_frKy-ykQB4g_PS5huk7r'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const OCTANIST_SESSIE = /^[A-Za-z0-9_.:-]{1,100}$/
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
 
 // Eigen tekst bij de betaalknop van Stripe (custom_text.submit, max. 1200 tekens),
@@ -184,6 +185,10 @@ async function createCheckoutSession(request, env, waitUntil) {
     }
   }
   if (sessieId) abonnementMetadata.funnel_sessie_id = sessieId
+  // Octanist-sessie: daarmee koppelt Octanist de lead aan het advertentiebezoek
+  if (typeof body?.octanist === 'string' && OCTANIST_SESSIE.test(body.octanist)) {
+    abonnementMetadata.octanist_sessie = body.octanist
+  }
   if (typeof meting?.utm_content === 'string' && meting.utm_content) {
     abonnementMetadata.utm_content = meting.utm_content.slice(0, 500)
   }
@@ -221,6 +226,8 @@ async function createCheckoutSession(request, env, waitUntil) {
     success_url: `${clientUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
     cancel_url: `${clientUrl}/checkout/cancelled`,
     phone_number_collection: { enabled: false },
+    // Altijd Nederlands (anders toont Stripe bij een Engelse browser 'per year')
+    locale: 'nl',
     ...(customerEmail ? { customer_email: customerEmail } : {}),
     ...(knopTekst ? { custom_text: { submit: { message: knopTekst } } } : {}),
     // Geen kortingsbon meer (prijsmodel 26-10: €99,99 is de echte jaarprijs).
@@ -274,7 +281,121 @@ async function lead(request, waitUntil) {
 
 // Alleen het e-mailadres van de sessie (voor Tracklution ContactInfo); de QR-code
 // van de Express-versie gebruikt de webfunnel niet.
-async function checkoutRedeem(request, env) {
+// Proef of maand gestart: lead in Octanist aanmaken (alleen als OCTANIST_API_KEY
+// bestaat). externalId = Stripe-abonnement, dus herladen maakt geen tweede lead;
+// n8n zet de lead later op Won met het bedrag. Fouten raken de klant nooit.
+async function octanistLead(env, session, email) {
+  const abonnement = typeof session.subscription === 'object' ? session.subscription : null
+  if (!abonnement?.id) return
+  const meta = abonnement.metadata ?? {}
+  const lead = {
+    externalId: abonnement.id,
+    email,
+    custom: { plan: meta.plan ?? 'jaar', bron: 'webfunnel', stripe_klant: abonnement.customer ?? null },
+    ...(meta.utm_content ? { utm_content: meta.utm_content } : {}),
+  }
+  const stuur = (body) => octanist(env, 'POST', body)
+  let response = await stuur(meta.octanist_sessie ? { ...lead, sessionId: meta.octanist_sessie } : lead)
+  // Verlopen of onbekende sessie: lead toch aanmaken, dan zonder koppeling
+  if (response.status === 400 && meta.octanist_sessie) response = await stuur(lead)
+  if (!response.ok) console.error('[octanist] lead:', response.status, await response.text())
+}
+
+const OCTANIST_LEADS = 'https://octanist.com/api/leads'
+
+// Namen in Cloudflare: OCTANIST_API_KEY / OCTANIST_STRIPE_WEBHOOK_SECRET, of met een 2
+// erachter (zo staan ze sinds 30-10 in Preview)
+const octanistSleutel = (env) => env.OCTANIST_API_KEY || env.OCTANIST_API_KEY2
+const octanistWebhookGeheim = (env) => env.OCTANIST_STRIPE_WEBHOOK_SECRET || env.OCTANIST_STRIPE_WEBHOOK_SECRET2
+
+function octanist(env, method, body) {
+  return fetch(OCTANIST_LEADS, {
+    method,
+    headers: { 'X-API-KEY': octanistSleutel(env), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+// Stripe-webhook (alleen invoice.paid) -> Octanist, zonder n8n. Elke echte betaling
+// (proef €1, jaar na de proef, maand, upsell, verlenging) wordt Won met het bedrag.
+// externalId = Stripe-abonnement, voor de upsell het hoofdabonnement. De lead wordt
+// eerst (idempotent) aangemaakt met de Octanist-sessie van het abonnement, dus ook
+// app-klanten en betalingen zonder bedankpagina komen erin.
+async function octanistStripe(request, env) {
+  const signature = request.headers.get('stripe-signature')
+  if (!signature) return json({ error: 'Missing stripe-signature header' }, 400)
+  const stripe = getStripe(env)
+  if (!stripe || !octanistWebhookGeheim(env) || !octanistSleutel(env)) {
+    return json({ error: 'Octanist webhook is not configured' }, 400)
+  }
+  const rawBody = await request.text()
+  let event
+  try {
+    event = await stripe.webhooks.constructEventAsync(
+      rawBody,
+      signature,
+      octanistWebhookGeheim(env),
+      undefined,
+      Stripe.createSubtleCryptoProvider(),
+    )
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : 'Invalid signature' }, 400)
+  }
+  if (event.type !== 'invoice.paid') return json({ received: true, handled: false, type: event.type })
+
+  const betaling = octanistBetaling(event.data.object)
+  if (!betaling) return json({ received: true, handled: false, reason: 'geen bedrag of abonnement' })
+  const { lead, won } = betaling
+  let response = await octanist(env, 'POST', lead)
+  // Onbekende/verlopen sessie: lead zonder koppeling aanmaken
+  if (response.status === 400 && lead.sessionId) {
+    const { sessionId, ...zonder } = lead
+    response = await octanist(env, 'POST', zonder)
+  }
+  if (!response.ok && response.status !== 409) {
+    console.error('[octanist] lead:', response.status, await response.text())
+    return json({ error: 'Octanist lead failed' }, 500) // Stripe probeert het later opnieuw
+  }
+  response = await octanist(env, 'PATCH', won)
+  if (!response.ok) {
+    console.error('[octanist] won:', response.status, await response.text())
+    return json({ error: 'Octanist won failed' }, 500)
+  }
+  return json({ received: true, handled: true, externalId: won.externalId, value: won.value })
+}
+
+function octanistBetaling(factuur) {
+  if (!factuur || factuur.object !== 'invoice' || !(factuur.amount_paid > 0)) return null
+  const details = factuur.parent?.subscription_details ?? factuur.subscription_details ?? {}
+  const meta = details.metadata ?? {}
+  const abonnement =
+    (typeof factuur.subscription === 'string' ? factuur.subscription : factuur.subscription?.id) ??
+    details.subscription ??
+    null
+  const email = (factuur.customer_email ?? '').trim().toLowerCase()
+  if (!abonnement || !email) return null
+  const isUpsell = meta.plan === 'upsell'
+  const externalId = isUpsell && meta.hoofd_abonnement ? meta.hoofd_abonnement : abonnement
+  const soort = isUpsell
+    ? 'upsell'
+    : factuur.billing_reason === 'subscription_create'
+      ? meta.plan === 'maand' ? 'maand' : 'proef'
+      : factuur.billing_reason === 'subscription_cycle' ? 'abonnement' : factuur.billing_reason ?? 'betaling'
+  const value = Math.round(factuur.amount_paid) / 100
+  const valuta = (factuur.currency ?? 'eur').toUpperCase()
+  const sessie = !isUpsell && typeof meta.octanist_sessie === 'string' ? meta.octanist_sessie : null
+  return {
+    lead: {
+      externalId,
+      email,
+      custom: { bron: 'stripe', plan: isUpsell ? 'jaar/maand + upsell' : meta.plan ?? 'onbekend' },
+      ...(sessie ? { sessionId: sessie } : {}),
+    },
+    won: { externalId, status: 'won', value, note: `${soort} ${value} ${valuta} (${factuur.id})` },
+  }
+}
+
+async function checkoutRedeem(request, env, waitUntil) {
   const url = new URL(request.url)
   const sessionId = url.searchParams.get('session_id') || ''
   const stripe = getStripe(env)
@@ -283,8 +404,13 @@ async function checkoutRedeem(request, env) {
   if (!stripe || !sessionId) {
     return json({ redeemUrl: `${redeemBase}?demo=1`, qrDataUrl: '', email: null, demo: true })
   }
-  const session = await stripe.checkout.sessions.retrieve(sessionId)
+  const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: octanistSleutel(env) ? ['subscription'] : [],
+  })
   const email = session.customer_details?.email ?? session.customer_email ?? null
+  if (octanistSleutel(env) && email && session.status === 'complete') {
+    waitUntil(octanistLead(env, session, email).catch((error) => console.error('[octanist]', error)))
+  }
   const params = new URLSearchParams({ session_id: sessionId })
   if (email) params.set('email', email)
   return json({
@@ -467,6 +593,8 @@ function health(env) {
     stripeConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID),
     maandConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_MAAND),
     proefPrijsConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PROEF),
+    octanistConfigured: Boolean(octanistSleutel(env)),
+    octanistStripeConfigured: Boolean(octanistSleutel(env) && octanistWebhookGeheim(env)),
     upsellConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_UPSELL),
     // Staat de oude kortingsbon nog in Cloudflare? Wordt niet meer gebruikt; mag weg.
     oudeCouponIngesteld: Boolean(env.STRIPE_COUPON_ID),
@@ -490,9 +618,11 @@ export async function onRequest({ request, env, waitUntil }) {
       case 'POST /api/lead':
         return await lead(request, opAchtergrond)
       case 'GET /api/checkout-redeem':
-        return await checkoutRedeem(request, env)
+        return await checkoutRedeem(request, env, waitUntil)
       case 'POST /api/upsell':
         return await upsell(request, env)
+      case 'POST /api/octanist-stripe':
+        return await octanistStripe(request, env)
       case 'POST /api/stripe-webhook':
         return await stripeWebhook(request, env)
       default:
