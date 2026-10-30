@@ -26,3 +26,11 @@ Bij een fout antwoordt de functie 500, zodat Stripe het later opnieuw probeert.
 
 **Let op:** koppel Meta pas in Octanist als Tracklution stopt met StartTrial/Purchase naar Meta,
 anders telt Meta dubbel.
+
+## Instellen en live zetten
+
+- Test (30-10-2026): Cloudflare **Preview** heeft `OCTANIST_API_KEY` (Octanist-sleutel "Webfunnel Cloudflare")
+  en `OCTANIST_STRIPE_WEBHOOK_SECRET`; Stripe-bestemming "Octanist (test)" (alleen `invoice.paid`,
+  API-versie 2026-01-28.clover) wijst naar de preview-URL `/api/octanist-stripe`.
+- Live: dezelfde twee secrets bij **Production** zetten, en de URL van de Stripe-bestemming veranderen
+  naar `https://proef.gymlads.nl/api/octanist-stripe` (signing secret blijft gelijk).
