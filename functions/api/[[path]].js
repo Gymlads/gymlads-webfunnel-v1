@@ -316,8 +316,9 @@ function octanist(env, method, body) {
   })
 }
 
-// Stripe-webhook (alleen invoice.paid) -> Octanist, zonder n8n. Elke echte betaling
-// (proef €1, jaar na de proef, maand, upsell, verlenging) wordt Won met het bedrag.
+// Stripe-webhook (alleen invoice.paid) -> Octanist, zonder n8n. De proef van €1 wordt
+// Qualified (Meta: StartTrial); elke echte betaling (jaar na de proef, maand, upsell,
+// verlenging) wordt Won met het bedrag (Meta: Purchase).
 // externalId = Stripe-abonnement, voor de upsell het hoofdabonnement. De lead wordt
 // eerst (idempotent) aangemaakt met de Octanist-sessie van het abonnement, dus ook
 // app-klanten en betalingen zonder bedankpagina komen erin.
@@ -345,7 +346,7 @@ async function octanistStripe(request, env) {
 
   const betaling = octanistBetaling(event.data.object)
   if (!betaling) return json({ received: true, handled: false, reason: 'geen bedrag of abonnement' })
-  const { lead, won } = betaling
+  const { lead, status } = betaling
   let response = await octanist(env, 'POST', lead)
   // Onbekende/verlopen sessie: lead zonder koppeling aanmaken
   if (response.status === 400 && lead.sessionId) {
@@ -356,12 +357,12 @@ async function octanistStripe(request, env) {
     console.error('[octanist] lead:', response.status, await response.text())
     return json({ error: 'Octanist lead failed' }, 500) // Stripe probeert het later opnieuw
   }
-  response = await octanist(env, 'PATCH', won)
+  response = await octanist(env, 'PATCH', status)
   if (!response.ok) {
-    console.error('[octanist] won:', response.status, await response.text())
-    return json({ error: 'Octanist won failed' }, 500)
+    console.error(`[octanist] ${status.status}:`, response.status, await response.text())
+    return json({ error: `Octanist ${status.status} failed` }, 500)
   }
-  return json({ received: true, handled: true, externalId: won.externalId, value: won.value })
+  return json({ received: true, handled: true, externalId: status.externalId, status: status.status, value: status.value })
 }
 
 function octanistBetaling(factuur) {
@@ -379,7 +380,7 @@ function octanistBetaling(factuur) {
   const soort = isUpsell
     ? 'upsell'
     : factuur.billing_reason === 'subscription_create'
-      ? meta.plan === 'maand' ? 'maand' : 'proef'
+      ? meta.plan === 'maand' ? 'maand' : factuur.amount_paid <= 100 ? 'proef' : 'start'
       : factuur.billing_reason === 'subscription_cycle' ? 'abonnement' : factuur.billing_reason ?? 'betaling'
   const value = Math.round(factuur.amount_paid) / 100
   const valuta = (factuur.currency ?? 'eur').toUpperCase()
@@ -391,7 +392,10 @@ function octanistBetaling(factuur) {
       custom: { bron: 'stripe', plan: isUpsell ? 'jaar/maand + upsell' : meta.plan ?? 'onbekend' },
       ...(sessie ? { sessionId: sessie } : {}),
     },
-    won: { externalId, status: 'won', value, note: `${soort} ${value} ${valuta} (${factuur.id})` },
+    status:
+      soort === 'proef'
+        ? { externalId, status: 'qualified', note: `proef ${value} ${valuta} (${factuur.id})` }
+        : { externalId, status: 'won', value, note: `${soort} ${value} ${valuta} (${factuur.id})` },
   }
 }
 
