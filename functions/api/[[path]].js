@@ -303,10 +303,15 @@ async function octanistLead(env, session, email) {
 
 const OCTANIST_LEADS = 'https://octanist.com/api/leads'
 
+// Namen in Cloudflare: OCTANIST_API_KEY / OCTANIST_STRIPE_WEBHOOK_SECRET, of met een 2
+// erachter (zo staan ze sinds 30-10 in Preview)
+const octanistSleutel = (env) => env.OCTANIST_API_KEY || env.OCTANIST_API_KEY2
+const octanistWebhookGeheim = (env) => env.OCTANIST_STRIPE_WEBHOOK_SECRET || env.OCTANIST_STRIPE_WEBHOOK_SECRET2
+
 function octanist(env, method, body) {
   return fetch(OCTANIST_LEADS, {
     method,
-    headers: { 'X-API-KEY': env.OCTANIST_API_KEY, 'Content-Type': 'application/json' },
+    headers: { 'X-API-KEY': octanistSleutel(env), 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
 }
@@ -320,7 +325,7 @@ async function octanistStripe(request, env) {
   const signature = request.headers.get('stripe-signature')
   if (!signature) return json({ error: 'Missing stripe-signature header' }, 400)
   const stripe = getStripe(env)
-  if (!stripe || !env.OCTANIST_STRIPE_WEBHOOK_SECRET || !env.OCTANIST_API_KEY) {
+  if (!stripe || !octanistWebhookGeheim(env) || !octanistSleutel(env)) {
     return json({ error: 'Octanist webhook is not configured' }, 400)
   }
   const rawBody = await request.text()
@@ -329,7 +334,7 @@ async function octanistStripe(request, env) {
     event = await stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
-      env.OCTANIST_STRIPE_WEBHOOK_SECRET,
+      octanistWebhookGeheim(env),
       undefined,
       Stripe.createSubtleCryptoProvider(),
     )
@@ -400,10 +405,10 @@ async function checkoutRedeem(request, env, waitUntil) {
     return json({ redeemUrl: `${redeemBase}?demo=1`, qrDataUrl: '', email: null, demo: true })
   }
   const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: env.OCTANIST_API_KEY ? ['subscription'] : [],
+    expand: octanistSleutel(env) ? ['subscription'] : [],
   })
   const email = session.customer_details?.email ?? session.customer_email ?? null
-  if (env.OCTANIST_API_KEY && email && session.status === 'complete') {
+  if (octanistSleutel(env) && email && session.status === 'complete') {
     waitUntil(octanistLead(env, session, email).catch((error) => console.error('[octanist]', error)))
   }
   const params = new URLSearchParams({ session_id: sessionId })
@@ -588,8 +593,8 @@ function health(env) {
     stripeConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID),
     maandConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_MAAND),
     proefPrijsConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PROEF),
-    octanistConfigured: Boolean(env.OCTANIST_API_KEY),
-    octanistStripeConfigured: Boolean(env.OCTANIST_API_KEY && env.OCTANIST_STRIPE_WEBHOOK_SECRET),
+    octanistConfigured: Boolean(octanistSleutel(env)),
+    octanistStripeConfigured: Boolean(octanistSleutel(env) && octanistWebhookGeheim(env)),
     // Alleen namen (nooit waarden), om tikfouten in Cloudflare te vinden
     octanistNamen: Object.keys(env).filter((k) => /octanist/i.test(k)),
     upsellConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_UPSELL),
