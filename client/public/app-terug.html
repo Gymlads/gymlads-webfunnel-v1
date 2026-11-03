@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Terug naar Gymlads</title>
+    <!-- Na betalen via een Stripe Payment Link van de app (sinds 2.2.9): stuurt
+         door naar de app, met session_id voor de upsell met één klik. -->
+    <style>
+      html, body { margin: 0; height: 100%; background: #171719; color: #fff; font-family: Inter, system-ui, -apple-system, sans-serif; }
+      main { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px 16px; box-sizing: border-box; text-align: center; }
+      h1 { margin: 0; font-size: 24px; font-weight: 800; }
+      p { margin: 0; color: #8e8e93; font-size: 15px; line-height: 1.4; }
+      a { display: inline-block; padding: 16px 24px; border-radius: 14px; background: #ccff00; color: #171719; font-weight: 800; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Betaling gelukt!</h1>
+      <p>We sturen je terug naar de Gymlads-app.</p>
+      <a id="terug" href="gymlads://checkout-succes">Tik hier om terug te gaan naar de app</a>
+    </main>
+    <script>
+      ;(function () {
+        var id = new URLSearchParams(window.location.search).get('session_id') || ''
+        var doel = 'gymlads://checkout-succes' + (/^cs_[A-Za-z0-9_]+$/.test(id) ? '?session_id=' + encodeURIComponent(id) : '')
+        document.getElementById('terug').href = doel
+        window.location.replace(doel)
+      })()
+    </script>
+  </body>
+</html>
