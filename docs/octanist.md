@@ -41,3 +41,17 @@ die Octanist gebruikt. Alleen Octanist stuurt aankopen naar Meta, dus niets telt
   API-versie 2026-01-28.clover) wijst naar de preview-URL `/api/octanist-stripe`.
 - Live: dezelfde twee secrets bij **Production** zetten, en de URL van de Stripe-bestemming veranderen
   naar `https://proef.gymlads.nl/api/octanist-stripe` (signing secret blijft gelijk).
+
+## Meta als website-event (7-11-2026)
+
+Octanist stuurt naar Meta als offline/winkel-event; dat telt niet voor campagnes met
+conversielocatie Website (Aankoop werd "inactief" 7 dagen na het uitzetten van Tracklution).
+Daarom stuurt `/api/octanist-stripe` nu zelf naar de Meta Conversions API (Pixel Gymlads):
+- proef €1 → `StartTrial`, elke echte betaling → `Purchase`, met `value`/`currency`;
+- `action_source: website` met `_fbp`/`_fbc`, IP en browser die bij de checkout op het
+  abonnement zijn gezet (`meta_fbp`, `meta_fbc`, `meta_ip`, `meta_ua`); zonder browsergegevens
+  (app-klant) `system_generated`;
+- `event_id` = Stripe-factuur, dus een nieuwe poging van Stripe telt niet dubbel.
+Cloudflare: `META_CAPI_TOKEN` (Events Manager → Pixel Gymlads → Instellingen → Toegangstoken
+genereren), optioneel `META_TEST_EVENT_CODE` om te testen. Zet in Octanist de Meta-integratie
+uit, anders komt elke aankoop er twee keer in.

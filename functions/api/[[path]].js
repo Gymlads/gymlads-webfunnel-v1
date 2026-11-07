@@ -189,6 +189,14 @@ async function createCheckoutSession(request, env, waitUntil) {
   if (typeof body?.octanist === 'string' && OCTANIST_SESSIE.test(body.octanist)) {
     abonnementMetadata.octanist_sessie = body.octanist
   }
+  // Meta-cookies + IP/browser: voor de Conversions API na de betaling (metaEvent)
+  for (const [key, waarde] of [['meta_fbp', body?.meta?.fbp], ['meta_fbc', body?.meta?.fbc]]) {
+    if (typeof waarde === 'string' && META_COOKIE.test(waarde)) abonnementMetadata[key] = waarde
+  }
+  const ip = request.headers.get('CF-Connecting-IP')
+  if (ip) abonnementMetadata.meta_ip = ip.slice(0, 64)
+  const ua = request.headers.get('User-Agent')
+  if (ua) abonnementMetadata.meta_ua = ua.slice(0, 450)
   if (typeof meting?.utm_content === 'string' && meting.utm_content) {
     abonnementMetadata.utm_content = meting.utm_content.slice(0, 500)
   }
@@ -302,6 +310,7 @@ async function octanistLead(env, session, email) {
 }
 
 const OCTANIST_LEADS = 'https://octanist.com/api/leads'
+const META_COOKIE = /^fb\.\d\.\d{10,13}\.[A-Za-z0-9_.-]{1,400}$/
 
 // Namen in Cloudflare: OCTANIST_API_KEY / OCTANIST_STRIPE_WEBHOOK_SECRET, of met een 2
 // erachter (zo staan ze sinds 30-10 in Preview)
@@ -326,7 +335,7 @@ async function octanistStripe(request, env) {
   const signature = request.headers.get('stripe-signature')
   if (!signature) return json({ error: 'Missing stripe-signature header' }, 400)
   const stripe = getStripe(env)
-  if (!stripe || !octanistWebhookGeheim(env) || !octanistSleutel(env)) {
+  if (!stripe || !octanistWebhookGeheim(env) || (!octanistSleutel(env) && !env.META_CAPI_TOKEN)) {
     return json({ error: 'Octanist webhook is not configured' }, 400)
   }
   const rawBody = await request.text()
@@ -347,22 +356,83 @@ async function octanistStripe(request, env) {
   const betaling = octanistBetaling(event.data.object)
   if (!betaling) return json({ received: true, handled: false, reason: 'geen bedrag of abonnement' })
   const { lead, status } = betaling
-  let response = await octanist(env, 'POST', lead)
-  // Onbekende/verlopen sessie: lead zonder koppeling aanmaken
-  if (response.status === 400 && lead.sessionId) {
-    const { sessionId, ...zonder } = lead
-    response = await octanist(env, 'POST', zonder)
+  if (octanistSleutel(env)) {
+    let response = await octanist(env, 'POST', lead)
+    // Onbekende/verlopen sessie: lead zonder koppeling aanmaken
+    if (response.status === 400 && lead.sessionId) {
+      const { sessionId, ...zonder } = lead
+      response = await octanist(env, 'POST', zonder)
+    }
+    if (!response.ok && response.status !== 409) {
+      console.error('[octanist] lead:', response.status, await response.text())
+      return json({ error: 'Octanist lead failed' }, 500) // Stripe probeert het later opnieuw
+    }
+    response = await octanist(env, 'PATCH', status)
+    if (!response.ok) {
+      console.error(`[octanist] ${status.status}:`, response.status, await response.text())
+      return json({ error: `Octanist ${status.status} failed` }, 500)
+    }
   }
-  if (!response.ok && response.status !== 409) {
-    console.error('[octanist] lead:', response.status, await response.text())
-    return json({ error: 'Octanist lead failed' }, 500) // Stripe probeert het later opnieuw
-  }
-  response = await octanist(env, 'PATCH', status)
-  if (!response.ok) {
-    console.error(`[octanist] ${status.status}:`, response.status, await response.text())
-    return json({ error: `Octanist ${status.status} failed` }, 500)
+  // Zelf naar Meta als website-event (Octanist stuurt alleen offline-events, die
+  // tellen niet voor campagnes met conversielocatie Website). event_id = factuur,
+  // dus een nieuwe poging van Stripe telt in Meta niet dubbel.
+  if (env.META_CAPI_TOKEN) {
+    const response = await metaEvent(env, stripe, betaling.meta)
+    if (!response.ok) {
+      console.error('[meta]', response.status, await response.text())
+      return json({ error: 'Meta event failed' }, 500)
+    }
   }
   return json({ received: true, handled: true, externalId: status.externalId, status: status.status, value: status.value })
+}
+
+const META_PIXEL = '1123007803324591'
+
+async function sha256(tekst) {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(tekst))
+  return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+// Proef €1 -> StartTrial, elke echte betaling -> Purchase, met bedrag. Cookies, IP en
+// browser komen van het abonnement (createCheckoutSession); de upsell leent ze van
+// het hoofdabonnement. Zonder browser-gegevens (bv. app-klant) geen 'website'.
+async function metaEvent(env, stripe, info) {
+  let meta = info.metadata
+  if (info.hoofdAbonnement && !meta.meta_ua) {
+    try {
+      meta = (await stripe.subscriptions.retrieve(info.hoofdAbonnement)).metadata ?? meta
+    } catch (error) {
+      console.error('[meta] hoofdabonnement:', error)
+    }
+  }
+  const userData = {
+    em: [await sha256(info.email)],
+    ...(info.klant ? { external_id: [await sha256(info.klant)] } : {}),
+    ...(meta.meta_fbp ? { fbp: meta.meta_fbp } : {}),
+    ...(meta.meta_fbc ? { fbc: meta.meta_fbc } : {}),
+    ...(meta.meta_ip ? { client_ip_address: meta.meta_ip } : {}),
+    ...(meta.meta_ua ? { client_user_agent: meta.meta_ua } : {}),
+  }
+  const website = Boolean(meta.meta_ua)
+  const body = {
+    data: [
+      {
+        event_name: info.soort === 'proef' ? 'StartTrial' : 'Purchase',
+        event_time: info.tijd,
+        event_id: info.factuur,
+        action_source: website ? 'website' : 'system_generated',
+        ...(website ? { event_source_url: 'https://proef.gymlads.nl/' } : {}),
+        user_data: userData,
+        custom_data: { value: info.value, currency: info.valuta, content_name: info.soort },
+      },
+    ],
+    ...(env.META_TEST_EVENT_CODE ? { test_event_code: env.META_TEST_EVENT_CODE } : {}),
+  }
+  return fetch(`https://graph.facebook.com/v23.0/${env.META_PIXEL_ID || META_PIXEL}/events?access_token=${encodeURIComponent(env.META_CAPI_TOKEN)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
 }
 
 function octanistBetaling(factuur) {
@@ -386,6 +456,17 @@ function octanistBetaling(factuur) {
   const valuta = (factuur.currency ?? 'eur').toUpperCase()
   const sessie = !isUpsell && typeof meta.octanist_sessie === 'string' ? meta.octanist_sessie : null
   return {
+    meta: {
+      soort,
+      value,
+      valuta,
+      email,
+      factuur: factuur.id,
+      tijd: factuur.status_transitions?.paid_at ?? factuur.created ?? Math.floor(Date.now() / 1000),
+      klant: typeof factuur.customer === 'string' ? factuur.customer : factuur.customer?.id ?? null,
+      metadata: meta,
+      hoofdAbonnement: isUpsell ? meta.hoofd_abonnement || null : null,
+    },
     lead: {
       externalId,
       email,
@@ -599,6 +680,7 @@ function health(env) {
     proefPrijsConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PROEF),
     octanistConfigured: Boolean(octanistSleutel(env)),
     octanistStripeConfigured: Boolean(octanistSleutel(env) && octanistWebhookGeheim(env)),
+    metaCapiConfigured: Boolean(env.META_CAPI_TOKEN && octanistWebhookGeheim(env)),
     upsellConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_UPSELL),
     // Staat de oude kortingsbon nog in Cloudflare? Wordt niet meer gebruikt; mag weg.
     oudeCouponIngesteld: Boolean(env.STRIPE_COUPON_ID),

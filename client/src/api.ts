@@ -1,6 +1,7 @@
 import type { OnboardingData } from './types'
 import { sportschoolAntwoorden, toStripeMetadata } from './types'
 import { meetKoppeling } from './analytics/meten'
+import { metaCookies } from './analytics/meta'
 import { octanistSessie } from './analytics/octanist'
 
 export interface CheckoutResponse {
@@ -42,6 +43,7 @@ export async function createCheckoutSession(
     clientOrigin: window.location.origin,
     meting: meetKoppeling(),
     octanist: octanistSessie(),
+    meta: metaCookies(),
   })
   const maxAttempts = 2
 
