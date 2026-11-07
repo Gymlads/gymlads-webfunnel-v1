@@ -3,7 +3,6 @@ import { confirmDemoCheckout, fetchCheckoutRedeem, koopUpsell } from '../api'
 import type { OnboardingData } from '../types'
 import { toStripeMetadata } from '../types'
 import { pushGtmEvent } from '../analytics/gtm'
-import { setTracklutionContactInfo, trackTracklutionSubscribe } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
 import OnboardingLayout from './components/OnboardingLayout'
 import NextButton from './components/NextButton'
@@ -142,17 +141,13 @@ export function CheckoutSuccess() {
       plan: maand ? 'month' : 'year',
     })
 
-    // E-mailadres uit de Stripe-sessie: tonen in stap 2 en doorgeven aan
-    // Tracklution (ContactInfo)
+    // E-mailadres uit de Stripe-sessie: tonen in stap 2
     if (sessionId) {
       fetchCheckoutRedeem(sessionId)
         .then((result) => {
           if (result.email) {
             setEmail(result.email)
-            setTracklutionContactInfo(result.email)
           }
-          // Na ContactInfo, zodat Tracklution de aankoop aan dit bezoek koppelt
-          if (maand && !result.demo) trackTracklutionSubscribe(sessionId)
           if (result.upsell && !result.demo) setUpsell('aanbod')
         })
         .catch(() => {})
