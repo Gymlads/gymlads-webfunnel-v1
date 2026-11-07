@@ -33,6 +33,7 @@ import {
   trackPaywallCta,
   trackPlanSelected,
 } from '../analytics/gtm'
+import { setTracklutionContactInfo } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
 import {
   buildStepList,
@@ -774,6 +775,7 @@ export default function OnboardingWizard() {
               setEmail(adres)
               setHerinneringen(vinkje)
               trackEmailSubmitted(vinkje)
+              setTracklutionContactInfo(adres)
               saveLead(data, adres, vinkje)
               navigateNext()
             }}
