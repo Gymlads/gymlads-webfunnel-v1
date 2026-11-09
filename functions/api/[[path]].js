@@ -326,7 +326,7 @@ async function octanistStripe(request, env) {
   const signature = request.headers.get('stripe-signature')
   if (!signature) return json({ error: 'Missing stripe-signature header' }, 400)
   const stripe = getStripe(env)
-  if (!stripe || !octanistWebhookGeheim(env) || !octanistSleutel(env)) {
+  if (!stripe || !octanistWebhookGeheim(env) || (!octanistSleutel(env) && !env.TRACKLUTION_WEBHOOK_URL)) {
     return json({ error: 'Octanist webhook is not configured' }, 400)
   }
   const rawBody = await request.text()
@@ -344,8 +344,15 @@ async function octanistStripe(request, env) {
   }
   if (event.type !== 'invoice.paid') return json({ received: true, handled: false, type: event.type })
 
-  const betaling = octanistBetaling(event.data.object)
-  if (!betaling) return json({ received: true, handled: false, reason: 'geen bedrag of abonnement' })
+  // Tracklution eerst: mislukt het, dan 500 en probeert Stripe het later opnieuw
+  // (Tracklution ontdubbelt op eventId = factuur-id).
+  let tracklution = null
+  if (env.TRACKLUTION_WEBHOOK_URL) {
+    tracklution = await tracklutionEvent(env, stripe, event.data.object)
+    if (tracklution?.fout) return json({ error: 'Tracklution failed' }, 500)
+  }
+  const betaling = octanistSleutel(env) ? octanistBetaling(event.data.object) : null
+  if (!betaling) return json({ received: true, handled: Boolean(tracklution), tracklution })
   const { lead, status } = betaling
   let response = await octanist(env, 'POST', lead)
   // Onbekende/verlopen sessie: lead zonder koppeling aanmaken
@@ -362,7 +369,62 @@ async function octanistStripe(request, env) {
     console.error(`[octanist] ${status.status}:`, response.status, await response.text())
     return json({ error: `Octanist ${status.status} failed` }, 500)
   }
-  return json({ received: true, handled: true, externalId: status.externalId, status: status.status, value: status.value })
+  return json({
+    received: true,
+    handled: true,
+    externalId: status.externalId,
+    status: status.status,
+    value: status.value,
+    tracklution,
+  })
+}
+
+// Stripe-betaling -> Tracklution-webhook -> Meta (website-event). Bepaalt zelf het
+// event, los van prijzen (Roel 9-11):
+// - eerste factuur van een abonnement MET proefperiode -> StartTrial (€1-proef web,
+//   gratis proef app)
+// - elke andere betaalde factuur (jaar, maand, Voedingsschema, verlenging) -> Purchase
+// TRACKLUTION_WEBHOOK_URL = de volledige webhook-link uit Tracklution (met k=sleutel).
+async function tracklutionEvent(env, stripe, factuur) {
+  if (!factuur || factuur.object !== 'invoice') return null
+  const email = (factuur.customer_email ?? '').trim().toLowerCase()
+  const details = factuur.parent?.subscription_details ?? factuur.subscription_details ?? {}
+  const abonnementId =
+    (typeof factuur.subscription === 'string' ? factuur.subscription : factuur.subscription?.id) ??
+    details.subscription ??
+    null
+  if (!email || !abonnementId) return null
+
+  let proef = false
+  if (factuur.billing_reason === 'subscription_create') {
+    const abonnement = await stripe.subscriptions.retrieve(abonnementId)
+    proef = Boolean(abonnement.trial_start || abonnement.trial_end)
+  }
+  if (!proef && !(factuur.amount_paid > 0)) return null
+
+  const track = proef ? 'StartTrial' : 'Purchase'
+  const value = Math.round(factuur.amount_paid ?? 0) / 100
+  const url = new URL(env.TRACKLUTION_WEBHOOK_URL)
+  url.searchParams.set('track', track)
+  url.searchParams.set('eventId', factuur.id)
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      value,
+      currency: (factuur.currency ?? 'eur').toUpperCase(),
+      external_id: typeof factuur.customer === 'string' ? factuur.customer : factuur.customer?.id ?? null,
+      event_id: factuur.id,
+      plan: details.metadata?.plan ?? null,
+      billing_reason: factuur.billing_reason ?? null,
+    }),
+  })
+  if (!response.ok) {
+    console.error('[tracklution]', track, response.status, await response.text())
+    return { track, fout: response.status }
+  }
+  return { track, value, eventId: factuur.id }
 }
 
 function octanistBetaling(factuur) {
@@ -599,6 +661,7 @@ function health(env) {
     proefPrijsConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PROEF),
     octanistConfigured: Boolean(octanistSleutel(env)),
     octanistStripeConfigured: Boolean(octanistSleutel(env) && octanistWebhookGeheim(env)),
+    tracklutionWebhookConfigured: Boolean(env.TRACKLUTION_WEBHOOK_URL && octanistWebhookGeheim(env)),
     upsellConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_UPSELL),
     // Staat de oude kortingsbon nog in Cloudflare? Wordt niet meer gebruikt; mag weg.
     oudeCouponIngesteld: Boolean(env.STRIPE_COUPON_ID),

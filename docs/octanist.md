@@ -38,3 +38,20 @@ anders telt Meta dubbel.
   API-versie 2026-01-28.clover) wijst naar de preview-URL `/api/octanist-stripe`.
 - Live: dezelfde twee secrets bij **Production** zetten, en de URL van de Stripe-bestemming veranderen
   naar `https://proef.gymlads.nl/api/octanist-stripe` (signing secret blijft gelijk).
+
+## Tracklution-events uit onze eigen Stripe-webhook (9-11-2026)
+
+Octanist stuurt naar Meta als `physical_store`; daarom gaat Meta weer via Tracklution.
+De Stripe-koppeling van Tracklution koos het event op basis van de betaalpagina, waardoor
+het Voedingsschema (€4,99) als StartTrial binnenkwam. Daarom bepaalt `/api/octanist-stripe`
+(Stripe `invoice.paid`) nu zelf het event en stuurt het naar de webhook van Tracklution:
+
+| Stripe-factuur | Event |
+|---|---|
+| eerste factuur van een abonnement **met proefperiode** (€1 web, gratis app) | `StartTrial` |
+| elke andere betaalde factuur (jaar, maand, Voedingsschema, verlenging) | `Purchase` |
+
+Los van prijzen: prijswijzigingen vragen geen aanpassing. `eventId` = Stripe-factuur-id
+(Tracklution ontdubbelt). Cloudflare (Production): `TRACKLUTION_WEBHOOK_URL` = volledige
+webhook-link uit Tracklution (met `k=`-sleutel, nooit in git). Daarna in Tracklution de
+Stripe-koppeling uitzetten (anders dubbel). Health: `tracklutionWebhookConfigured`.
