@@ -24,6 +24,30 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
 // de jaarproef. Moet gelijk zijn aan PROEF_BEDRAG in client/src/onboarding/paywallInhoud.ts.
 const PROEF_BEDRAG_CENT = 100
 
+// Vaste Stripe-prijs voor de €1-proefweek (product "Gymlads proefweek", zelfde als
+// de app). Tracklution blokkeert dat product als Purchase; een losse price_data
+// maakt elke keer een nieuw product en glipt daar langs (10-11-2026).
+// Alleen gebruiken als Stripe bevestigt: actief, eenmalig, €1 in euro. Anders
+// (of bij een fout) het oude losse bedrag, zodat de checkout altijd blijft werken.
+const STANDAARD_PROEF_PRIJS = 'price_1UVvloClVZcfiz3MxDpbRGkO'
+let proefPrijsCache = null
+async function vasteProefPrijs(stripe, env) {
+  const id = env.STRIPE_PRICE_ID_PROEF || STANDAARD_PROEF_PRIJS
+  if (proefPrijsCache && proefPrijsCache.id === id && Date.now() - proefPrijsCache.tijd < 10 * 60 * 1000) {
+    return proefPrijsCache.ok ? id : null
+  }
+  let ok = false
+  try {
+    const p = await stripe.prices.retrieve(id)
+    ok = p.active && p.type === 'one_time' && p.currency === 'eur' && p.unit_amount === PROEF_BEDRAG_CENT
+    if (!ok) console.error('[checkout] proefprijs klopt niet, los bedrag gebruikt', id)
+  } catch (err) {
+    console.error('[checkout] proefprijs niet gevonden, los bedrag gebruikt', id, err?.message)
+  }
+  proefPrijsCache = { id, ok, tijd: Date.now() }
+  return ok ? id : null
+}
+
 const STRIPE_KNOP_TEKST = {
   jaar:
     'Je betaalt vandaag €1 voor je proefweek. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef. Je abonnement start direct na betaling. Daarmee vervalt je herroepingsrecht van 14 dagen.',
@@ -197,6 +221,7 @@ async function createCheckoutSession(request, env, waitUntil) {
   // E-mail uit de e-mailstap: op de betaalpagina al ingevuld. Bewust GEEN
   // client_reference_id: n8n en Tracklution zien een web-checkout dan als app-checkout.
   const customerEmail = geldigEmail(body?.email)
+  const proefPrijsId = skipTrial ? null : await vasteProefPrijs(stripe, env)
   const knopTekst = plan === 'maand' ? STRIPE_KNOP_TEKST.maand : skipTrial ? null : STRIPE_KNOP_TEKST.jaar
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -209,8 +234,8 @@ async function createCheckoutSession(request, env, waitUntil) {
         : [
             // Liefst het Stripe-product "Gymlads proefweek" (zelfde als de app),
             // anders hetzelfde bedrag los meegegeven
-            env.STRIPE_PRICE_ID_PROEF
-              ? { price: env.STRIPE_PRICE_ID_PROEF, quantity: 1 }
+            proefPrijsId
+              ? { price: proefPrijsId, quantity: 1 }
               : {
                   price_data: {
                     currency: 'eur',
@@ -597,6 +622,7 @@ function health(env) {
     stripeConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID),
     maandConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_MAAND),
     proefPrijsConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_PROEF),
+    proefPrijsGebruikt: proefPrijsCache ? proefPrijsCache.ok : null,
     octanistConfigured: Boolean(octanistSleutel(env)),
     octanistStripeConfigured: Boolean(octanistSleutel(env) && octanistWebhookGeheim(env)),
     upsellConfigured: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID_UPSELL),
