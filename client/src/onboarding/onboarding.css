@@ -1932,3 +1932,128 @@
   cursor: pointer;
 }
 .checkout-upsell__gelukt { margin: 20px 0 0; color: #ccff00; font-weight: 700; text-align: center; }
+
+/* Koopblok 'een-plan' (oude opbouw terug, Roel 10-11-2026, VOORSTEL-v7) */
+.paywall__een {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.paywall__een-kop {
+  margin: 0 0 12px;
+  font-size: clamp(2.2rem, 10vw, 2.7rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.paywall__een-sub {
+  margin: 0 0 18px;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.paywall__een-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  margin: 0 0 30px;
+  font-size: 0.95rem;
+}
+
+.paywall__een-score {
+  flex-wrap: nowrap;
+  gap: 8px;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.paywall__een-score .paywall__stars {
+  display: inline-flex;
+  gap: 1px;
+  color: #ffc21a;
+}
+
+.paywall__een-score .paywall__stars svg {
+  width: 15px;
+  height: 15px;
+}
+
+.paywall__een-plan {
+  position: relative;
+  padding: 34px 8px 20px;
+  border: 3px solid var(--accent);
+  border-radius: 22px;
+  background: #1f2116;
+}
+
+.paywall__een-badge {
+  position: absolute;
+  top: -19px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.85rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.paywall__een-prijs {
+  margin: 0;
+  font-size: clamp(2.8rem, 13vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.paywall__een-prijs span {
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.paywall__een-regel {
+  margin: 10px 0 0;
+  font-size: 1.05rem;
+}
+
+.paywall__een-regel s {
+  color: var(--text-muted);
+}
+
+.paywall__een-regel {
+  font-size: clamp(0.84rem, 3.9vw, 1.05rem);
+  letter-spacing: -0.01em;
+}
+
+.paywall__een-regel s,
+.paywall__een-regel strong {
+  white-space: nowrap;
+}
+
+.paywall__een-regel strong {
+  font-weight: 800;
+}
+
+.paywall__een-knop {
+  margin-top: 26px;
+  min-height: 64px;
+  font-size: 1.15rem;
+}
+
+.paywall__een .paywall__smallprint {
+  margin: 14px 4px 0;
+  font-size: 0.82rem;
+}
+
+.paywall__een .paywall__garantie {
+  margin-top: 18px;
+  font-size: 15px;
+  text-align: left;
+}

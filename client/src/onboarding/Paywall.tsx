@@ -3,6 +3,8 @@ import { BadgeCheck, Check, ChevronDown, Gift, Star } from 'lucide-react'
 import PaymentLogos from './components/PaymentLogos'
 import {
   AANTAL_SPORTERS,
+  EEN_PLAN,
+  PAYWALL_VERSIE,
   APP_STORE_SCORE,
   APP_STORE_URL,
   GOOGLE_PLAY_URL,
@@ -46,7 +48,7 @@ const PLAN_VOLGORDE: Plan[] = ['jaar', 'maand']
 
 // Plankeuze (Roel 26-10): twee kaarten onder elkaar, jaar bovenaan en standaard
 // gekozen. Knop en kleine tekst wisselen mee met de keuze.
-function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: PaywallProps & { positie: CtaPositie }) {
+function BetaalblokKeuze({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: PaywallProps & { positie: CtaPositie }) {
   const ditBlokBezig = bezig === positie
   const gekozen = PLANNEN[plan]
   return (
@@ -112,6 +114,66 @@ function Betaalblok({ positie, onCheckout, bezig, fout, plan, onKiesPlan }: Payw
           gekozen.knop
         )}
       </button>
+      <Garantie />
+      <PaymentLogos />
+    </section>
+  )
+}
+
+type BlokProps = PaywallProps & { positie: CtaPositie }
+
+/** Koopblok volgens PAYWALL_VERSIE (zie paywallInhoud.ts). Boven en halverwege gelijk. */
+function Betaalblok(props: BlokProps) {
+  return PAYWALL_VERSIE === 'een-plan' ? <BetaalblokEenPlan {...props} /> : <BetaalblokKeuze {...props} />
+}
+
+// Oude opbouw terug (Roel 10-11, voorbeeld VOORSTEL-v7): één kop, één jaarplan, één knop.
+// Alleen tekst en opmaak: de knop roept dezelfde onCheckout aan als "GA VERDER" met
+// het jaar gekozen (plan staat standaard op 'jaar' en is hier niet te wisselen).
+function BetaalblokEenPlan({ positie, onCheckout, bezig, fout, plan }: BlokProps) {
+  const ditBlokBezig = bezig === positie
+  return (
+    <section className="paywall__een" aria-label="Start je proefweek">
+      <h2 className="paywall__een-kop">{EEN_PLAN.kop}</h2>
+      <p className="paywall__een-sub">{EEN_PLAN.sub}</p>
+      <p className="paywall__een-score">
+        <Sterren />
+        <span>
+          {EEN_PLAN.score} • {EEN_PLAN.workouts}
+        </span>
+      </p>
+
+      <div className="paywall__een-plan" data-plan="jaar">
+        <span className="paywall__een-badge">{EEN_PLAN.badge}</span>
+        <p className="paywall__een-prijs">
+          {EEN_PLAN.prijs}
+          <span> {EEN_PLAN.prijsEenheid}</span>
+        </p>
+        <p className="paywall__een-regel">
+          {EEN_PLAN.planNaam} <s>{EEN_PLAN.oudePrijs}</s> <strong>{EEN_PLAN.nieuwePrijs}</strong>
+        </p>
+      </div>
+
+      {fout?.positie === positie && <div className="onboarding__error">{fout.tekst}</div>}
+      <button
+        type="button"
+        className={`onboarding__btn paywall__cta paywall__een-knop${ditBlokBezig ? ' paywall__cta--bezig' : ''}`}
+        onClick={() => onCheckout(positie)}
+        disabled={bezig !== null}
+        aria-busy={ditBlokBezig}
+        data-cta-positie={positie}
+        data-plan={plan}
+      >
+        {ditBlokBezig ? (
+          <>
+            <span className="paywall__spinner" aria-hidden="true" />
+            Even geduld…
+          </>
+        ) : (
+          EEN_PLAN.knop
+        )}
+      </button>
+      <p className="paywall__smallprint">{EEN_PLAN.kleineTekst}</p>
       <Garantie />
       <PaymentLogos />
     </section>
