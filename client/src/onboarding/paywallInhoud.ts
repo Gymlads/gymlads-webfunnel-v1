@@ -61,6 +61,34 @@ export const PLANNEN: Record<
 }
 
 /**
+ * Welke opbouw het koopblok bovenaan (en halverwege) heeft.
+ * - 'een-plan' (Roel 10-11-2026): terug naar de oude opbouw van vóór 29-10. Eén kop,
+ *   één jaarplan, één grote knop. Geen jaar/maand-keuze in beeld.
+ * - 'plankeuze' (26-10 t/m 10-11): "Kies jouw plan" met jaar én maand.
+ * Terugzetten = deze ene regel weer op 'plankeuze' zetten. De werking eronder is in
+ * beide versies gelijk: zelfde Stripe-prijs, checkout en tracking.
+ */
+export const PAYWALL_VERSIE: 'een-plan' | 'plankeuze' = 'een-plan'
+
+/** Teksten van het koopblok in de versie 'een-plan' (letterlijk uit de opdracht van Roel, 10-11). */
+export const EEN_PLAN = {
+  kop: `Start vandaag voor ${PROEF_BEDRAG},-`,
+  sub: `Probeer Gymlads 7 dagen voor ${PROEF_BEDRAG}. Niet overtuigd dat dit je progressie versnelt? Annuleer en je betaalt niets meer.`,
+  score: '4.8/5.0',
+  workouts: '10.000+ workouts gemaakt',
+  badge: 'EINDEJAARSACTIE: BESPAAR 50%',
+  // €99,99 / 365 = €0,27
+  prijs: '€ 0,27',
+  prijsEenheid: '/ dag',
+  planNaam: 'Jaarabonnement:',
+  // Afgerond onder de echte maandprijs: 12 × €17,99 = €215,88
+  oudePrijs: '€ 199,99',
+  nieuwePrijs: '€ 99,99 / jaar',
+  knop: `CLAIM JOUW 7 DAGEN VOOR ${PROEF_BEDRAG}`,
+  kleineTekst: `Vandaag betaal je ${PROEF_BEDRAG}. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens de proef, in je account. Actie geldt t/m 31 december.`,
+}
+
+/**
  * ⚠️ Upsell op de bedankpagina (Roel 29-10, advies Max, ontwerp A uit
  * ideeen/voedingsschema/upsell-varianten.png): het Voedingsschema,
  * €4,99 per maand (thread "Maaltijdplan als maandelijkse upsell"). Staat uit tot
