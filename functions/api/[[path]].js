@@ -225,6 +225,9 @@ async function createCheckoutSession(request, env, waitUntil) {
   // customer.subscription.created, en dat object heeft zelf geen e-mail. Zonder
   // e-mail kan Tracklution de proef niet aan het advertentiebezoek koppelen (11-11-2026).
   if (customerEmail) abonnementMetadata.email = customerEmail
+  // Wat de klant vandaag echt betaalt, als waarde voor StartTrial in Tracklution
+  // (Roel 11-11: tracking zo eerlijk mogelijk, dus €1 en niet de jaarprijs).
+  if (!skipTrial) abonnementMetadata.proef_bedrag = (PROEF_BEDRAG_CENT / 100).toFixed(2)
   const proefPrijsId = skipTrial ? null : await vasteProefPrijs(stripe, env)
   const knopTekst = plan === 'maand' ? STRIPE_KNOP_TEKST.maand : skipTrial ? null : STRIPE_KNOP_TEKST.jaar
   const session = await stripe.checkout.sessions.create({
