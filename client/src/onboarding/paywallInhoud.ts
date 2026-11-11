@@ -81,8 +81,8 @@ export const EEN_PLAN = {
   prijs: '€ 0,27',
   prijsEenheid: '/ dag',
   planNaam: 'Jaarabonnement:',
-  // Afgerond onder de echte maandprijs: 12 × €17,99 = €215,88
-  oudePrijs: '€ 199,99',
+  // Echte maandprijs × 12: 12 × €17,99 = €215,88 (Roel 11-11)
+  oudePrijs: '€ 215,88',
   nieuwePrijs: '€ 99,99 / jaar',
   knop: `CLAIM JOUW 7 DAGEN VOOR ${PROEF_BEDRAG}`,
   kleineTekst: `Vandaag betaal je ${PROEF_BEDRAG}. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens de proef, in je account. Actie geldt t/m 31 december.`,
