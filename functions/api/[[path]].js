@@ -221,6 +221,10 @@ async function createCheckoutSession(request, env, waitUntil) {
   // E-mail uit de e-mailstap: op de betaalpagina al ingevuld. Bewust GEEN
   // client_reference_id: n8n en Tracklution zien een web-checkout dan als app-checkout.
   const customerEmail = geldigEmail(body?.email)
+  // E-mail ook op het abonnement: Tracklution maakt StartTrial uit
+  // customer.subscription.created, en dat object heeft zelf geen e-mail. Zonder
+  // e-mail kan Tracklution de proef niet aan het advertentiebezoek koppelen (11-11-2026).
+  if (customerEmail) abonnementMetadata.email = customerEmail
   const proefPrijsId = skipTrial ? null : await vasteProefPrijs(stripe, env)
   const knopTekst = plan === 'maand' ? STRIPE_KNOP_TEKST.maand : skipTrial ? null : STRIPE_KNOP_TEKST.jaar
   const session = await stripe.checkout.sessions.create({
