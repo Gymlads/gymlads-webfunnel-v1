@@ -15,39 +15,20 @@ export interface DoelOptie {
   label: string
 }
 
-const OPTIES: Record<DoelSoort, DoelOptie> = {
-  kracht: { soort: 'kracht', emoji: '🏋️', label: 'Zwaarder op een oefening' },
-  afvallen: { soort: 'afvallen', emoji: '⚖️', label: "Kilo's eraf" },
-  aankomen: { soort: 'aankomen', emoji: '⚖️', label: "Kilo's erbij" },
-  taille: { soort: 'taille', emoji: '📏', label: 'Centimeters van je taille' },
-  armen: { soort: 'armen', emoji: '💪', label: 'Grotere armen' },
-  billen: { soort: 'billen', emoji: '🍑', label: 'Grotere billen' },
-  workouts: { soort: 'workouts', emoji: '📅', label: 'Elke week al mijn workouts' },
-}
-
-const VOLGORDE: DoelSoort[] = ['kracht', 'afvallen', 'aankomen', 'taille', 'armen', 'billen', 'workouts']
-
-/** Voorgestelde doelen bij het hoofddoel (zelfde als de app), daarna de rest. */
-export function doelOpties(hoofddoel: string, geslacht: string): { voorgesteld: DoelOptie[]; overig: DoelOptie[] } {
-  const man = geslacht.toLowerCase().startsWith('man')
-  let soorten: DoelSoort[]
-  switch (hoofddoel) {
-    case 'Afvallen':
-      soorten = ['afvallen', 'taille', 'kracht', 'workouts']
-      break
-    case 'Spieropbouw':
-      soorten = man ? ['aankomen', 'armen', 'kracht'] : ['aankomen', 'billen', 'armen', 'kracht']
-      break
-    case 'Kracht opbouwen':
-      soorten = man ? ['kracht', 'aankomen', 'armen'] : ['kracht', 'aankomen', 'billen']
-      break
-    default:
-      soorten = ['workouts', 'kracht', 'taille', 'afvallen']
+/**
+ * Vier vaste keuzes (Roel, 12 nov): afvallen, sterker worden (daarna welke
+ * oefening), spiermassa aankomen, en bij vrouwen grotere billen.
+ */
+export function doelOpties(geslacht: string): DoelOptie[] {
+  const opties: DoelOptie[] = [
+    { soort: 'afvallen', emoji: '🔥', label: 'Afvallen' },
+    { soort: 'kracht', emoji: '🏋️', label: 'Sterker worden' },
+    { soort: 'aankomen', emoji: '💪', label: 'Spiermassa aankomen' },
+  ]
+  if (!geslacht.toLowerCase().startsWith('man')) {
+    opties.push({ soort: 'billen', emoji: '🍑', label: 'Grotere billen' })
   }
-  return {
-    voorgesteld: soorten.map((s) => OPTIES[s]),
-    overig: VOLGORDE.filter((s) => !soorten.includes(s)).map((s) => OPTIES[s]),
-  }
+  return opties
 }
 
 /** Zelfde zes oefeningen als de app (ONBOARDING_OEFENINGEN). */
@@ -65,6 +46,8 @@ export function oefeningLabel(naam: string): string {
 }
 
 export function niveauUitErvaring(ervaring: string): Niveau {
+  // Het doel komt nu vóór de ervaringsvraag: dan het midden aanhouden.
+  if (!ervaring) return 'gemiddeld'
   const e = ervaring.toLowerCase()
   if (e.includes('1+ jaar')) return 'gevorderd'
   if (e.includes('6-12')) return 'gemiddeld'

@@ -453,7 +453,7 @@ export default function OnboardingWizard() {
       )
 
     case 'doel-kiezen': {
-      const { voorgesteld, overig } = doelOpties(data.doel, data.geslacht)
+      const opties = doelOpties(data.geslacht)
       const kies = (o: DoelOptie) => {
         setPressedOption(o.soort)
         setTimeout(() => {
@@ -474,11 +474,9 @@ export default function OnboardingWizard() {
       )
       return (
         <OnboardingLayout {...layoutProps}>
-          <h1 className="onboarding__title">Wat wil je over 8 weken zien?</h1>
-          <p className="onboarding__subtitle">Kies wat voor jou telt. Je kunt het later aanpassen in de app.</p>
-          <div className="onboarding__options">{voorgesteld.map(knop)}</div>
-          <p className="doel-kopje">Of kies een ander doel</p>
-          <div className="onboarding__options">{overig.map(knop)}</div>
+          <h1 className="onboarding__title">Wat wil je over 8 weken bereikt hebben?</h1>
+          <p className="onboarding__subtitle">Kies één doel. Je kunt het later aanpassen in de app.</p>
+          <div className="onboarding__options">{opties.map(knop)}</div>
           <button
             type="button"
             className="doel-later"

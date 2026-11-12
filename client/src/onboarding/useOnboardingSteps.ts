@@ -73,7 +73,7 @@ function getConditionalSteps(data: OnboardingData): StepId[] {
   }
 }
 
-// Doel na de ervaring, zoals in de app (12 nov). Overslaan kan ("Later").
+// Doel meteen na het hoofddoel (Roel, 12 nov). Overslaan kan ("Later").
 function getDoelSteps(data: OnboardingData): StepId[] {
   const s: StepId[] = ['doel-kiezen']
   if (data.doel_soort === 'kracht') s.push('doel-oefening')
@@ -82,7 +82,7 @@ function getDoelSteps(data: OnboardingData): StepId[] {
 }
 
 export function buildStepList(data: OnboardingData): StepId[] {
-  const i = BASE_STEPS.indexOf('experience') + 1
+  const i = BASE_STEPS.indexOf('goal') + 1
   return [
     ...BASE_STEPS.slice(0, i),
     ...getDoelSteps(data),
