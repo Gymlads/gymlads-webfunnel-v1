@@ -97,6 +97,11 @@ export interface OnboardingData {
   sportschool_smith: boolean
   sportschool_optrekstang: boolean
   sportschool_dipstation: boolean
+  // Doel (12 nov): gaat apart naar de server, niet in de Stripe-metadata.
+  doel_soort: '' | 'afvallen' | 'aankomen' | 'taille' | 'billen' | 'armen' | 'kracht' | 'workouts'
+  doel_oefening: string
+  doel_start: number | null
+  doel_waarde: number | null
   source: string
   subscribed_int: number
 }
@@ -205,6 +210,10 @@ export const initialOnboardingData: OnboardingData = {
   sportschool_smith: false,
   sportschool_optrekstang: false,
   sportschool_dipstation: false,
+  doel_soort: '',
+  doel_oefening: '',
+  doel_start: null,
+  doel_waarde: null,
   source: 'web',
   subscribed_int: 0,
 }
@@ -216,7 +225,13 @@ export const initialOnboardingData: OnboardingData = {
  */
 const LEEG_WEGLATEN = new Set<string>(['lengte', 'gewicht'])
 
+// Doel ook niet: Stripe staat max. 50 metadata-sleutels toe en we zitten er
+// dichtbij. Het doel gaat apart naar de server (api.ts, veld doel).
 const NIET_IN_CHECKOUT = new Set<string>([
+  'doel_soort',
+  'doel_oefening',
+  'doel_start',
+  'doel_waarde',
   'soort_sportschool',
   ...SPORTSCHOOL_TOESTELLEN.map((t) => t.key),
 ])

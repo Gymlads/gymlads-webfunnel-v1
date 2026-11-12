@@ -1,5 +1,6 @@
 import type { OnboardingData } from './types'
 import { sportschoolAntwoorden, toStripeMetadata } from './types'
+import { webDoel } from './onboarding/doel'
 import { meetKoppeling } from './analytics/meten'
 import { octanistSessie } from './analytics/octanist'
 
@@ -35,6 +36,8 @@ export async function createCheckoutSession(
     metadata: toStripeMetadata(data),
     // Kleine sportschool + toestellen: apart, op het abonnement (zie types.ts)
     sportschool: sportschoolAntwoorden(data),
+    // Doel (12 nov): de server bewaart het in Supabase, de app neemt het over
+    doel: webDoel(data) ?? undefined,
     // Jaar (met proef) of maand (zonder proef); de server kiest de Stripe-prijs
     plan,
     // Alleen voor customer_email in Stripe (vooraf ingevuld), niet in de metadata

@@ -124,6 +124,21 @@ async function forwardToN8n(env, payload) {
   return { forwarded: true }
 }
 
+const DOEL_SOORTEN = ['afvallen', 'aankomen', 'taille', 'billen', 'armen', 'kracht', 'workouts']
+
+// Doel uit de webfunnel controleren (zelfde regels als web_doel_bewaren).
+function geldigDoel(doel) {
+  if (!doel || typeof doel !== 'object' || !DOEL_SOORTEN.includes(doel.soort)) return null
+  if (doel.soort === 'workouts') return { soort: 'workouts', oefening: null, start: null, doel: null }
+  const getal = (x) => (typeof x === 'number' && Number.isFinite(x) && x > 0 && x <= 400 ? x : null)
+  const start = getal(doel.start)
+  const waarde = getal(doel.doel)
+  const oefening = typeof doel.oefening === 'string' ? doel.oefening.trim().slice(0, 80) : ''
+  if (start == null || waarde == null) return null
+  if (doel.soort === 'kracht' && !oefening) return null
+  return { soort: doel.soort, oefening: doel.soort === 'kracht' ? oefening : null, start, doel: waarde }
+}
+
 async function supabaseRpc(functie, args) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functie}`, {
     method: 'POST',
@@ -209,6 +224,12 @@ async function createCheckoutSession(request, env, waitUntil) {
     }
   }
   if (sessieId) abonnementMetadata.funnel_sessie_id = sessieId
+  // Doel uit de vragenlijst (12 nov): compact op het abonnement (alleen ter
+  // controle) en apart naar Supabase (web_doel_bewaren), niet naar n8n.
+  const doel = geldigDoel(body?.doel)
+  if (doel) {
+    abonnementMetadata.doel = [doel.soort, doel.oefening ?? '', doel.start ?? '', doel.doel ?? ''].join('|').slice(0, 200)
+  }
   // Octanist-sessie: daarmee koppelt Octanist de lead aan het advertentiebezoek
   if (typeof body?.octanist === 'string' && OCTANIST_SESSIE.test(body.octanist)) {
     abonnementMetadata.octanist_sessie = body.octanist
@@ -262,6 +283,20 @@ async function createCheckoutSession(request, env, waitUntil) {
     },
     metadata: enrichedMetadata,
   })
+
+  // Doel bewaren op e-mailadres; een fout hier merkt de klant niet.
+  if (doel && customerEmail) {
+    waitUntil(
+      supabaseRpc('web_doel_bewaren', {
+        p_email: customerEmail,
+        p_soort: doel.soort,
+        p_exercise_naam: doel.oefening,
+        p_startwaarde: doel.start,
+        p_doelwaarde: doel.doel,
+        p_checkout: session.id,
+      }).catch((error) => console.error('[doel]', error)),
+    )
+  }
 
   if (sessieId) {
     waitUntil(

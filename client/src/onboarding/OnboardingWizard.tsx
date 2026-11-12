@@ -22,6 +22,24 @@ import OnboardingLayout from './components/OnboardingLayout'
 import NextButton from './components/NextButton'
 import OptionButton from './components/OptionButton'
 import GoalsComparisonChart from './components/GoalsComparisonChart'
+import { DoelAdvies, DoelStepper, DoelZoneBalk } from './components/DoelStepper'
+import {
+  DOEL_OEFENINGEN,
+  adviesTekst,
+  doelOpties,
+  eenheid,
+  getalTitel,
+  grenzen,
+  niveauUitErvaring,
+  omlaag,
+  standaardStart,
+  startBereik,
+  startTitel,
+  startUitleg,
+  zonePositie,
+  zoneVan,
+  type DoelOptie,
+} from './doel'
 import EmailStap from './EmailStap'
 import Paywall, { type CtaPositie } from './Paywall'
 import { STANDAARD_PLAN, type Plan } from './paywallInhoud'
@@ -433,6 +451,130 @@ export default function OnboardingWizard() {
           </div>
         </OnboardingLayout>
       )
+
+    case 'doel-kiezen': {
+      const { voorgesteld, overig } = doelOpties(data.doel, data.geslacht)
+      const kies = (o: DoelOptie) => {
+        setPressedOption(o.soort)
+        setTimeout(() => {
+          setPressedOption(null)
+          const start = o.soort === 'workouts' ? null : standaardStart(o.soort, data.geslacht)
+          navigateNext({ doel_soort: o.soort, doel_oefening: '', doel_start: start, doel_waarde: null })
+        }, 300)
+      }
+      const knop = (o: DoelOptie) => (
+        <OptionButton
+          key={o.soort}
+          icon={o.emoji}
+          selected={isOptionSelected(o.soort, data.doel_soort)}
+          onClick={() => kies(o)}
+        >
+          {o.label}
+        </OptionButton>
+      )
+      return (
+        <OnboardingLayout {...layoutProps}>
+          <h1 className="onboarding__title">Wat wil je over 8 weken zien?</h1>
+          <p className="onboarding__subtitle">Kies wat voor jou telt. Je kunt het later aanpassen in de app.</p>
+          <div className="onboarding__options">{voorgesteld.map(knop)}</div>
+          <p className="doel-kopje">Of kies een ander doel</p>
+          <div className="onboarding__options">{overig.map(knop)}</div>
+          <button
+            type="button"
+            className="doel-later"
+            onClick={() => navigateNext({ doel_soort: '', doel_oefening: '', doel_start: null, doel_waarde: null })}
+          >
+            Later
+          </button>
+        </OnboardingLayout>
+      )
+    }
+
+    case 'doel-oefening':
+      return (
+        <OnboardingLayout {...layoutProps}>
+          <h1 className="onboarding__title">Op welke oefening wil je sterker worden?</h1>
+          <div className="onboarding__options">
+            {DOEL_OEFENINGEN.map((o) => (
+              <OptionButton
+                key={o.naam}
+                selected={isOptionSelected(o.naam, data.doel_oefening)}
+                onClick={() => selectSingle('doel_oefening', o.naam)}
+              >
+                {o.label}
+              </OptionButton>
+            ))}
+          </div>
+        </OnboardingLayout>
+      )
+
+    case 'doel-startpunt': {
+      if (!data.doel_soort || data.doel_soort === 'workouts') return null
+      const soort = data.doel_soort
+      const b = startBereik(soort)
+      const start = data.doel_start ?? standaardStart(soort, data.geslacht)
+      return (
+        <OnboardingLayout
+          {...layoutProps}
+          footer={<NextButton onClick={() => navigateNext({ doel_start: start, doel_waarde: null })} />}
+        >
+          <h1 className="onboarding__title">{startTitel(soort, data.doel_oefening)}</h1>
+          <p className="onboarding__subtitle">{startUitleg(soort)}</p>
+          <DoelStepper
+            waarde={start}
+            eenheid={eenheid(soort)}
+            stap={b.stap}
+            min={b.min}
+            max={b.max}
+            onChange={(v) => setData((prev) => ({ ...prev, doel_start: v }))}
+          />
+        </OnboardingLayout>
+      )
+    }
+
+    case 'doel-getal': {
+      if (!data.doel_soort || data.doel_soort === 'workouts') return null
+      const soort = data.doel_soort
+      const start = data.doel_start ?? standaardStart(soort, data.geslacht)
+      const g = grenzen(soort, start, niveauUitErvaring(data.ervaring_krachttraining))
+      const richting = omlaag(soort) ? -1 : 1
+      const doelWaarde = data.doel_waarde ?? start + richting * g.voorstel
+      const verandering = Math.abs(doelWaarde - start)
+      const zone = zoneVan(verandering, g)
+      const advies = adviesTekst(soort, verandering, zone, g.max, start)
+      const isKracht = soort === 'kracht'
+      // Kracht: het doelgewicht; anders de verandering ("4,5 kg eraf").
+      const getoond = isKracht ? doelWaarde : verandering
+      return (
+        <OnboardingLayout
+          {...layoutProps}
+          footer={
+            <NextButton
+              label="Dit is mijn doel"
+              disabled={verandering <= 0}
+              onClick={() => navigateNext({ doel_start: start, doel_waarde: doelWaarde })}
+            />
+          }
+        >
+          <h1 className="onboarding__title">{getalTitel(soort, data.doel_oefening)}</h1>
+          <p className="onboarding__subtitle">
+            {isKracht ? `Nu ${start.toLocaleString('nl-NL')} kg` : `Nu ${start.toLocaleString('nl-NL')} ${eenheid(soort)}`}
+          </p>
+          <DoelStepper
+            waarde={getoond}
+            eenheid={eenheid(soort)}
+            stap={g.stap}
+            min={isKracht ? start + g.stap : g.stap}
+            max={isKracht ? start + g.max * 2 : g.max * 2}
+            onChange={(v) =>
+              setData((prev) => ({ ...prev, doel_waarde: isKracht ? v : start + richting * v }))
+            }
+          />
+          <DoelZoneBalk zone={zone} positie={zonePositie(verandering, g)} />
+          <DoelAdvies zone={zone} vet={advies.vet} tekst={advies.tekst} />
+        </OnboardingLayout>
+      )
+    }
 
     case 'info-experience':
       return (
