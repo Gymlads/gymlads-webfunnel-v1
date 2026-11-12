@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
+import { Check } from 'lucide-react'
 import { confirmDemoCheckout, fetchCheckoutRedeem, koopUpsell } from '../api'
 import type { OnboardingData } from '../types'
 import { toStripeMetadata } from '../types'
@@ -167,6 +168,9 @@ export function CheckoutSuccess() {
     <OnboardingLayout centered checkoutSuccess>
       <div className="checkout-success">
         <GymladsLogo className="checkout-success__logo" />
+        <span className="checkout-success__vink" aria-hidden="true">
+          <Check size={24} strokeWidth={3} />
+        </span>
         <h1 className="checkout-success__title">
           {maand ? 'Je abonnement is gestart!' : 'Je proefweek is gestart!'}
         </h1>
