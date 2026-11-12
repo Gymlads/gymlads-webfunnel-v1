@@ -46,8 +46,9 @@ export function oefeningLabel(naam: string): string {
 }
 
 export function niveauUitErvaring(ervaring: string): Niveau {
-  // Het doel komt nu vóór de ervaringsvraag: dan het midden aanhouden.
-  if (!ervaring) return 'gemiddeld'
+  // Het doel komt vóór de ervaringsvraag: dan als beginner rekenen (de
+  // meeste bezoekers; beginners mogen ook de grootste stappen zetten).
+  if (!ervaring) return 'beginner'
   const e = ervaring.toLowerCase()
   if (e.includes('1+ jaar')) return 'gevorderd'
   if (e.includes('6-12')) return 'gemiddeld'
