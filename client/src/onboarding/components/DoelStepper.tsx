@@ -8,7 +8,9 @@ export function DoelStepper({
   min,
   max,
   onChange,
+  klein,
 }: {
+  klein?: boolean
   waarde: number
   eenheid: string
   stap: number
@@ -18,7 +20,7 @@ export function DoelStepper({
 }) {
   const zet = (v: number) => onChange(Math.min(max, Math.max(min, Math.round(v / stap) * stap)))
   return (
-    <div className="doel-stepper">
+    <div className={`doel-stepper${klein ? ' doel-stepper--klein' : ''}`}>
       <button type="button" className="doel-stepper__knop" aria-label="Minder" onClick={() => zet(waarde - stap)}>
         −
       </button>

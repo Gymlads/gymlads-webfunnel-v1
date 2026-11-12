@@ -16,19 +16,25 @@ export interface DoelOptie {
 }
 
 /**
- * Vier vaste keuzes (Roel, 12 nov): afvallen, sterker worden (daarna welke
- * oefening), spiermassa aankomen, en bij vrouwen grotere billen.
+ * Het hoofddoel ís het doel (Roel, 12 nov): Afvallen -> kilo's eraf,
+ * Spieropbouw -> kilo's erbij (vrouwen kiezen nog: of grotere billen),
+ * Kracht opbouwen -> zwaarder op een oefening, anders: al je workouts.
  */
-export function doelOpties(geslacht: string): DoelOptie[] {
-  const opties: DoelOptie[] = [
-    { soort: 'afvallen', emoji: '🔥', label: 'Afvallen' },
-    { soort: 'kracht', emoji: '🏋️', label: 'Sterker worden' },
-    { soort: 'aankomen', emoji: '💪', label: 'Spiermassa aankomen' },
-  ]
-  if (!geslacht.toLowerCase().startsWith('man')) {
-    opties.push({ soort: 'billen', emoji: '🍑', label: 'Grotere billen' })
+export function soortUitHoofddoel(hoofddoel: string): DoelSoort {
+  switch (hoofddoel) {
+    case 'Afvallen':
+      return 'afvallen'
+    case 'Spieropbouw':
+      return 'aankomen'
+    case 'Kracht opbouwen':
+      return 'kracht'
+    default:
+      return 'workouts'
   }
-  return opties
+}
+
+export function isMan(geslacht: string): boolean {
+  return geslacht.toLowerCase().startsWith('man')
 }
 
 /** Zelfde zes oefeningen als de app (ONBOARDING_OEFENINGEN). */

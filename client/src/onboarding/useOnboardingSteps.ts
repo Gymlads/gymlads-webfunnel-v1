@@ -11,7 +11,6 @@ export type StepId =
   | 'experience'
   | 'doel-kiezen'
   | 'doel-oefening'
-  | 'doel-startpunt'
   | 'doel-getal'
   | 'info-experience'
   | 'info-goals'
@@ -73,12 +72,21 @@ function getConditionalSteps(data: OnboardingData): StepId[] {
   }
 }
 
-// Doel meteen na het hoofddoel (Roel, 12 nov). Overslaan kan ("Later").
+// Doel meteen na het hoofddoel, zonder dubbele vraag (Roel, 12 nov): het
+// hoofddoel bepaalt het soort doel, we vragen alleen nog het getal.
+export const DOEL_STAPPEN: StepId[] = ['doel-kiezen', 'doel-oefening', 'doel-getal']
+
 function getDoelSteps(data: OnboardingData): StepId[] {
-  const s: StepId[] = ['doel-kiezen']
-  if (data.doel_soort === 'kracht') s.push('doel-oefening')
-  if (data.doel_soort && data.doel_soort !== 'workouts') s.push('doel-startpunt', 'doel-getal')
-  return s
+  switch (data.doel) {
+    case 'Afvallen':
+      return ['doel-getal']
+    case 'Spieropbouw':
+      return data.geslacht === 'Man' ? ['doel-getal'] : ['doel-kiezen', 'doel-getal']
+    case 'Kracht opbouwen':
+      return ['doel-oefening', 'doel-getal']
+    default:
+      return []
+  }
 }
 
 export function buildStepList(data: OnboardingData): StepId[] {
@@ -103,7 +111,7 @@ export function shouldShowProgress(stepId: StepId): boolean {
 export function useOnboardingSteps(data: OnboardingData, currentStepId: StepId) {
   const steps = useMemo(
     () => buildStepList(data),
-    [data.locatie_training, data.soort_sportschool, data.doel_soort],
+    [data.locatie_training, data.soort_sportschool, data.doel, data.geslacht],
   )
 
   const currentIndex = steps.indexOf(currentStepId)
