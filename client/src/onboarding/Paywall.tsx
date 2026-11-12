@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BadgeCheck, Check, ChevronDown, Gift, Star } from 'lucide-react'
+import { Check, ChevronDown, Gift, Star } from 'lucide-react'
 import PaymentLogos from './components/PaymentLogos'
 import {
   AANTAL_SPORTERS,
@@ -8,9 +8,7 @@ import {
   APP_STORE_SCORE,
   APP_STORE_URL,
   GOOGLE_PLAY_URL,
-  FAQ_GARANTIE,
   FAQ_PROEF,
-  GARANTIE,
   FAQ_VERSCHIL,
   PLANNEN,
   PRIVACY_URL,
@@ -114,7 +112,6 @@ function BetaalblokKeuze({ positie, onCheckout, bezig, fout, plan, onKiesPlan }:
           gekozen.knop
         )}
       </button>
-      <Garantie />
       <PaymentLogos />
     </section>
   )
@@ -174,37 +171,16 @@ function BetaalblokEenPlan({ positie, onCheckout, bezig, fout, plan }: BlokProps
         )}
       </button>
       <p className="paywall__smallprint">{EEN_PLAN.kleineTekst}</p>
-      <Garantie />
       <PaymentLogos />
     </section>
   )
 }
 
-/** Sterker-garantie als één regel direct onder de knop (Roel 28-10). */
-function Garantie() {
-  return (
-    <p className="paywall__garantie">
-      <BadgeCheck size={18} strokeWidth={2.5} aria-hidden="true" />
-      {GARANTIE.kort}
-    </p>
-  )
-}
-
-// Vier vragen (Roel 21-10: er waren er te veel), plus maand/jaar (Roel 26-10). Overige vragen: mail, zie onder de FAQ.
+// Vier vragen (Roel 21-10: er waren er te veel), plus maand/jaar (Roel 26-10).
+// Garantie van de betaalpagina af (Roel 12-11); de voorwaarden zelf blijven. Overige vragen: mail, zie onder de FAQ.
 const FAQ: Array<{ vraag: string; antwoord: React.ReactNode }> = [
   { vraag: 'Hoe werkt de proefweek?', antwoord: FAQ_PROEF },
   { vraag: 'Wat is het verschil tussen maand en jaar?', antwoord: FAQ_VERSCHIL },
-  {
-    vraag: 'Hoe werkt de garantie?',
-    antwoord: (
-      <>
-        {FAQ_GARANTIE}{' '}
-        <a href={VOORWAARDEN_URL} target="_blank" rel="noreferrer">
-          Lees de voorwaarden
-        </a>
-      </>
-    ),
-  },
   {
     vraag: 'Hoe zeg ik mijn abonnement op?',
     antwoord: (
