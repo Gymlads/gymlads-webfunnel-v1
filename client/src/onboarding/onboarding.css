@@ -2057,3 +2057,133 @@
   font-size: 15px;
   text-align: left;
 }
+
+/* Doel (12 nov, zelfde als de app) */
+.doel-kopje {
+  margin: 26px 0 12px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.doel-later {
+  display: block;
+  margin: 18px auto 0;
+  padding: 10px 16px;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.doel-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 24px;
+}
+
+.doel-stepper__knop {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid var(--surface-elevated);
+  background: #2c2c2e;
+  color: var(--text);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.doel-stepper__waarde {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+.doel-stepper__eenheid {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.doel-zone {
+  margin: 4px 0 18px;
+}
+
+.doel-zone__balk {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  height: 8px;
+}
+
+.doel-zone__deel {
+  flex: 1;
+  border-radius: 4px;
+  background: var(--surface-elevated);
+  opacity: 0.6;
+}
+
+.doel-zone__deel--1,
+.doel-zone__deel--2 {
+  background: rgba(204, 255, 0, 0.35);
+}
+
+.doel-zone__deel--3 {
+  background: rgba(255, 149, 0, 0.35);
+}
+
+.doel-zone__deel--actief {
+  opacity: 1;
+}
+
+.doel-zone__knop {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #171719;
+  transition: left 0.2s ease;
+}
+
+.doel-zone__knop--oranje {
+  background: #ff9500;
+}
+
+.doel-zone__namen {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.doel-zone__naam--actief {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.doel-advies {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #2c2c2e;
+  border: 1px solid rgba(204, 255, 0, 0.35);
+  box-shadow: 0 0 18px rgba(204, 255, 0, 0.12);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.doel-advies--oranje {
+  border-color: rgba(255, 149, 0, 0.45);
+  box-shadow: 0 0 18px rgba(255, 149, 0, 0.12);
+}

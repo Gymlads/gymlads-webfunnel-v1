@@ -9,6 +9,10 @@ export type StepId =
   | 'info-consistency'
   | 'challenge'
   | 'experience'
+  | 'doel-kiezen'
+  | 'doel-oefening'
+  | 'doel-startpunt'
+  | 'doel-getal'
   | 'info-experience'
   | 'info-goals'
   | 'info-schedule'
@@ -69,8 +73,23 @@ function getConditionalSteps(data: OnboardingData): StepId[] {
   }
 }
 
+// Doel na de ervaring, zoals in de app (12 nov). Overslaan kan ("Later").
+function getDoelSteps(data: OnboardingData): StepId[] {
+  const s: StepId[] = ['doel-kiezen']
+  if (data.doel_soort === 'kracht') s.push('doel-oefening')
+  if (data.doel_soort && data.doel_soort !== 'workouts') s.push('doel-startpunt', 'doel-getal')
+  return s
+}
+
 export function buildStepList(data: OnboardingData): StepId[] {
-  return [...BASE_STEPS, ...getConditionalSteps(data), ...TAIL_STEPS]
+  const i = BASE_STEPS.indexOf('experience') + 1
+  return [
+    ...BASE_STEPS.slice(0, i),
+    ...getDoelSteps(data),
+    ...BASE_STEPS.slice(i),
+    ...getConditionalSteps(data),
+    ...TAIL_STEPS,
+  ]
 }
 
 export function shouldShowProgress(stepId: StepId): boolean {
@@ -82,7 +101,10 @@ export function shouldShowProgress(stepId: StepId): boolean {
 }
 
 export function useOnboardingSteps(data: OnboardingData, currentStepId: StepId) {
-  const steps = useMemo(() => buildStepList(data), [data.locatie_training, data.soort_sportschool])
+  const steps = useMemo(
+    () => buildStepList(data),
+    [data.locatie_training, data.soort_sportschool, data.doel_soort],
+  )
 
   const currentIndex = steps.indexOf(currentStepId)
   const progressSteps = steps.filter(
