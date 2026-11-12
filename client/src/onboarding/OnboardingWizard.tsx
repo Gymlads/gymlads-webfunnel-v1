@@ -27,6 +27,7 @@ import {
   DOEL_OEFENINGEN,
   adviesTekst,
   eenheid,
+  getal,
   getalTitel,
   grenzen,
   niveauUitErvaring,
@@ -593,6 +594,13 @@ export default function OnboardingWizard() {
             max={isKracht ? start + g.max * 2 : g.max * 2}
             onChange={(v) => setData((prev) => ({ ...prev, doel_waarde: isKracht ? v : start + richting * v }))}
           />
+          {!isKracht ? (
+            <p className="doel-nu__label doel-nu__uitkomst">
+              {soort === 'afvallen' || soort === 'aankomen'
+                ? `Dan weeg je ${getal(doelWaarde)} kg`
+                : `Dan is het ${getal(doelWaarde)} cm`}
+            </p>
+          ) : null}
           <DoelZoneBalk zone={zone} positie={zonePositie(verandering, g)} />
           <DoelAdvies zone={zone} vet={advies.vet} tekst={advies.tekst} />
           <button type="button" className="doel-later" onClick={slaDoelOver}>

@@ -2217,3 +2217,8 @@
 .doel-stepper--klein .doel-stepper__waarde {
   font-size: 1.6rem;
 }
+
+.doel-nu__uitkomst {
+  margin: -14px 0 18px;
+  color: var(--text);
+}
