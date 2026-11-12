@@ -26,19 +26,18 @@ import { DoelAdvies, DoelStepper, DoelZoneBalk } from './components/DoelStepper'
 import {
   DOEL_OEFENINGEN,
   adviesTekst,
-  doelOpties,
   eenheid,
+  getal,
   getalTitel,
   grenzen,
   niveauUitErvaring,
   omlaag,
   standaardStart,
   startBereik,
+  soortUitHoofddoel,
   startTitel,
-  startUitleg,
   zonePositie,
   zoneVan,
-  type DoelOptie,
 } from './doel'
 import EmailStap from './EmailStap'
 import Paywall, { type CtaPositie } from './Paywall'
@@ -54,6 +53,7 @@ import {
 import { setTracklutionContactInfo } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
 import {
+  DOEL_STAPPEN,
   buildStepList,
   type StepId,
   shouldShowProgress,
@@ -235,6 +235,35 @@ export default function OnboardingWizard() {
     setData((prev) => ({ ...prev, [key]: !prev[key] }))
   }, [])
 
+  // Hoofddoel kiezen bepaalt meteen het soort doel (Roel, 12 nov).
+  const kiesHoofddoel = useCallback(
+    (option: Doel) => {
+      const soort = soortUitHoofddoel(option)
+      setPressedOption(option)
+      setTimeout(() => {
+        setPressedOption(null)
+        navigateNext({
+          doel: option,
+          doel_soort: soort,
+          doel_oefening: '',
+          doel_start: soort === 'workouts' ? null : standaardStart(soort, data.geslacht),
+          doel_waarde: null,
+        })
+      }, 300)
+    },
+    [navigateNext, data.geslacht],
+  )
+
+  // "Sla over": geen doel, door naar de eerste vraag na de doelvragen.
+  const slaDoelOver = useCallback(() => {
+    const next = { ...data, doel_soort: '' as const, doel_oefening: '', doel_start: null, doel_waarde: null }
+    const steps = buildStepList(next)
+    const idx = steps.indexOf(stepId)
+    const volgende = steps.slice(idx + 1).find((s) => !DOEL_STAPPEN.includes(s))
+    setData(next)
+    if (volgende) setStepId(volgende)
+  }, [data, stepId])
+
   const hasSelectedGymDay = WEEKDAYS.some((d) => data[d.gym])
   const hasSelectedHomeDay = WEEKDAYS.some((d) => data[d.home])
   const hasNoHomeEquipment = HOME_EQUIPMENT.every((item) => !data[item.key])
@@ -352,7 +381,7 @@ export default function OnboardingWizard() {
                 key={option}
                 icon={DOEL_ICONEN[option]}
                 selected={isOptionSelected(option, data.doel)}
-                onClick={() => selectSingle('doel', option)}
+                onClick={() => kiesHoofddoel(option)}
               >
                 {option}
               </OptionButton>
@@ -452,89 +481,76 @@ export default function OnboardingWizard() {
         </OnboardingLayout>
       )
 
-    case 'doel-kiezen': {
-      const { voorgesteld, overig } = doelOpties(data.doel, data.geslacht)
-      const kies = (o: DoelOptie) => {
-        setPressedOption(o.soort)
-        setTimeout(() => {
-          setPressedOption(null)
-          const start = o.soort === 'workouts' ? null : standaardStart(o.soort, data.geslacht)
-          navigateNext({ doel_soort: o.soort, doel_oefening: '', doel_start: start, doel_waarde: null })
-        }, 300)
-      }
-      const knop = (o: DoelOptie) => (
-        <OptionButton
-          key={o.soort}
-          icon={o.emoji}
-          selected={isOptionSelected(o.soort, data.doel_soort)}
-          onClick={() => kies(o)}
-        >
-          {o.label}
-        </OptionButton>
-      )
+    case 'doel-kiezen':
       return (
         <OnboardingLayout {...layoutProps}>
-          <h1 className="onboarding__title">Wat wil je over 8 weken zien?</h1>
-          <p className="onboarding__subtitle">Kies wat voor jou telt. Je kunt het later aanpassen in de app.</p>
-          <div className="onboarding__options">{voorgesteld.map(knop)}</div>
-          <p className="doel-kopje">Of kies een ander doel</p>
-          <div className="onboarding__options">{overig.map(knop)}</div>
-          <button
-            type="button"
-            className="doel-later"
-            onClick={() => navigateNext({ doel_soort: '', doel_oefening: '', doel_start: null, doel_waarde: null })}
-          >
-            Later
-          </button>
-        </OnboardingLayout>
-      )
-    }
-
-    case 'doel-oefening':
-      return (
-        <OnboardingLayout {...layoutProps}>
-          <h1 className="onboarding__title">Op welke oefening wil je sterker worden?</h1>
+          <h1 className="onboarding__title">Waar wil je spieren bij?</h1>
+          <p className="onboarding__subtitle">Dit wordt je doel voor de komende 8 weken.</p>
           <div className="onboarding__options">
-            {DOEL_OEFENINGEN.map((o) => (
+            {(
+              [
+                { soort: 'aankomen', emoji: '💪', label: "Kilo's erbij (overal spier)" },
+                { soort: 'billen', emoji: '🍑', label: 'Grotere billen' },
+              ] as const
+            ).map((o) => (
               <OptionButton
-                key={o.naam}
-                selected={isOptionSelected(o.naam, data.doel_oefening)}
-                onClick={() => selectSingle('doel_oefening', o.naam)}
+                key={o.soort}
+                icon={o.emoji}
+                selected={isOptionSelected(o.soort, data.doel_soort)}
+                onClick={() => {
+                  setPressedOption(o.soort)
+                  setTimeout(() => {
+                    setPressedOption(null)
+                    navigateNext({
+                      doel_soort: o.soort,
+                      doel_start: standaardStart(o.soort, data.geslacht),
+                      doel_waarde: null,
+                    })
+                  }, 300)
+                }}
               >
                 {o.label}
               </OptionButton>
             ))}
           </div>
+          <button type="button" className="doel-later" onClick={slaDoelOver}>
+            Sla over
+          </button>
         </OnboardingLayout>
       )
 
-    case 'doel-startpunt': {
-      if (!data.doel_soort || data.doel_soort === 'workouts') return null
-      const soort = data.doel_soort
-      const b = startBereik(soort)
-      const start = data.doel_start ?? standaardStart(soort, data.geslacht)
+    case 'doel-oefening':
       return (
-        <OnboardingLayout
-          {...layoutProps}
-          footer={<NextButton onClick={() => navigateNext({ doel_start: start, doel_waarde: null })} />}
-        >
-          <h1 className="onboarding__title">{startTitel(soort, data.doel_oefening)}</h1>
-          <p className="onboarding__subtitle">{startUitleg(soort)}</p>
-          <DoelStepper
-            waarde={start}
-            eenheid={eenheid(soort)}
-            stap={b.stap}
-            min={b.min}
-            max={b.max}
-            onChange={(v) => setData((prev) => ({ ...prev, doel_start: v }))}
-          />
+        <OnboardingLayout {...layoutProps}>
+          <h1 className="onboarding__title">Op welke oefening wil je sterker worden?</h1>
+          <p className="onboarding__subtitle">Dit wordt je doel voor de komende 8 weken.</p>
+          <div className="onboarding__options">
+            {DOEL_OEFENINGEN.map((o) => (
+              <OptionButton
+                key={o.naam}
+                selected={isOptionSelected(o.naam, data.doel_oefening)}
+                onClick={() => {
+                  setPressedOption(o.naam)
+                  setTimeout(() => {
+                    setPressedOption(null)
+                    navigateNext({ doel_soort: 'kracht', doel_oefening: o.naam, doel_waarde: null })
+                  }, 300)
+                }}
+              >
+                {o.label}
+              </OptionButton>
+            ))}
+          </div>
+          <button type="button" className="doel-later" onClick={slaDoelOver}>
+            Sla over
+          </button>
         </OnboardingLayout>
       )
-    }
 
     case 'doel-getal': {
-      if (!data.doel_soort || data.doel_soort === 'workouts') return null
       const soort = data.doel_soort
+      if (!soort || soort === 'workouts') return null
+      const b = startBereik(soort)
       const start = data.doel_start ?? standaardStart(soort, data.geslacht)
       const g = grenzen(soort, start, niveauUitErvaring(data.ervaring_krachttraining))
       const richting = omlaag(soort) ? -1 : 1
@@ -557,21 +573,39 @@ export default function OnboardingWizard() {
           }
         >
           <h1 className="onboarding__title">{getalTitel(soort, data.doel_oefening)}</h1>
-          <p className="onboarding__subtitle">
-            {isKracht ? `Nu ${start.toLocaleString('nl-NL')} kg` : `Nu ${start.toLocaleString('nl-NL')} ${eenheid(soort)}`}
-          </p>
+          <div className="doel-nu">
+            <span className="doel-nu__label">{isKracht ? 'Nu (ongeveer 8 herhalingen)' : startTitel(soort, data.doel_oefening)}</span>
+            <DoelStepper
+              klein
+              waarde={start}
+              eenheid={eenheid(soort)}
+              stap={b.stap}
+              min={b.min}
+              max={b.max}
+              onChange={(v) => setData((prev) => ({ ...prev, doel_start: v, doel_waarde: null }))}
+            />
+          </div>
+          <p className="doel-nu__label">Je doel</p>
           <DoelStepper
             waarde={getoond}
             eenheid={eenheid(soort)}
             stap={g.stap}
             min={isKracht ? start + g.stap : g.stap}
             max={isKracht ? start + g.max * 2 : g.max * 2}
-            onChange={(v) =>
-              setData((prev) => ({ ...prev, doel_waarde: isKracht ? v : start + richting * v }))
-            }
+            onChange={(v) => setData((prev) => ({ ...prev, doel_waarde: isKracht ? v : start + richting * v }))}
           />
+          {!isKracht ? (
+            <p className="doel-nu__label doel-nu__uitkomst">
+              {soort === 'afvallen' || soort === 'aankomen'
+                ? `Dan weeg je ${getal(doelWaarde)} kg`
+                : `Dan is het ${getal(doelWaarde)} cm`}
+            </p>
+          ) : null}
           <DoelZoneBalk zone={zone} positie={zonePositie(verandering, g)} />
           <DoelAdvies zone={zone} vet={advies.vet} tekst={advies.tekst} />
+          <button type="button" className="doel-later" onClick={slaDoelOver}>
+            Sla over
+          </button>
         </OnboardingLayout>
       )
     }

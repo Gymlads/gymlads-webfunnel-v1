@@ -15,39 +15,26 @@ export interface DoelOptie {
   label: string
 }
 
-const OPTIES: Record<DoelSoort, DoelOptie> = {
-  kracht: { soort: 'kracht', emoji: '🏋️', label: 'Zwaarder op een oefening' },
-  afvallen: { soort: 'afvallen', emoji: '⚖️', label: "Kilo's eraf" },
-  aankomen: { soort: 'aankomen', emoji: '⚖️', label: "Kilo's erbij" },
-  taille: { soort: 'taille', emoji: '📏', label: 'Centimeters van je taille' },
-  armen: { soort: 'armen', emoji: '💪', label: 'Grotere armen' },
-  billen: { soort: 'billen', emoji: '🍑', label: 'Grotere billen' },
-  workouts: { soort: 'workouts', emoji: '📅', label: 'Elke week al mijn workouts' },
-}
-
-const VOLGORDE: DoelSoort[] = ['kracht', 'afvallen', 'aankomen', 'taille', 'armen', 'billen', 'workouts']
-
-/** Voorgestelde doelen bij het hoofddoel (zelfde als de app), daarna de rest. */
-export function doelOpties(hoofddoel: string, geslacht: string): { voorgesteld: DoelOptie[]; overig: DoelOptie[] } {
-  const man = geslacht.toLowerCase().startsWith('man')
-  let soorten: DoelSoort[]
+/**
+ * Het hoofddoel ís het doel (Roel, 12 nov): Afvallen -> kilo's eraf,
+ * Spieropbouw -> kilo's erbij (vrouwen kiezen nog: of grotere billen),
+ * Kracht opbouwen -> zwaarder op een oefening, anders: al je workouts.
+ */
+export function soortUitHoofddoel(hoofddoel: string): DoelSoort {
   switch (hoofddoel) {
     case 'Afvallen':
-      soorten = ['afvallen', 'taille', 'kracht', 'workouts']
-      break
+      return 'afvallen'
     case 'Spieropbouw':
-      soorten = man ? ['aankomen', 'armen', 'kracht'] : ['aankomen', 'billen', 'armen', 'kracht']
-      break
+      return 'aankomen'
     case 'Kracht opbouwen':
-      soorten = man ? ['kracht', 'aankomen', 'armen'] : ['kracht', 'aankomen', 'billen']
-      break
+      return 'kracht'
     default:
-      soorten = ['workouts', 'kracht', 'taille', 'afvallen']
+      return 'workouts'
   }
-  return {
-    voorgesteld: soorten.map((s) => OPTIES[s]),
-    overig: VOLGORDE.filter((s) => !soorten.includes(s)).map((s) => OPTIES[s]),
-  }
+}
+
+export function isMan(geslacht: string): boolean {
+  return geslacht.toLowerCase().startsWith('man')
 }
 
 /** Zelfde zes oefeningen als de app (ONBOARDING_OEFENINGEN). */
@@ -65,6 +52,9 @@ export function oefeningLabel(naam: string): string {
 }
 
 export function niveauUitErvaring(ervaring: string): Niveau {
+  // Het doel komt vóór de ervaringsvraag: dan als beginner rekenen (de
+  // meeste bezoekers; beginners mogen ook de grootste stappen zetten).
+  if (!ervaring) return 'beginner'
   const e = ervaring.toLowerCase()
   if (e.includes('1+ jaar')) return 'gevorderd'
   if (e.includes('6-12')) return 'gemiddeld'

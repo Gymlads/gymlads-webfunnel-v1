@@ -2187,3 +2187,38 @@
   border-color: rgba(255, 149, 0, 0.45);
   box-shadow: 0 0 18px rgba(255, 149, 0, 0.12);
 }
+
+.doel-nu {
+  margin: 8px 0 6px;
+  padding: 12px 14px 0;
+  border-radius: 12px;
+  background: #2c2c2e;
+}
+
+.doel-nu__label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 6px 0 0;
+}
+
+.doel-stepper--klein {
+  margin: 4px 0 12px;
+}
+
+.doel-stepper--klein .doel-stepper__knop {
+  width: 40px;
+  height: 40px;
+  font-size: 1.3rem;
+  background: #232325;
+}
+
+.doel-stepper--klein .doel-stepper__waarde {
+  font-size: 1.6rem;
+}
+
+.doel-nu__uitkomst {
+  margin: -14px 0 18px;
+  color: var(--text);
+}
