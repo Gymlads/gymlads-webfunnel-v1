@@ -76,7 +76,7 @@ export const EEN_PLAN = {
   sub: `Probeer Gymlads 7 dagen voor ${PROEF_BEDRAG}. Niet overtuigd dat dit je progressie versnelt? Annuleer en je betaalt niets meer.`,
   score: '4.8/5.0',
   workouts: '10.000+ workouts gemaakt',
-  badge: 'EINDEJAARSACTIE: BESPAAR 50%',
+  badge: 'SUPER BLACK FRIDAY DEAL: -50%',
   // €99,99 / 365 = €0,27
   prijs: '€ 0,27',
   prijsEenheid: '/ dag',
@@ -85,7 +85,7 @@ export const EEN_PLAN = {
   oudePrijs: '€ 215,88',
   nieuwePrijs: '€ 99,99 / jaar',
   knop: `CLAIM JOUW 7 DAGEN VOOR ${PROEF_BEDRAG}`,
-  kleineTekst: `Vandaag betaal je ${PROEF_BEDRAG}. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens de proef, in je account. Actie geldt t/m 31 december.`,
+  kleineTekst: `Vandaag betaal je ${PROEF_BEDRAG}. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens de proef, in je account. Black Friday-actie geldt t/m 1 december.`,
 }
 
 /**
