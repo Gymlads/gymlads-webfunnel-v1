@@ -10,10 +10,13 @@ import foto6 from './assets/start-6.jpg'
 // Collage: drie kolommen, de middelste iets hoger, de buitenste lopen van het
 // scherm af. Volgorde zoals in het ontwerp: boven links, midden, rechts;
 // onder links, midden, rechts.
-const KOLOMMEN: ReadonlyArray<readonly [string, string]> = [
-  [foto1, foto4],
-  [foto2, foto5],
-  [foto3, foto6],
+// Tweede waarde: welk deel van de foto in beeld blijft (verticaal), zodat
+// gezicht en oefening zichtbaar zijn.
+type Foto = readonly [src: string, positie: string]
+const KOLOMMEN: ReadonlyArray<readonly [Foto, Foto]> = [
+  [[foto1, '50% 55%'], [foto4, '50% 45%']],
+  [[foto2, '50% 40%'], [foto5, '50% 55%']],
+  [[foto3, '50% 60%'], [foto6, '50% 15%']],
 ]
 
 interface StartschermProps {
@@ -36,8 +39,15 @@ export default function Startscherm({ onStart }: StartschermProps) {
         <div className="startscherm__collage" aria-hidden="true">
           {KOLOMMEN.map((kolom, i) => (
             <div key={i} className={`startscherm__kolom startscherm__kolom--${i + 1}`}>
-              {kolom.map((src) => (
-                <img key={src} src={src} alt="" className="startscherm__foto" />
+              {kolom.map(([src, positie]) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  className="startscherm__foto"
+                  style={{ objectPosition: positie }}
+                  fetchPriority="high"
+                />
               ))}
             </div>
           ))}
