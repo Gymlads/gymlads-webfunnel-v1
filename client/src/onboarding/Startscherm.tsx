@@ -33,7 +33,7 @@ export default function Startscherm({ onStart }: StartschermProps) {
       <main className="startscherm__inhoud">
         <h1 className="startscherm__kop">Word de sterkste versie van jezelf</h1>
         <p className="startscherm__tekst">
-          Beantwoord een paar vragen, zodat je <span className="startscherm__nowrap">AI-coach</span> jou goed kan helpen.
+          Beantwoord een paar vragen, zodat onze <span className="startscherm__nowrap">AI-coach</span> jou goed kan helpen.
         </p>
 
         <div className="startscherm__collage" aria-hidden="true">
