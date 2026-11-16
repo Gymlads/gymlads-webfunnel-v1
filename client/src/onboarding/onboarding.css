@@ -2378,3 +2378,8 @@
 .startscherm__nowrap {
   white-space: nowrap;
 }
+
+.startscherm__accent {
+  color: var(--accent);
+  font-weight: 600;
+}

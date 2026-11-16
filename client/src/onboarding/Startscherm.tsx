@@ -33,7 +33,7 @@ export default function Startscherm({ onStart }: StartschermProps) {
       <main className="startscherm__inhoud">
         <h1 className="startscherm__kop">Word de sterkste versie van jezelf</h1>
         <p className="startscherm__tekst">
-          Beantwoord een paar vragen, zodat onze <span className="startscherm__nowrap">AI-coach</span> jou goed kan helpen.
+          Beantwoord een paar vragen, zodat onze <span className="startscherm__nowrap">AI-coach</span> jou kan helpen.
         </p>
 
         <div className="startscherm__collage" aria-hidden="true">
@@ -62,7 +62,9 @@ export default function Startscherm({ onStart }: StartschermProps) {
         <button type="button" className="onboarding__btn startscherm__knop" onClick={onStart}>
           START
         </button>
-        <p className="startscherm__klein">1-minuutquiz voor jouw persoonlijke plan</p>
+        <p className="startscherm__klein">
+          <span className="startscherm__accent">1-minuutquiz</span> voor jouw persoonlijke plan
+        </p>
       </footer>
     </div>
   )
