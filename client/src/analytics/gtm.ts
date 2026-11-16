@@ -64,3 +64,10 @@ export function trackCheckoutWacht(positie: 'boven' | 'onder', wachtMs: number, 
     browser: browserSoort(),
   })
 }
+
+/** Startscherm vóór de eerste vraag: in beeld ('view') of op START gedrukt ('start'). */
+export function trackStartscherm(actie: 'view' | 'start') {
+  pushGtmEvent(actie === 'view' ? 'startscherm_view' : 'startscherm_start', {
+    browser: browserSoort(),
+  })
+}

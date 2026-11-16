@@ -2240,3 +2240,146 @@
   margin: -14px 0 18px;
   color: var(--text);
 }
+
+/* ---- Startscherm (vóór de eerste vraag, ontwerp Roel 16 nov) ---- */
+.startscherm {
+  overflow: hidden;
+}
+
+.startscherm__logo {
+  display: flex;
+  justify-content: center;
+  padding: max(18px, calc(env(safe-area-inset-top) + 12px)) 24px 0;
+  flex-shrink: 0;
+}
+
+.startscherm__logo img {
+  height: 16px;
+  width: auto;
+  display: block;
+}
+
+.startscherm__inhoud {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px 0;
+}
+
+.startscherm__kop {
+  margin: 0;
+  font-size: clamp(2rem, 9.6vw, 2.6rem);
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--text);
+  text-align: left;
+}
+
+.startscherm__tekst {
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+/* Maten zoals het ontwerp (telefoon 748 breed): tegels 300x370, tussenruimte 16,
+   middelste kolom 40 hoger, buitenste kolommen lopen van het scherm af. */
+.startscherm__collage {
+  flex: 1;
+  min-height: 160px;
+  margin: 20px -24px 0;
+  container-type: size;
+}
+
+/* Schermbreed zoals het ontwerp. Is het scherm te laag, dan loopt de onderste
+   rij weg in de achtergrond (net als in het ontwerp). */
+.startscherm__raster {
+  position: relative;
+  width: 100%;
+  /* Lage schermen: hooguit ~1/6 van de collage wegvallen, daarna iets kleiner */
+  width: min(100cqw, 100cqh * 748 / 796 * 1.2);
+  margin: 0 auto;
+  height: 100%;
+  max-height: calc(100cqw * 796 / 748);
+  overflow: hidden;
+}
+
+/* Onderste rij zacht laten weglopen in de achtergrond */
+.startscherm__raster::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: min(30%, calc(100cqw * 0.2));
+  background: linear-gradient(to bottom, rgba(23, 23, 25, 0), var(--bg) 95%);
+  pointer-events: none;
+}
+
+.startscherm__kolommen {
+  position: absolute;
+  top: 0;
+  left: calc(-92 / 748 * 100%);
+  width: calc(932 / 748 * 100%);
+  display: flex;
+  justify-content: space-between;
+}
+
+.startscherm__kolom {
+  width: calc(300 / 932 * 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.startscherm__foto + .startscherm__foto {
+  margin-top: calc(16 / 300 * 100%);
+}
+
+/* margin in % rekent met de breedte van .startscherm__kolommen (932) */
+.startscherm__kolom--1,
+.startscherm__kolom--3 {
+  margin-top: calc(40 / 932 * 100%);
+}
+
+.startscherm__foto {
+  width: 100%;
+  aspect-ratio: 300 / 370;
+  object-fit: cover;
+  border-radius: calc(20 / 300 * 100%) / calc(20 / 370 * 100%);
+  display: block;
+  background: var(--surface-elevated);
+}
+
+.startscherm__onder {
+  flex-shrink: 0;
+  padding: 8px 24px;
+  padding-bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px));
+  text-align: center;
+}
+
+.startscherm__knop {
+  padding: 17px 24px;
+  border-radius: 16px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.startscherm__klein {
+  margin: 12px 0 0;
+  font-style: italic;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.startscherm__nowrap {
+  white-space: nowrap;
+}
+
+.startscherm__accent {
+  color: var(--accent);
+  font-weight: 600;
+}

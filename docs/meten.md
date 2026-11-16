@@ -36,3 +36,13 @@ hoe geteld): `docs/dashboard-trechter.md` in Gymlads/gymlads-app.
   ze stil genegeerd.
 - `info.browser` (instagram / facebook / overig) gaat mee bij de eerste stap.
 - Het e-mailadres gaat nooit via `/api/meet`, alleen via `/api/lead` (aparte tabel).
+
+## Startscherm (16-11-2026)
+
+- Nieuw startscherm vóór de eerste vraag (`client/src/onboarding/Startscherm.tsx`,
+  foto's `assets/start-1..6.jpg`). Terug van een geannuleerde betaling
+  (`?terug=paywall`) slaat het over; "terug" op de geslachtvraag gaat naar het startscherm.
+- Metingen: `startscherm` (in beeld) en `start-knop` (op START gedrukt). Supabase
+  telt ze pas na `20261116000000_trechter_startscherm.sql` (gymlads-app).
+- GTM: aparte events `startscherm_view` en `startscherm_start`. Het bestaande
+  `onboarding_step_view` (en de nummering per stap) blijft gelijk, begint nog steeds bij `gender`.
