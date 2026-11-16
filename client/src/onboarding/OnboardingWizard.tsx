@@ -40,6 +40,7 @@ import {
   zoneVan,
 } from './doel'
 import EmailStap from './EmailStap'
+import Startscherm from './Startscherm'
 import Paywall, { type CtaPositie } from './Paywall'
 import { STANDAARD_PLAN, type Plan } from './paywallInhoud'
 import { bewaarAntwoorden, leesAntwoorden } from './bewaren'
@@ -49,6 +50,7 @@ import {
   trackOnboardingStepView,
   trackPaywallCta,
   trackPlanSelected,
+  trackStartscherm,
 } from '../analytics/gtm'
 import { setTracklutionContactInfo } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
@@ -148,6 +150,9 @@ const STEP_PAGE_BG: Partial<Record<StepId, string>> = {
 export default function OnboardingWizard() {
   const [terug] = useState(startPunt)
   const [stepId, setStepId] = useState<StepId>(terug ? 'paywall' : 'gender')
+  // Startscherm vóór de eerste vraag (Roel, 16 nov). Terug van een geannuleerde
+  // betaling slaan we het over.
+  const [gestart, setGestart] = useState(Boolean(terug))
   const [data, setData] = useState<OnboardingData>(terug?.data ?? initialOnboardingData)
   const [email, setEmail] = useState(terug?.email ?? '')
   const [herinneringen, setHerinneringen] = useState(terug?.herinneringen ?? false)
@@ -160,9 +165,22 @@ export default function OnboardingWizard() {
   const { progress, steps, currentIndex } = useOnboardingSteps(data, stepId)
 
   useEffect(() => {
+    if (!gestart) {
+      trackStartscherm('view')
+      meetStap('startscherm')
+      return
+    }
     trackOnboardingStepView(stepId, currentIndex, steps.length, progress)
     meetStap(stepId, currentIndex >= 0 ? currentIndex + 1 : undefined, data)
-  }, [stepId])
+  }, [stepId, gestart])
+
+  const startQuiz = useCallback(() => {
+    trackStartscherm('start')
+    meetStap('start-knop')
+    setStepId('gender')
+    setGestart(true)
+    window.scrollTo(0, 0)
+  }, [])
 
   useEffect(() => {
     setPressedOption(null)
@@ -217,6 +235,7 @@ export default function OnboardingWizard() {
     const steps = buildStepList(data)
     const idx = steps.indexOf(stepId)
     if (idx > 0) setStepId(steps[idx - 1])
+    else if (stepId === 'gender') setGestart(false)
   }, [stepId, data])
 
   const selectSingle = useCallback(
@@ -322,8 +341,12 @@ export default function OnboardingWizard() {
 
   const layoutProps = {
     progress: showProgress ? progress : undefined,
-    showBack: stepId !== 'gender' && stepId !== 'paywall',
+    showBack: stepId !== 'paywall',
     onBack: navigateBack,
+  }
+
+  if (!gestart) {
+    return <Startscherm onStart={startQuiz} />
   }
 
   switch (stepId) {
