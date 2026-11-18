@@ -20,7 +20,11 @@ const KOLOMMEN: ReadonlyArray<readonly [string, string]> = [
 
 // Welk deel van een foto in beeld blijft (verticaal). Foto 5: hoofd tot enkels zover het past, hoofd
 // niet afsnijden (Roel, 18 nov).
-const POSITIE: Record<string, string> = { [foto5]: '50% 10%' }
+const POSITIE: Record<string, string> = { [foto5]: '50% 20%' }
+
+// Foto 5 krijgt meer hoogte in de middelste kolom, zodat hoofd, billen en een
+// stuk van de benen in beeld zijn (Roel, 18 nov).
+const GROEI: Record<string, number> = { [foto5]: 1.35 }
 
 interface StartschermProps {
   isGekozen: (option: Geslacht) => boolean
@@ -52,7 +56,7 @@ export default function Startscherm({ isGekozen, onKies }: StartschermProps) {
           {KOLOMMEN.map((kolom, i) => (
             <div key={i} className={`startscherm__kolom startscherm__kolom--${i + 1}`}>
               {kolom.map((src) => (
-                <img key={src} src={src} alt="" className="startscherm__foto" style={POSITIE[src] ? { objectPosition: POSITIE[src] } : undefined} fetchPriority="high" />
+                <img key={src} src={src} alt="" className="startscherm__foto" style={{ objectPosition: POSITIE[src], flexGrow: GROEI[src] }} fetchPriority="high" />
               ))}
             </div>
           ))}
