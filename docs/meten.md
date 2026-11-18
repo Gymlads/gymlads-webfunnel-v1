@@ -46,3 +46,11 @@ hoe geteld): `docs/dashboard-trechter.md` in Gymlads/gymlads-app.
   telt ze pas na `20261116000000_trechter_startscherm.sql` (gymlads-app).
 - GTM: aparte events `startscherm_view` en `startscherm_start`. Het bestaande
   `onboarding_step_view` (en de nummering per stap) blijft gelijk, begint nog steeds bij `gender`.
+
+## Startscherm v2 (18-11-2026)
+
+- De geslachtvraag staat op het startscherm zelf (geen START-knop meer). Stap `gender`
+  toont `Startscherm.tsx`; "terug" op de leeftijdvraag gaat naar het startscherm.
+- Metingen blijven gelijk zodat het dashboard klopt: `startscherm` = scherm in beeld;
+  bij het kiezen van een geslacht `start-knop` en `gender` (met geslacht). GTM:
+  `onboarding_step_view` gender + `startscherm_view` bij laden, `startscherm_start` bij kiezen.

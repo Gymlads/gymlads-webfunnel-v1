@@ -150,9 +150,6 @@ const STEP_PAGE_BG: Partial<Record<StepId, string>> = {
 export default function OnboardingWizard() {
   const [terug] = useState(startPunt)
   const [stepId, setStepId] = useState<StepId>(terug ? 'paywall' : 'gender')
-  // Startscherm vóór de eerste vraag (Roel, 16 nov). Terug van een geannuleerde
-  // betaling slaan we het over.
-  const [gestart, setGestart] = useState(Boolean(terug))
   const [data, setData] = useState<OnboardingData>(terug?.data ?? initialOnboardingData)
   const [email, setEmail] = useState(terug?.email ?? '')
   const [herinneringen, setHerinneringen] = useState(terug?.herinneringen ?? false)
@@ -164,23 +161,19 @@ export default function OnboardingWizard() {
 
   const { progress, steps, currentIndex } = useOnboardingSteps(data, stepId)
 
+  // Startscherm v2 (Roel, 18 nov): de geslachtvraag staat op het startscherm.
+  // Metingen blijven gelijk aan v1: 'startscherm' = scherm in beeld,
+  // 'start-knop' + 'gender' = geslacht gekozen (vroeger: START gedrukt en
+  // daarna de geslachtvraag in beeld).
   useEffect(() => {
-    if (!gestart) {
+    trackOnboardingStepView(stepId, currentIndex, steps.length, progress)
+    if (stepId === 'gender') {
       trackStartscherm('view')
       meetStap('startscherm')
       return
     }
-    trackOnboardingStepView(stepId, currentIndex, steps.length, progress)
     meetStap(stepId, currentIndex >= 0 ? currentIndex + 1 : undefined, data)
-  }, [stepId, gestart])
-
-  const startQuiz = useCallback(() => {
-    trackStartscherm('start')
-    meetStap('start-knop')
-    setStepId('gender')
-    setGestart(true)
-    window.scrollTo(0, 0)
-  }, [])
+  }, [stepId])
 
   useEffect(() => {
     setPressedOption(null)
@@ -235,7 +228,6 @@ export default function OnboardingWizard() {
     const steps = buildStepList(data)
     const idx = steps.indexOf(stepId)
     if (idx > 0) setStepId(steps[idx - 1])
-    else if (stepId === 'gender') setGestart(false)
   }, [stepId, data])
 
   const selectSingle = useCallback(
@@ -345,27 +337,19 @@ export default function OnboardingWizard() {
     onBack: navigateBack,
   }
 
-  if (!gestart) {
-    return <Startscherm onStart={startQuiz} />
-  }
-
   switch (stepId) {
     case 'gender':
       return (
-        <OnboardingLayout {...layoutProps}>
-          <h1 className="onboarding__title">Wat is jouw geslacht?</h1>
-          <div className="onboarding__options">
-            {(['Man', 'Vrouw', 'Zeg ik liever niet'] as Geslacht[]).map((option) => (
-              <OptionButton
-                key={option}
-                selected={isOptionSelected(option, data.geslacht)}
-                onClick={() => selectSingle('geslacht', option)}
-              >
-                {option}
-              </OptionButton>
-            ))}
-          </div>
-        </OnboardingLayout>
+        <Startscherm
+          isGekozen={(option: Geslacht) => isOptionSelected(option, data.geslacht)}
+          onKies={(option: Geslacht) => {
+            if (pressedOption) return
+            trackStartscherm('start')
+            meetStap('start-knop')
+            meetStap('gender', 1, { ...data, geslacht: option })
+            selectSingle('geslacht', option)
+          }}
+        />
       )
 
     case 'age':

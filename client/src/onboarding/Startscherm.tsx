@@ -1,3 +1,4 @@
+import type { Geslacht } from '../types'
 import logoImage from './assets/gymlads-logo.png'
 import foto1 from './assets/start-1.jpg'
 import foto2 from './assets/start-2.jpg'
@@ -6,24 +7,39 @@ import foto4 from './assets/start-4.jpg'
 import foto5 from './assets/start-5.jpg'
 import foto6 from './assets/start-6.jpg'
 
-// Startscherm vóór de eerste vraag (ontwerp Roel, 16 nov 2026).
-// Collage: drie kolommen, de middelste iets hoger, de buitenste lopen van het
-// scherm af. Volgorde zoals in het ontwerp: boven links, midden, rechts;
-// onder links, midden, rechts.
-// De foto's zijn al precies bijgesneden zoals in Roels ontwerp (tegel 300x370);
-// tweede waarde = welk deel in beeld blijft als dat ooit nodig is.
-type Foto = readonly [src: string, positie: string]
-const KOLOMMEN: ReadonlyArray<readonly [Foto, Foto]> = [
-  [[foto1, '50% 50%'], [foto4, '50% 50%']],
-  [[foto2, '50% 50%'], [foto5, '50% 50%']],
-  [[foto3, '50% 50%'], [foto6, '50% 50%']],
+// Startscherm v2 (ontwerp Roel, 18 nov 2026): de eerste vraag (geslacht) staat
+// meteen onder de collage. Alles past op één scherm, ook op iPhone SE en een
+// klein Android-toestel: de collage krijgt hooguit ±44% van de schermhoogte.
+// Collage: drie kolommen, de middelste iets hoger, langzaam bewegend.
+// Volgorde: boven links, midden, rechts; onder links, midden, rechts.
+const KOLOMMEN: ReadonlyArray<readonly [string, string]> = [
+  [foto1, foto4],
+  [foto2, foto5],
+  [foto3, foto6],
 ]
 
+// Welk deel van een foto in beeld blijft (verticaal). Foto 5: hoofd tot enkels zover het past, hoofd
+// niet afsnijden (Roel, 18 nov).
+const POSITIE: Record<string, string> = { [foto5]: '50% 20%' }
+
+// Foto 5 krijgt meer hoogte in de middelste kolom, zodat hoofd, billen en een
+// stuk van de benen in beeld zijn (Roel, 18 nov).
+const GROEI: Record<string, number> = { [foto5]: 1.35 }
+
 interface StartschermProps {
-  onStart: () => void
+  isGekozen: (option: Geslacht) => boolean
+  onKies: (option: Geslacht) => void
 }
 
-export default function Startscherm({ onStart }: StartschermProps) {
+function Pijl() {
+  return (
+    <svg className="startscherm__pijl" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 6L15 12L9 18" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export default function Startscherm({ isGekozen, onKies }: StartschermProps) {
   return (
     <div className="onboarding startscherm">
       <header className="startscherm__logo">
@@ -37,35 +53,33 @@ export default function Startscherm({ onStart }: StartschermProps) {
         </p>
 
         <div className="startscherm__collage" aria-hidden="true">
-          <div className="startscherm__raster">
-          <div className="startscherm__kolommen">
           {KOLOMMEN.map((kolom, i) => (
             <div key={i} className={`startscherm__kolom startscherm__kolom--${i + 1}`}>
-              {kolom.map(([src, positie]) => (
-                <img
-                  key={src}
-                  src={src}
-                  alt=""
-                  className="startscherm__foto"
-                  style={{ objectPosition: positie }}
-                  fetchPriority="high"
-                />
+              {kolom.map((src) => (
+                <img key={src} src={src} alt="" className="startscherm__foto" style={{ objectPosition: POSITIE[src], flexGrow: GROEI[src] }} fetchPriority="high" />
               ))}
             </div>
           ))}
-          </div>
-          </div>
         </div>
-      </main>
 
-      <footer className="startscherm__onder">
-        <button type="button" className="onboarding__btn startscherm__knop" onClick={onStart}>
-          START
-        </button>
-        <p className="startscherm__klein">
-          <span className="startscherm__accent">1-minuutquiz</span> voor jouw persoonlijke plan
-        </p>
-      </footer>
+        <section className="startscherm__vraag" aria-labelledby="startscherm-vraag">
+          <h2 id="startscherm-vraag" className="startscherm__vraag-titel">Ik ben een…</h2>
+          {(['Man', 'Vrouw'] as Geslacht[]).map((option) => (
+            <button
+              key={option}
+              type="button"
+              className={`startscherm__keuze${isGekozen(option) ? ' startscherm__keuze--gekozen' : ''}`}
+              onClick={() => onKies(option)}
+            >
+              <span>{option}</span>
+              <Pijl />
+            </button>
+          ))}
+          <p className="startscherm__klein">
+            <span className="startscherm__accent">1-minuutquiz</span> voor jouw persoonlijke plan
+          </p>
+        </section>
+      </main>
     </div>
   )
 }
