@@ -18,6 +18,10 @@ const KOLOMMEN: ReadonlyArray<readonly [string, string]> = [
   [foto3, foto6],
 ]
 
+// Welk deel van een foto in beeld blijft (verticaal). Foto 5: billen meer in
+// beeld (Roel, 18 nov).
+const POSITIE: Record<string, string> = { [foto5]: '50% 82%' }
+
 interface StartschermProps {
   isGekozen: (option: Geslacht) => boolean
   onKies: (option: Geslacht) => void
@@ -48,7 +52,7 @@ export default function Startscherm({ isGekozen, onKies }: StartschermProps) {
           {KOLOMMEN.map((kolom, i) => (
             <div key={i} className={`startscherm__kolom startscherm__kolom--${i + 1}`}>
               {kolom.map((src) => (
-                <img key={src} src={src} alt="" className="startscherm__foto" fetchPriority="high" />
+                <img key={src} src={src} alt="" className="startscherm__foto" style={POSITIE[src] ? { objectPosition: POSITIE[src] } : undefined} fetchPriority="high" />
               ))}
             </div>
           ))}
@@ -67,13 +71,6 @@ export default function Startscherm({ isGekozen, onKies }: StartschermProps) {
               <Pijl />
             </button>
           ))}
-          <button
-            type="button"
-            className={`startscherm__liever-niet${isGekozen('Zeg ik liever niet') ? ' startscherm__liever-niet--gekozen' : ''}`}
-            onClick={() => onKies('Zeg ik liever niet')}
-          >
-            Zeg ik liever niet
-          </button>
           <p className="startscherm__klein">
             <span className="startscherm__accent">1-minuutquiz</span> voor jouw persoonlijke plan
           </p>
