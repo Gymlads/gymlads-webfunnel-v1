@@ -2330,7 +2330,16 @@
   animation: startscherm-zweef-op 9s ease-in-out infinite alternate;
 }
 
+.startscherm__kolom--1,
+.startscherm__kolom--3 {
+  /* Buitenste kolommen kleiner: korter en smaller dan het midden. */
+  height: calc(100% - var(--verschil));
+  margin-top: calc(var(--verschil) * 2);
+}
+
+/* Middelste kolom (het resultaat) groter dan de rest (Roel, 18 nov). */
 .startscherm__kolom--2 {
+  flex: 1.4;
   margin-top: 0;
   animation-name: startscherm-zweef-neer;
 }
