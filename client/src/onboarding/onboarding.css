@@ -2241,7 +2241,9 @@
   color: var(--text);
 }
 
-/* ---- Startscherm (vóór de eerste vraag, ontwerp Roel 16 nov) ---- */
+/* ---- Startscherm v2 (eerste vraag op het startscherm, ontwerp Roel 18 nov) ----
+   Alles op één scherm: tekstmaten schalen mee met de schermhoogte en de
+   collage krijgt hooguit ±44% van de hoogte (en krimpt als het krap wordt). */
 .startscherm {
   overflow: hidden;
 }
@@ -2249,12 +2251,14 @@
 .startscherm__logo {
   display: flex;
   justify-content: center;
-  padding: max(18px, calc(env(safe-area-inset-top) + 12px)) 24px 0;
+  padding: max(14px, calc(env(safe-area-inset-top) + 10px)) 24px 0;
+  padding-top: max(min(18px, 2.2dvh), calc(env(safe-area-inset-top) + 8px));
   flex-shrink: 0;
 }
 
 .startscherm__logo img {
   height: 16px;
+  height: clamp(13px, 2dvh, 16px);
   width: auto;
   display: block;
 }
@@ -2264,119 +2268,169 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 18px 24px 0;
+  padding: 0 24px;
+  padding-bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px));
 }
 
 .startscherm__kop {
-  margin: 0;
-  font-size: clamp(2rem, 9.6vw, 2.6rem);
+  margin: min(14px, 1.8dvh) 0 0;
+  font-size: clamp(1.75rem, min(9.6vw, 5.3dvh), 2.6rem);
   font-weight: 900;
   font-style: italic;
-  line-height: 1.05;
+  line-height: 1.04;
   letter-spacing: -0.035em;
   color: var(--text);
   text-align: left;
 }
 
 .startscherm__tekst {
-  margin: 12px 0 0;
-  font-size: 0.95rem;
+  margin: min(10px, 1.3dvh) 0 0;
+  font-size: clamp(0.85rem, 2.3dvh, 0.95rem);
   font-weight: 500;
-  line-height: 1.45;
+  line-height: 1.4;
   color: var(--text-muted);
   text-align: left;
 }
 
-/* Maten zoals het ontwerp (telefoon 748 breed): tegels 300x370, tussenruimte 16,
-   middelste kolom 40 hoger, buitenste kolommen lopen van het scherm af. */
-.startscherm__collage {
-  flex: 1;
-  min-height: 160px;
-  margin: 20px -24px 0;
-  container-type: size;
+.startscherm__nowrap {
+  white-space: nowrap;
 }
 
-/* Schermbreed zoals het ontwerp. Is het scherm te laag, dan loopt de onderste
-   rij weg in de achtergrond (net als in het ontwerp). */
-.startscherm__raster {
+/* Collage: drie kolommen, middelste hoger; langzaam verspringend */
+.startscherm__collage {
+  --verschil: 14px;
   position: relative;
-  width: 100%;
-  /* Lage schermen: hooguit ~1/6 van de collage wegvallen, daarna iets kleiner */
-  width: min(100cqw, 100cqh * 748 / 796 * 1.2);
-  margin: 0 auto;
-  height: 100%;
-  max-height: calc(100cqw * 796 / 748);
+  flex: 0 1 44dvh;
+  height: 44dvh;
+  max-height: calc((100vw - 32px) * 0.95);
+  min-height: 110px;
+  margin: min(16px, 2dvh) -14px 0;
+  display: flex;
+  gap: 8px;
   overflow: hidden;
 }
 
-/* Onderste rij zacht laten weglopen in de achtergrond */
-.startscherm__raster::after {
+.startscherm__collage::after {
   content: '';
   position: absolute;
   inset: auto 0 0 0;
-  height: min(30%, calc(100cqw * 0.2));
+  height: 26%;
   background: linear-gradient(to bottom, rgba(23, 23, 25, 0), var(--bg) 95%);
   pointer-events: none;
 }
 
-.startscherm__kolommen {
-  position: absolute;
-  top: 0;
-  left: calc(-92 / 748 * 100%);
-  width: calc(932 / 748 * 100%);
-  display: flex;
-  justify-content: space-between;
-}
-
 .startscherm__kolom {
-  width: calc(300 / 932 * 100%);
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  height: calc(100% + var(--verschil));
+  margin-top: var(--verschil);
+  animation: startscherm-zweef-op 9s ease-in-out infinite alternate;
 }
 
-.startscherm__foto + .startscherm__foto {
-  margin-top: calc(16 / 300 * 100%);
+.startscherm__kolom--2 {
+  margin-top: 0;
+  animation-name: startscherm-zweef-neer;
 }
 
-/* margin in % rekent met de breedte van .startscherm__kolommen (932) */
-.startscherm__kolom--1,
-.startscherm__kolom--3 {
-  margin-top: calc(40 / 932 * 100%);
+@keyframes startscherm-zweef-op {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(var(--verschil) * -0.7)); }
+}
+
+@keyframes startscherm-zweef-neer {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(var(--verschil) * 0.7)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startscherm__kolom {
+    animation: none;
+  }
 }
 
 .startscherm__foto {
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  aspect-ratio: 300 / 370;
   object-fit: cover;
-  border-radius: calc(20 / 300 * 100%) / calc(20 / 370 * 100%);
+  object-position: 50% 40%;
+  border-radius: 14px;
   display: block;
   background: var(--surface-elevated);
 }
 
-.startscherm__onder {
+/* Vraag */
+.startscherm__vraag {
   flex-shrink: 0;
-  padding: 8px 24px;
-  padding-bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px));
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: min(10px, 1.4dvh);
+  margin-top: min(10px, 1.2dvh);
 }
 
-.startscherm__knop {
-  padding: 17px 24px;
-  border-radius: 16px;
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+.startscherm__vraag-titel {
+  margin: 0 0 2px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+}
+
+.startscherm__keuze {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  height: clamp(48px, 7.4dvh, 60px);
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: #2c2c2e;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.startscherm__keuze:active,
+.startscherm__keuze--gekozen {
+  border-color: var(--accent);
+}
+
+.startscherm__pijl {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.startscherm__liever-niet {
+  align-self: center;
+  margin-top: 2px;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.startscherm__liever-niet--gekozen {
+  color: var(--accent);
 }
 
 .startscherm__klein {
-  margin: 12px 0 0;
+  margin: -4px 0 0;
+  font-size: 0.85rem;
   font-style: italic;
-  font-size: 0.875rem;
   color: var(--text-muted);
-}
-
-.startscherm__nowrap {
-  white-space: nowrap;
+  text-align: center;
 }
 
 .startscherm__accent {
