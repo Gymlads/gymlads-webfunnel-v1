@@ -18,9 +18,9 @@ const KOLOMMEN: ReadonlyArray<readonly [string, string]> = [
   [foto3, foto6],
 ]
 
-// Welk deel van een foto in beeld blijft (verticaal). Foto 5: hoofd tot knieën in beeld, hoofd
+// Welk deel van een foto in beeld blijft (verticaal). Foto 5: hoofd tot enkels zover het past, hoofd
 // niet afsnijden (Roel, 18 nov).
-const POSITIE: Record<string, string> = { [foto5]: '50% 30%' }
+const POSITIE: Record<string, string> = { [foto5]: '50% 10%' }
 
 interface StartschermProps {
   isGekozen: (option: Geslacht) => boolean
