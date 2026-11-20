@@ -10,7 +10,6 @@ import { browserSoort } from './browser'
 //   meting merkt de bezoeker niet.
 
 export type MeetStap =
-  | 'startscherm' | 'start-knop'
   | 'goal' | 'gender' | 'age' | 'stats' | 'info-personalization' | 'info-consistency'
   | 'challenge' | 'experience' | 'info-experience' | 'info-goals' | 'info-schedule'
   | 'frequency' | 'duration' | 'muscle-focus' | 'location' | 'training-days'

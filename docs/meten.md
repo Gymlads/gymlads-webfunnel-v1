@@ -54,3 +54,7 @@ hoe geteld): `docs/dashboard-trechter.md` in Gymlads/gymlads-app.
 - Metingen blijven gelijk zodat het dashboard klopt: `startscherm` = scherm in beeld;
   bij het kiezen van een geslacht `start-knop` en `gender` (met geslacht). GTM:
   `onboarding_step_view` gender + `startscherm_view` bij laden, `startscherm_start` bij kiezen.
+
+## Startscherm teruggedraaid (20-11)
+
+Op verzoek van Roel (20 nov) weer de oude opbouw: de quiz begint meteen met de geslachtvraag, zonder startscherm. De stappen `startscherm` en `start-knop` worden niet meer gemeten; `gender` weer bij het tonen van de vraag (zoals vóór 16 nov). GTM-events `startscherm_view` / `startscherm_start` vervallen.
