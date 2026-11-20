@@ -27,19 +27,21 @@ import {
   DOEL_OEFENINGEN,
   adviesTekst,
   eenheid,
+  danLabel,
+  doelEenheidTekst,
   getal,
   getalTitel,
+  nuLabel,
   grenzen,
   niveauUitErvaring,
   omlaag,
   standaardStart,
   startBereik,
   soortUitHoofddoel,
-  startTitel,
-  zonePositie,
   zoneVan,
 } from './doel'
 import EmailStap from './EmailStap'
+import Doelscherm from './Doelscherm'
 import Paywall, { type CtaPositie } from './Paywall'
 import { STANDAARD_PLAN, type Plan } from './paywallInhoud'
 import { bewaarAntwoorden, leesAntwoorden } from './bewaren'
@@ -155,6 +157,7 @@ export default function OnboardingWizard() {
   const [checkoutBezig, setCheckoutBezig] = useState<CtaPositie | null>(null)
   const [plan, setPlan] = useState<Plan>(STANDAARD_PLAN)
   const [pressedOption, setPressedOption] = useState<string | null>(null)
+  const [startWijzigen, setStartWijzigen] = useState(false)
   const opgewarmd = useRef(false)
 
   const { progress, steps, currentIndex } = useOnboardingSteps(data, stepId)
@@ -166,6 +169,7 @@ export default function OnboardingWizard() {
 
   useEffect(() => {
     setPressedOption(null)
+    setStartWijzigen(false)
   }, [stepId])
 
   // Paywall in beeld: de server alvast wakker maken, zodat de knop sneller
@@ -485,7 +489,7 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Waar wil je spieren bij?</h1>
-          <p className="onboarding__subtitle">Dit wordt je doel voor de komende 8 weken.</p>
+          <p className="onboarding__subtitle">Dit wordt jouw doel.</p>
           <div className="onboarding__options">
             {(
               [
@@ -523,7 +527,7 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Op welke oefening wil je sterker worden?</h1>
-          <p className="onboarding__subtitle">Dit wordt je doel voor de komende 8 weken.</p>
+          <p className="onboarding__subtitle">Dit wordt jouw doel.</p>
           <div className="onboarding__options">
             {DOEL_OEFENINGEN.map((o) => (
               <OptionButton
@@ -558,23 +562,42 @@ export default function OnboardingWizard() {
       const verandering = Math.abs(doelWaarde - start)
       const zone = zoneVan(verandering, g)
       const advies = adviesTekst(soort, verandering, zone, g.max, start)
-      const isKracht = soort === 'kracht'
-      // Kracht: het doelgewicht; anders de verandering ("4,5 kg eraf").
-      const getoond = isKracht ? doelWaarde : verandering
+      // Kilo-scherm v2 (Roel, 20-11): "Ik weeg nu" op één regel, groot "4 kg eraf",
+      // "Dan weeg je 76 kg". Kracht en centimeters op dezelfde manier.
       return (
         <OnboardingLayout
           {...layoutProps}
           footer={
-            <NextButton
-              label="Dit is mijn doel"
-              disabled={verandering <= 0}
-              onClick={() => navigateNext({ doel_start: start, doel_waarde: doelWaarde })}
-            />
+            <>
+              <button
+                type="button"
+                className="doel-onbekend"
+                onClick={() => {
+                  meetStap('doel-getal-onbekend', undefined, data)
+                  slaDoelOver()
+                }}
+              >
+                Ik weet het nog niet
+              </button>
+              <NextButton
+                label="Dit is mijn doel"
+                disabled={verandering <= 0}
+                onClick={() => navigateNext({ doel_start: start, doel_waarde: doelWaarde })}
+              />
+            </>
           }
         >
           <h1 className="onboarding__title">{getalTitel(soort, data.doel_oefening)}</h1>
-          <div className="doel-nu">
-            <span className="doel-nu__label">{isKracht ? 'Nu (ongeveer 8 herhalingen)' : startTitel(soort, data.doel_oefening)}</span>
+          <div className="doel-nu-regel">
+            <span className="doel-nu-regel__label">{nuLabel(soort)}</span>
+            <span className="doel-nu-regel__waarde">
+              {getal(start)} <span className="doel-nu-regel__eenheid">{eenheid(soort)}</span>
+            </span>
+            <button type="button" className="doel-nu-regel__wijzig" onClick={() => setStartWijzigen((w) => !w)}>
+              {startWijzigen ? 'Klaar' : 'Wijzig'}
+            </button>
+          </div>
+          {startWijzigen ? (
             <DoelStepper
               klein
               waarde={start}
@@ -584,28 +607,25 @@ export default function OnboardingWizard() {
               max={b.max}
               onChange={(v) => setData((prev) => ({ ...prev, doel_start: v, doel_waarde: null }))}
             />
-          </div>
-          <p className="doel-nu__label">Je doel</p>
-          <DoelStepper
-            waarde={getoond}
-            eenheid={eenheid(soort)}
-            stap={g.stap}
-            min={isKracht ? start + g.stap : g.stap}
-            max={isKracht ? start + g.max * 2 : g.max * 2}
-            onChange={(v) => setData((prev) => ({ ...prev, doel_waarde: isKracht ? v : start + richting * v }))}
-          />
-          {!isKracht ? (
-            <p className="doel-nu__label doel-nu__uitkomst">
-              {soort === 'afvallen' || soort === 'aankomen'
-                ? `Dan weeg je ${getal(doelWaarde)} kg`
-                : `Dan is het ${getal(doelWaarde)} cm`}
-            </p>
           ) : null}
-          <DoelZoneBalk zone={zone} positie={zonePositie(verandering, g)} />
+          <p className="doel-mijn">Mijn doel</p>
+          <DoelStepper
+            groot
+            waarde={verandering}
+            eenheid={doelEenheidTekst(soort)}
+            stap={g.stap}
+            min={g.stap}
+            max={g.max * 2}
+            onChange={(v) => setData((prev) => ({ ...prev, doel_waarde: start + richting * v }))}
+          />
+          <p className="doel-dan">
+            {danLabel(soort)}{' '}
+            <span className="doel-dan__getal">
+              {getal(doelWaarde)} {eenheid(soort)}
+            </span>
+          </p>
+          <DoelZoneBalk zone={zone} />
           <DoelAdvies zone={zone} vet={advies.vet} tekst={advies.tekst} />
-          <button type="button" className="doel-later" onClick={slaDoelOver}>
-            Sla over
-          </button>
         </OnboardingLayout>
       )
     }
@@ -956,6 +976,26 @@ export default function OnboardingWizard() {
               navigateNext()
             }}
           />
+        </OnboardingLayout>
+      )
+
+    case 'doelscherm':
+      return (
+        <OnboardingLayout
+          {...layoutProps}
+          logo
+          contentClassName="onboarding__content--doelscherm"
+          footer={
+            <NextButton
+              label="VERDER"
+              onClick={() => {
+                meetStap('doelscherm-knop', undefined, data)
+                navigateNext()
+              }}
+            />
+          }
+        >
+          <Doelscherm data={data} />
         </OnboardingLayout>
       )
 
