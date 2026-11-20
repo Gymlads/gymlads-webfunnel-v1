@@ -105,3 +105,11 @@ Wat er verandert:
   gymlads-app migratie `20261120120000_trechter_doelscherm.sql` vóór livegang.
 - Blok "Je eerste workout" uit het voorstel is weggelaten: het echte schema maakt n8n pas
   na het inloggen in de app. De splitsing-chip volgt dezelfde regel als "M1 – Schema maken 4.0".
+
+### Briefing 20-11 (deel 2)
+- Mijlpalen v2: "Deze week · Na 4 weken · Daarna" (`Doelscherm.tsx`), doelblok Onderhouden = "Fit en sterk blijven".
+- Kilo-scherm v2 (`doel-getal`): "Ik weeg nu · 80 kg · Wijzig", groot "4 kg eraf", "Dan weeg je 76 kg", meter lime tot het niveau.
+  Kilo's (afvallen/aankomen) in stappen van 1 kg (app: 0,5); het maximum blijft gelijk. Kracht en cm-doelen dezelfde opbouw.
+- "Sla over" op het getal-scherm heet "Ik weet het nog niet" en telt `doel-getal-onbekend` (werkt verder hetzelfde).
+- "8 weken" weg uit: subregel bij doel-kiezen en doel-oefening, kracht-advies "+X kg past bij jouw niveau",
+  "Te veel"-tekst bij kracht/centimeters ("meer tijd"). Blijft op het kilo-scherm en in de garantie.

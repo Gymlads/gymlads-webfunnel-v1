@@ -76,11 +76,13 @@ function rond(waarde: number, stap: number) {
 /** Voorstel en maximum voor de verandering in 8 weken (zelfde als de app). */
 export function grenzen(soort: DoelSoort, start: number, niveau: Niveau): { voorstel: number; max: number; stap: number } {
   switch (soort) {
+    // Web (20-11-2026, Roel): kilo's in hele stappen van 1 kg (de app: 0,5).
+    // Het maximum blijft hetzelfde, alleen het voorstel is een heel getal.
     case 'afvallen':
-      return { voorstel: rond(start * 0.045, 0.5), max: rond(start * 0.07, 0.5), stap: 0.5 }
+      return { voorstel: Math.max(1, Math.round(start * 0.045)), max: rond(start * 0.07, 0.5), stap: 1 }
     case 'aankomen': {
       const p = niveau === 'beginner' ? [0.02, 0.035] : niveau === 'gemiddeld' ? [0.015, 0.03] : [0.01, 0.02]
-      return { voorstel: Math.max(0.5, rond(start * p[0], 0.5)), max: Math.max(1, rond(start * p[1], 0.5)), stap: 0.5 }
+      return { voorstel: Math.max(1, Math.round(start * p[0])), max: Math.max(1, rond(start * p[1], 0.5)), stap: 1 }
     }
     case 'taille':
       return { voorstel: 3, max: 6, stap: 0.5 }
@@ -176,9 +178,9 @@ export function startUitleg(soort: DoelSoort): string {
 export function getalTitel(soort: DoelSoort, oefening: string): string {
   switch (soort) {
     case 'afvallen':
-      return 'Hoeveel kilo eraf in 8 weken?'
+      return 'Hoeveel kilo wil je kwijt in 8 weken?'
     case 'aankomen':
-      return 'Hoeveel kilo erbij in 8 weken?'
+      return 'Hoeveel kilo wil je erbij in 8 weken?'
     case 'taille':
       return 'Hoeveel centimeter van je taille af?'
     case 'billen':
@@ -192,6 +194,25 @@ export function getalTitel(soort: DoelSoort, oefening: string): string {
   }
 }
 
+/** Onder het grote getal: "kg eraf", "kg erbij", "cm erbij". */
+export function doelEenheidTekst(soort: DoelSoort): string {
+  return `${eenheid(soort)} ${omlaag(soort) ? 'eraf' : 'erbij'}`
+}
+
+/** "Ik weeg nu" / "Ik til nu" / "Ik meet nu". */
+export function nuLabel(soort: DoelSoort): string {
+  if (soort === 'kracht') return 'Ik til nu'
+  if (soort === 'afvallen' || soort === 'aankomen') return 'Ik weeg nu'
+  return 'Ik meet nu'
+}
+
+/** "Dan weeg je" / "Dan til je" / "Dan meet je". */
+export function danLabel(soort: DoelSoort): string {
+  if (soort === 'kracht') return 'Dan til je'
+  if (soort === 'afvallen' || soort === 'aankomen') return 'Dan weeg je'
+  return 'Dan meet je'
+}
+
 export function getal(waarde: number): string {
   return waarde.toLocaleString('nl-NL', { maximumFractionDigits: 1 })
 }
@@ -202,7 +223,8 @@ export function adviesTekst(soort: DoelSoort, verandering: number, zone: Zone, m
   if (zone === 3) {
     const maxWaarde = soort === 'kracht' ? `${getal(start + max)} ${e}` : `${getal(max)} ${e}`
     return {
-      tekst: `Zo'n grote stap kost meestal meer dan 8 weken. Voor jou raden we maximaal ${maxWaarde} aan, en dat is al ambitieus.`,
+      // "8 weken" alleen op het kilo-scherm (Roel, 20-11)
+      tekst: `Zo'n grote stap kost meestal meer ${soort === 'afvallen' || soort === 'aankomen' ? 'dan 8 weken' : 'tijd'}. Voor jou raden we maximaal ${maxWaarde} aan, en dat is al ambitieus.`,
     }
   }
   if (zone === 0)
@@ -215,14 +237,14 @@ export function adviesTekst(soort: DoelSoort, verandering: number, zone: Zone, m
       vet: 'Ambitieus!',
       tekst: 'Haalbaar als je elke workout doet en je eten goed bijhoudt. Wij helpen je elke week.',
     }
-  const perWeek = (verandering / 8).toLocaleString('nl-NL', { maximumFractionDigits: 2 })
+  const perWeek = (verandering / 8).toLocaleString('nl-NL', { maximumFractionDigits: verandering / 8 < 0.25 ? 2 : 1 })
   switch (soort) {
     case 'aankomen':
       return { vet: 'Mooi doel.', tekst: `Dit haal je als je je plan volgt: zo'n ${perWeek} kg per week, vooral spiermassa.` }
     case 'afvallen':
       return { vet: 'Mooi doel.', tekst: `Dit haal je als je je plan volgt: zo'n ${perWeek} kg per week, terwijl je je spieren houdt.` }
     case 'kracht':
-      return { vet: 'Mooi doel.', tekst: `+${getal(verandering)} kg in 8 weken past bij jouw niveau.` }
+      return { vet: 'Mooi doel.', tekst: `+${getal(verandering)} kg past bij jouw niveau.` }
     default:
       return { vet: 'Mooi doel.', tekst: 'Dit haal je als je je plan volgt en goed eet. Meet jezelf 1x per week.' }
   }

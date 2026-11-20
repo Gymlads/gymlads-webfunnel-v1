@@ -15,7 +15,7 @@ export type MeetStap =
   | 'frequency' | 'duration' | 'muscle-focus' | 'location' | 'training-days'
   | 'gym-days' | 'home-days' | 'activity' | 'equipment' | 'gym-equipment' | 'info-feedback'
   | 'plan-ready' | 'email' | 'doelscherm' | 'doelscherm-knop' | 'paywall' | 'betaalknop' | 'betaald'
-  | 'doel-kiezen' | 'doel-oefening' | 'doel-getal'
+  | 'doel-kiezen' | 'doel-oefening' | 'doel-getal' | 'doel-getal-onbekend'
 
 const SESSIE_KEY = 'gl_meet_sessie'
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const

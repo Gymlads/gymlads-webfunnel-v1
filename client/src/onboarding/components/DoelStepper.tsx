@@ -9,8 +9,11 @@ export function DoelStepper({
   max,
   onChange,
   klein,
+  groot,
 }: {
   klein?: boolean
+  /** Kilo-scherm v2: één heel groot getal met ronde knoppen */
+  groot?: boolean
   waarde: number
   eenheid: string
   stap: number
@@ -20,7 +23,7 @@ export function DoelStepper({
 }) {
   const zet = (v: number) => onChange(Math.min(max, Math.max(min, Math.round(v / stap) * stap)))
   return (
-    <div className={`doel-stepper${klein ? ' doel-stepper--klein' : ''}`}>
+    <div className={`doel-stepper${klein ? ' doel-stepper--klein' : ''}${groot ? ' doel-stepper--groot' : ''}`}>
       <button type="button" className="doel-stepper__knop" aria-label="Minder" onClick={() => zet(waarde - stap)}>
         −
       </button>
@@ -35,15 +38,17 @@ export function DoelStepper({
   )
 }
 
-/** Balk met vier zones en een bolletje (zoals de app, ZoneBalk). */
-export function DoelZoneBalk({ zone, positie }: { zone: Zone; positie: number }) {
+/** Meter met vier zones: lime tot het gekozen niveau, oranje bij "Te veel" (kilo-scherm v2, 20-11). */
+export function DoelZoneBalk({ zone }: { zone: Zone }) {
   return (
     <div className="doel-zone">
       <div className="doel-zone__balk">
         {[0, 1, 2, 3].map((z) => (
-          <div key={z} className={`doel-zone__deel doel-zone__deel--${z}${z === zone ? ' doel-zone__deel--actief' : ''}`} />
+          <div
+            key={z}
+            className={`doel-zone__deel${z <= zone ? (zone === 3 ? ' doel-zone__deel--oranje' : ' doel-zone__deel--aan') : ''}`}
+          />
         ))}
-        <div className={`doel-zone__knop${zone === 3 ? ' doel-zone__knop--oranje' : ''}`} style={{ left: `${positie}%` }} />
       </div>
       <div className="doel-zone__namen">
         {ZONE_NAMEN.map((n, z) => (

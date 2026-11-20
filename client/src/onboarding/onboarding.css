@@ -2343,7 +2343,7 @@
 .doelscherm__mijlpaal:not(:last-child)::before {
   content: '';
   position: absolute;
-  left: 15px;
+  left: 12px;
   top: 50%;
   height: calc(100% + 8px);
   width: 2px;
@@ -2351,11 +2351,12 @@
 }
 
 .doelscherm__bol {
+  /* leeg rondje, het laatste vol */
   position: relative;
   z-index: 1;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: 2px solid var(--accent);
   background: var(--bg);
@@ -2448,4 +2449,110 @@
     margin-top: 8px;
     font-size: 0.8rem;
   }
+}
+
+/* ── Kilo-scherm v2 (20-11-2026): rustiger, één groot getal ── */
+.doel-nu-regel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #2c2c2e;
+}
+
+.doel-nu-regel__label {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.doel-nu-regel__waarde {
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.doel-nu-regel__eenheid {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.doel-nu-regel__wijzig {
+  flex: 1;
+  text-align: right;
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.doel-mijn {
+  margin: 18px 0 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.doel-stepper--groot {
+  margin: 6px 0 10px;
+}
+
+.doel-stepper--groot .doel-stepper__knop {
+  width: 60px;
+  height: 60px;
+  border: 0;
+  font-size: 1.9rem;
+}
+
+.doel-stepper--groot .doel-stepper__waarde {
+  font-size: 3.6rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.doel-stepper--groot .doel-stepper__eenheid {
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.doel-dan {
+  margin: 0 0 18px;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.doel-dan__getal {
+  color: var(--accent);
+}
+
+.doel-zone__deel--aan {
+  background: var(--accent);
+  opacity: 1;
+}
+
+.doel-zone__deel--oranje {
+  background: #ff9500;
+  opacity: 1;
+}
+
+.doel-onbekend {
+  display: block;
+  margin: 0 auto 12px;
+  padding: 6px 12px;
+  background: none;
+  border: 0;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
 }

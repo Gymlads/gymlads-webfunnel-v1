@@ -3,12 +3,12 @@ import { eenheid, getal, oefeningLabel, type DoelSoort } from './doel'
 
 // Scherm "Zo haal jij je doel" (Roel, 20-11-2026, VOORSTEL v4): staat op de
 // plek van de oude e-mailstap, vlak voor "Je plan staat klaar". Geen invulveld.
-// Teksten: Mijlpalen-per-doel-v1 (alleen wat de app echt doet of laat zien,
+// Teksten: Mijlpalen-per-doel v2 (DEFINITIEF 20-11) (alleen wat de app echt doet of laat zien,
 // geen kilo's met een datum beloven). Het blok "Je eerste workout" is bewust
 // weggelaten: het echte schema maakt de app pas na het inloggen (n8n).
 
 interface Mijlpaal {
-  week: number
+  week: string
   tekst: string
 }
 
@@ -80,47 +80,54 @@ export function planChips(data: OnboardingData): string[] {
 }
 
 export function mijlpalen(data: OnboardingData): Mijlpaal[] {
-  const trainingen = (data.sessies_per_week ?? 3) * 4
+  const perWeek = data.sessies_per_week ?? 3
   const getalTekst = doelGetalTekst(data)
-  const inZicht = getalTekst ? `Je ${getalTekst.zicht} komt in zicht` : null
+  // Kracht en afvallen: alleen het getal ("Je 80 kg komt in zicht").
+  const inZicht = getalTekst && data.doel_waarde != null && data.doel_start != null
+    ? `Je ${data.doel_soort === 'kracht' ? `${getal(data.doel_waarde)} kg` : getalTekst.zicht} komt in zicht`
+    : null
+  // Mijlpalen v2 (Roel, 20-11): geen 8 weken meer, ritme Deze week · Na 4 weken · Daarna.
   switch (data.doel) {
     case 'Afvallen':
       return [
-        { week: 1, tekst: 'Je weet precies wat je traint en eet' },
-        { week: 4, tekst: `${trainingen} trainingen gedaan, en je ziet je gewicht bewegen in de app` },
-        { week: 8, tekst: inZicht ?? 'Je doel komt in zicht' },
+        { week: 'Deze week', tekst: `Je eerste ${perWeek} trainingen staan, en je dagelijkse caloriedoel ook` },
+        { week: 'Na 4 weken', tekst: 'Trainen is een gewoonte. In de app zie je hoe je gewicht verandert' },
+        { week: 'Daarna', tekst: inZicht ?? 'Je voelt je lichter en fitter' },
       ]
     case 'Spieropbouw':
       return [
-        { week: 1, tekst: 'Je weet bij elke oefening welk gewicht je pakt' },
-        { week: 3, tekst: 'Je eerste record: meer gewicht dan vorige keer' },
-        { week: 8, tekst: inZicht ?? 'Je ziet zwart op wit hoeveel sterker je bent' },
+        { week: 'Deze week', tekst: 'Je weet bij elke oefening welk gewicht je pakt' },
+        { week: 'Na 4 weken', tekst: 'Je verbreekt je records, week na week' },
+        { week: 'Daarna', tekst: 'Elke week iets zwaarder. Nooit meer vastlopen op hetzelfde gewicht' },
       ]
-    case 'Kracht opbouwen':
+    case 'Kracht opbouwen': {
+      const oefening = data.doel_oefening ? oefeningLabel(data.doel_oefening).toLowerCase() : null
       return [
-        { week: 1, tekst: 'Je weet bij elke oefening welk gewicht je pakt' },
-        { week: 3, tekst: 'Je eerste record staat op je naam' },
-        { week: 8, tekst: inZicht ?? 'Je ziet zwart op wit hoeveel sterker je bent' },
+        { week: 'Deze week', tekst: 'Je startgewichten staan vast, per oefening' },
+        { week: 'Na 4 weken', tekst: `Je verbreekt je records op ${oefening ?? 'je basisoefeningen'}` },
+        { week: 'Daarna', tekst: inZicht ?? 'Elke maand een nieuw record' },
       ]
+    }
     case 'Onderhouden':
       return [
-        { week: 1, tekst: 'Je hebt een vast ritme dat past bij jouw week' },
-        { week: 4, tekst: 'Geen week overgeslagen' },
-        { week: 8, tekst: 'Je blijft sterker worden, zonder vast te lopen' },
+        { week: 'Deze week', tekst: 'Een vast ritme dat past bij jouw week' },
+        { week: 'Na 4 weken', tekst: `${perWeek * 4} trainingen gedaan, geen week overgeslagen` },
+        { week: 'Daarna', tekst: 'Je blijft sterk, zonder na te denken over je schema' },
       ]
     case 'Fit voelen':
     default:
       return [
-        { week: 1, tekst: 'Je weet precies wat je moet doen, ook bij apparaten' },
-        { week: 4, tekst: `Trainen is een vaste gewoonte: ${trainingen} workouts gedaan` },
-        { week: 8, tekst: 'Je voelt je fitter en sterker dan vandaag' },
+        { week: 'Deze week', tekst: 'Elke training ligt klaar. Je hoeft niks zelf te bedenken' },
+        { week: 'Na 4 weken', tekst: 'Trainen is een gewoonte, en je hebt meer energie' },
+        { week: 'Daarna', tekst: 'Je voelt je fitter en sterker dan vandaag' },
       ]
   }
 }
 
 export default function Doelscherm({ data }: { data: OnboardingData }) {
   const getalTekst = doelGetalTekst(data)
-  const doelBlok = getalTekst?.blok ?? (data.doel || 'Fitter en sterker worden')
+  const doelBlok =
+    getalTekst?.blok ?? (data.doel === 'Onderhouden' ? 'Fit en sterk blijven' : data.doel || 'Fit voelen')
   const chips = planChips(data)
   const stappen = mijlpalen(data)
 
@@ -154,11 +161,9 @@ export default function Doelscherm({ data }: { data: OnboardingData }) {
             <span
               className={`doelscherm__bol${i === stappen.length - 1 ? ' doelscherm__bol--vol' : ''}`}
               aria-hidden="true"
-            >
-              {stap.week}
-            </span>
+            />
             <div className="doelscherm__kaart">
-              <span className="doelscherm__week">Week {stap.week}</span>
+              <span className="doelscherm__week">{stap.week}</span>
               <span className="doelscherm__tekst">{stap.tekst}</span>
             </div>
           </li>
