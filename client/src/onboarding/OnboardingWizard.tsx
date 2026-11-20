@@ -40,7 +40,6 @@ import {
   zoneVan,
 } from './doel'
 import EmailStap from './EmailStap'
-import Startscherm from './Startscherm'
 import Paywall, { type CtaPositie } from './Paywall'
 import { STANDAARD_PLAN, type Plan } from './paywallInhoud'
 import { bewaarAntwoorden, leesAntwoorden } from './bewaren'
@@ -50,7 +49,6 @@ import {
   trackOnboardingStepView,
   trackPaywallCta,
   trackPlanSelected,
-  trackStartscherm,
 } from '../analytics/gtm'
 import { setTracklutionContactInfo } from '../analytics/tracklution'
 import { meetStap } from '../analytics/meten'
@@ -161,17 +159,8 @@ export default function OnboardingWizard() {
 
   const { progress, steps, currentIndex } = useOnboardingSteps(data, stepId)
 
-  // Startscherm v2 (Roel, 18 nov): de geslachtvraag staat op het startscherm.
-  // Metingen blijven gelijk aan v1: 'startscherm' = scherm in beeld,
-  // 'start-knop' + 'gender' = geslacht gekozen (vroeger: START gedrukt en
-  // daarna de geslachtvraag in beeld).
   useEffect(() => {
     trackOnboardingStepView(stepId, currentIndex, steps.length, progress)
-    if (stepId === 'gender') {
-      trackStartscherm('view')
-      meetStap('startscherm')
-      return
-    }
     meetStap(stepId, currentIndex >= 0 ? currentIndex + 1 : undefined, data)
   }, [stepId])
 
@@ -333,23 +322,27 @@ export default function OnboardingWizard() {
 
   const layoutProps = {
     progress: showProgress ? progress : undefined,
-    showBack: stepId !== 'paywall',
+    showBack: stepId !== 'gender' && stepId !== 'paywall',
     onBack: navigateBack,
   }
 
   switch (stepId) {
     case 'gender':
       return (
-        <Startscherm
-          isGekozen={(option: Geslacht) => isOptionSelected(option, data.geslacht)}
-          onKies={(option: Geslacht) => {
-            if (pressedOption) return
-            trackStartscherm('start')
-            meetStap('start-knop')
-            meetStap('gender', 1, { ...data, geslacht: option })
-            selectSingle('geslacht', option)
-          }}
-        />
+        <OnboardingLayout {...layoutProps}>
+          <h1 className="onboarding__title">Wat is jouw geslacht?</h1>
+          <div className="onboarding__options">
+            {(['Man', 'Vrouw', 'Zeg ik liever niet'] as Geslacht[]).map((option) => (
+              <OptionButton
+                key={option}
+                selected={isOptionSelected(option, data.geslacht)}
+                onClick={() => selectSingle('geslacht', option)}
+              >
+                {option}
+              </OptionButton>
+            ))}
+          </div>
+        </OnboardingLayout>
       )
 
     case 'age':
