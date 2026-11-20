@@ -139,6 +139,16 @@ function geldigDoel(doel) {
   return { soort: doel.soort, oefening: doel.soort === 'kracht' ? oefening : null, start, doel: waarde }
 }
 
+// Doel terug uit de abonnement-metadata ("soort|oefening|start|doel", zie
+// createCheckoutSession). Zelfde controle als bij de betaalknop.
+function doelUitAbonnement(abonnement) {
+  const tekst = typeof abonnement === 'object' ? abonnement?.metadata?.doel : null
+  if (typeof tekst !== 'string' || !tekst) return null
+  const [soort, oefening, start, doel] = tekst.split('|')
+  const getal = (x) => (x === '' || x == null ? null : Number(x))
+  return geldigDoel({ soort, oefening, start: getal(start), doel: getal(doel) })
+}
+
 async function supabaseRpc(functie, args) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functie}`, {
     method: 'POST',
@@ -468,10 +478,26 @@ async function checkoutRedeem(request, env, waitUntil) {
   if (!stripe || !sessionId) {
     return json({ redeemUrl: `${redeemBase}?demo=1`, qrDataUrl: '', email: null, demo: true })
   }
-  const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: octanistSleutel(env) ? ['subscription'] : [],
-  })
+  // Abonnement altijd mee ophalen: daar staat het doel op (en de Octanist-sessie)
+  const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['subscription'] })
   const email = session.customer_details?.email ?? session.customer_email ?? null
+  // Doel na betaling bewaren met het e-mailadres dat iemand bij Stripe invulde
+  // (sinds 20-11 is er geen e-mailstap meer vóór de betaalpagina).
+  if (email && session.status === 'complete') {
+    const doel = doelUitAbonnement(session.subscription)
+    if (doel) {
+      waitUntil(
+        supabaseRpc('web_doel_bewaren', {
+          p_email: email.trim().toLowerCase(),
+          p_soort: doel.soort,
+          p_exercise_naam: doel.oefening,
+          p_startwaarde: doel.start,
+          p_doelwaarde: doel.doel,
+          p_checkout: session.id,
+        }).catch((error) => console.error('[doel]', error)),
+      )
+    }
+  }
   if (octanistSleutel(env) && email && session.status === 'complete') {
     waitUntil(octanistLead(env, session, email).catch((error) => console.error('[octanist]', error)))
   }

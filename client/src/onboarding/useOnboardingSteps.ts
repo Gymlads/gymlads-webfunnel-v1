@@ -26,6 +26,7 @@ export type StepId =
   | 'info-feedback'
   | 'plan-ready'
   | 'email'
+  | 'doelscherm'
   | 'paywall'
 
 // Geslacht, leeftijd, dan doel (Roel 21-10-2026: volgorde niet omdraaien).
@@ -48,10 +49,15 @@ const BASE_STEPS: StepId[] = [
   'location',
 ]
 
+// E-mailstap (sinds 21-10) staat uit sinds 20-11-2026 (Roel): 20% haakte daar
+// af. Stripe vraagt het e-mailadres nu zelf, net als in oktober. Weer aanzetten:
+// EMAILSTAP_AAN op true. Op die plek staat nu het scherm "Zo haal jij je doel".
+export const EMAILSTAP_AAN = false
+
 const TAIL_STEPS: StepId[] = [
   'info-schedule',
   'info-feedback',
-  'email',
+  ...(EMAILSTAP_AAN ? (['email'] as StepId[]) : (['doelscherm'] as StepId[])),
   'plan-ready',
   'paywall',
 ]

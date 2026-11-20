@@ -82,3 +82,26 @@ Zet `STRIPE_PRICE_ID` (nieuwe €99,99-prijs) en `STRIPE_COUPON_ID` alleen bij *
 (keuzemenu rechtsboven op de Settings-pagina). Bij Production blijft tot livegang de oude
 prijs staan en géén `STRIPE_COUPON_ID`. Nieuwe waarden werken pas na een nieuwe deploy.
 Controle: in het Stripe-logboek (POST /v1/checkout/sessions) moet `discounts` de coupon bevatten.
+
+## Update 20-11-2026: e-mailstap uit, scherm "Zo haal jij je doel" erin
+
+Roel: 20% haakte af bij de e-mailstap, wie bleef kocht niet vaker. De stap staat
+uit met de schakelaar `EMAILSTAP_AAN` in `client/src/onboarding/useOnboardingSteps.ts`
+(op `true` zetten = alles weer zoals hierboven). Volgorde nu:
+`info-feedback` → `doelscherm` ("Zo haal jij je doel", `Doelscherm.tsx`) → `plan-ready` → `paywall`.
+
+Wat er verandert:
+- Stripe vraagt het e-mailadres zelf (geen `customer_email` meer), net als vóór 21 okt.
+  n8n (staging + Link User), Tracklution (StartTrial uit `checkout.session.completed`,
+  `customer_details.email`), Octanist (lead op de bedankpagina) en de upsell gebruikten
+  al het e-mailadres van de Stripe-sessie: geen wijziging.
+- Doel uit de vragenlijst: werd bij de betaalknop op het e-mailadres van de e-mailstap
+  bewaard (`web_doel_bewaren`). Nu op de bedankpagina (`GET /api/checkout-redeem`), met het
+  e-mailadres van Stripe, uit de abonnement-metadata `doel`. Komt iemand niet op de
+  bedankpagina, dan vraagt de app het doel gewoon opnieuw.
+- Geen leads meer (`/api/lead`, `web_leads`) en geen GTM-event `email_submitted`.
+- Tracklution `ContactInfo` alleen nog op de bedankpagina (zoals vóór 21 okt).
+- Meting: nieuwe stappen `doelscherm` (in beeld) en `doelscherm-knop` (VERDER). Vereist
+  gymlads-app migratie `20261120120000_trechter_doelscherm.sql` vóór livegang.
+- Blok "Je eerste workout" uit het voorstel is weggelaten: het echte schema maakt n8n pas
+  na het inloggen in de app. De splitsing-chip volgt dezelfde regel als "M1 – Schema maken 4.0".

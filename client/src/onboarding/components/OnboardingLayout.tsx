@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import GymladsLogo from './GymladsLogo'
 
 interface OnboardingLayoutProps {
   children: ReactNode
@@ -13,6 +14,10 @@ interface OnboardingLayoutProps {
   paywall?: boolean
   welcome?: boolean
   checkoutSuccess?: boolean
+  /** Klein logo midden in de kopregel (scherm "Zo haal jij je doel") */
+  logo?: boolean
+  /** Extra klasse op het inhoudsvak */
+  contentClassName?: string
 }
 
 export default function OnboardingLayout({
@@ -28,6 +33,8 @@ export default function OnboardingLayout({
   paywall,
   welcome,
   checkoutSuccess,
+  logo,
+  contentClassName,
 }: OnboardingLayoutProps) {
   const layoutStyle = pageBg
     ? ({ '--bg': pageBg, background: pageBg } as CSSProperties)
@@ -58,6 +65,7 @@ export default function OnboardingLayout({
               </svg>
             </button>
           )}
+          {logo && <GymladsLogo className="onboarding__header-logo" />}
         </header>
       )}
 
@@ -79,7 +87,9 @@ export default function OnboardingLayout({
           planReady ? ' onboarding__content--plan-ready' : ''
         }${paywall ? ' onboarding__content--paywall' : ''}${
           welcome ? ' onboarding__content--welcome' : ''
-        }${checkoutSuccess ? ' onboarding__content--checkout-success' : ''}`}
+        }${checkoutSuccess ? ' onboarding__content--checkout-success' : ''}${
+          contentClassName ? ` ${contentClassName}` : ''
+        }`}
       >
         {children}
       </main>

@@ -31,6 +31,7 @@ hoe geteld): `docs/dashboard-trechter.md` in Gymlads/gymlads-app.
 
 ## v3 (21-10-2026)
 
+- (20-11-2026: `email` uit, `doelscherm` + `doelscherm-knop` erbij, zie paywall-v3.md.)
 - Nieuwe stappen `age` en `email`, volgorde doel → geslacht → leeftijd. Supabase
   telt ze pas na `20261021000000_webfunnel_v3.sql` (gymlads-app); tot dan worden
   ze stil genegeerd.

@@ -40,6 +40,7 @@ import {
   zoneVan,
 } from './doel'
 import EmailStap from './EmailStap'
+import Doelscherm from './Doelscherm'
 import Paywall, { type CtaPositie } from './Paywall'
 import { STANDAARD_PLAN, type Plan } from './paywallInhoud'
 import { bewaarAntwoorden, leesAntwoorden } from './bewaren'
@@ -956,6 +957,26 @@ export default function OnboardingWizard() {
               navigateNext()
             }}
           />
+        </OnboardingLayout>
+      )
+
+    case 'doelscherm':
+      return (
+        <OnboardingLayout
+          {...layoutProps}
+          logo
+          contentClassName="onboarding__content--doelscherm"
+          footer={
+            <NextButton
+              label="VERDER"
+              onClick={() => {
+                meetStap('doelscherm-knop', undefined, data)
+                navigateNext()
+              }}
+            />
+          }
+        >
+          <Doelscherm data={data} />
         </OnboardingLayout>
       )
 

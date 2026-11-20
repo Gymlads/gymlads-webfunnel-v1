@@ -14,6 +14,7 @@ export function pushGtmEvent(event: string, data?: Record<string, unknown>) {
 
 function getStepType(stepId: StepId): 'question' | 'info' | 'conversion' {
   if (stepId === 'plan-ready' || stepId === 'email' || stepId === 'paywall') return 'conversion'
+  if (stepId === 'doelscherm') return 'info'
   if (stepId.startsWith('info-')) return 'info'
   return 'question'
 }
