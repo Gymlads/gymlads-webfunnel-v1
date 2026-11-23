@@ -94,7 +94,7 @@ export const EEN_PLAN = {
   // Echte maandprijs × 12: 12 × €17,99 = €215,88 (Roel 11-11)
   oudePrijs: '€ 215,88',
   nieuwePrijs: '€ 99,99 / jaar',
-  knop: BETAALDE_PROEF ? `CLAIM JOUW 7 DAGEN VOOR ${PROEF_BEDRAG}` : 'CLAIM JOUW 7 GRATIS DAGEN',
+  knop: BETAALDE_PROEF ? `CLAIM JOUW 7 DAGEN VOOR ${PROEF_BEDRAG}` : 'PROBEER 7 DAGEN GRATIS',
   kleineTekst: `Vandaag betaal je ${BETAALDE_PROEF ? PROEF_BEDRAG : '€0'}. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens de proef, in je account. Black Friday-actie geldt t/m 1 december.`,
 }
 
