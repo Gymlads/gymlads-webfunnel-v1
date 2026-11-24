@@ -21,15 +21,60 @@ export interface DoelOptie {
  * Kracht opbouwen -> zwaarder op een oefening, anders: al je workouts.
  */
 export function soortUitHoofddoel(hoofddoel: string): DoelSoort {
+  // 24-11 (Roel): Spieropbouw heeft geen getal-scherm meer.
   switch (hoofddoel) {
     case 'Afvallen':
       return 'afvallen'
-    case 'Spieropbouw':
-      return 'aankomen'
     case 'Kracht opbouwen':
       return 'kracht'
     default:
       return 'workouts'
+  }
+}
+
+/**
+ * Hoofddoel per man/vrouw (Roel, 24-11-2026). "Zeg ik liever niet" krijgt de
+ * lijst van mannen. `doel` is wat app en n8n kennen; `figuur` zet de
+ * spierfocus op billen + benen vooraf aan.
+ */
+export interface HoofddoelKeuze {
+  label: string
+  icoon: string
+  doel: 'Afvallen' | 'Spieropbouw' | 'Kracht opbouwen' | 'Fit voelen'
+  figuur?: boolean
+}
+
+export const HOOFDDOELEN_MAN: ReadonlyArray<HoofddoelKeuze> = [
+  { label: 'Breder en gespierder', icoon: '💪', doel: 'Spieropbouw' },
+  { label: 'Sterker worden', icoon: '🏋️', doel: 'Kracht opbouwen' },
+  { label: 'Afvallen', icoon: '🔥', doel: 'Afvallen' },
+  { label: 'Fit voelen', icoon: '❤️', doel: 'Fit voelen' },
+]
+
+export const HOOFDDOELEN_VROUW: ReadonlyArray<HoofddoelKeuze> = [
+  { label: 'Beter figuur', icoon: '🍑', doel: 'Spieropbouw', figuur: true },
+  { label: 'Afvallen', icoon: '🔥', doel: 'Afvallen' },
+  { label: 'Sterker worden', icoon: '🏋️', doel: 'Kracht opbouwen' },
+  { label: 'Spieren opbouwen', icoon: '💪', doel: 'Spieropbouw' },
+  { label: 'Fit voelen', icoon: '❤️', doel: 'Fit voelen' },
+]
+
+export function hoofddoelen(geslacht: string): ReadonlyArray<HoofddoelKeuze> {
+  return geslacht === 'Vrouw' ? HOOFDDOELEN_VROUW : HOOFDDOELEN_MAN
+}
+
+/** Gekozen hoofddoel-tekst; voor oudere bewaarde antwoorden afgeleid van `doel`. */
+export function doelKeuze(data: Pick<OnboardingData, 'doel' | 'doel_keuze' | 'geslacht'>): string {
+  if (data.doel_keuze) return data.doel_keuze
+  switch (data.doel) {
+    case 'Spieropbouw':
+      return data.geslacht === 'Vrouw' ? 'Spieren opbouwen' : 'Breder en gespierder'
+    case 'Kracht opbouwen':
+      return 'Sterker worden'
+    case 'Afvallen':
+      return 'Afvallen'
+    default:
+      return 'Fit voelen'
   }
 }
 
@@ -259,6 +304,8 @@ export function webDoel(data: OnboardingData):
   if (soort === 'workouts') return { soort, oefening: null, start: null, doel: null }
   if (data.doel_start == null || data.doel_waarde == null) return null
   if (soort === 'kracht' && !data.doel_oefening) return null
+  // Doelgewicht gelijk aan nu ("Zelfde als nu"): geen getal-doel.
+  if (soort !== 'kracht' && data.doel_waarde === data.doel_start) return null
   return {
     soort,
     oefening: soort === 'kracht' ? data.doel_oefening : null,
@@ -279,4 +326,20 @@ export function zonePositie(verandering: number, g: { voorstel: number; max: num
   if (v <= b) return lin(v, a, b, 25, 50)
   if (v <= c) return lin(v, b, c, 50, 75)
   return lin(v, c, c * 1.6, 76, 96)
+}
+
+/**
+ * Kilo-scherm doelgewicht (Roel, 24-11): één oordeel in plaats van de meter.
+ * Zelfde grenzen (8 weken) als de meter: Rustig/Uitdagend = gezond,
+ * Ambitieus = stevig, Te veel = te snel.
+ */
+export function tempoOordeel(verandering: number, zone: Zone): { kleur: 'lime' | 'oranje' | 'rood'; vet: string; tekst: string } {
+  const perWeek = (verandering / 8).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+  if (verandering <= 0)
+    return { kleur: 'lime', vet: 'Gewicht houden.', tekst: 'Je plan helpt je sterker en fitter te worden op je huidige gewicht.' }
+  if (zone === 3)
+    return { kleur: 'rood', vet: 'Te snel.', tekst: `Zo'n ${perWeek} kg per week kost je spieren. Kies een iets hoger doelgewicht.` }
+  if (zone === 2)
+    return { kleur: 'oranje', vet: 'Stevig tempo.', tekst: `Dat is zo'n ${perWeek} kg per week. Kan, maar vraagt veel discipline.` }
+  return { kleur: 'lime', vet: 'Gezond tempo.', tekst: `Met je plan is dat zo'n ${perWeek} kg per week. Zo houd je je spieren.` }
 }
