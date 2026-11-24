@@ -138,7 +138,7 @@ export const UPSELL = {
 export const GARANTIE = {
   titel: 'Sterker in 8 weken, gegarandeerd',
   /** Eén regel direct onder de knop; bovenaan stond hij niet mooi (Roel 28-10). */
-  kort: 'Garantie: sterker binnen 8 weken of je geld terug.',
+  kort: 'Garantie: volg je plan en word sterker binnen 8 weken, of je geld terug.',
   tekst: 'Volg je plan met je AI-coach. Word je niet sterker? Dan krijg je al je geld terug.',
 }
 
