@@ -1,4 +1,5 @@
 import type { OnboardingData } from '../types'
+import { DoelIcoon } from './DoelIcoon'
 import { doelKeuze, eenheid, getal, oefeningLabel, type DoelSoort } from './doel'
 
 // Scherm "Zo haal jij je doel" (Roel, 20-11-2026, VOORSTEL v4): staat op de
@@ -146,8 +147,11 @@ export default function Doelscherm({ data }: { data: OnboardingData }) {
       <p className="doelscherm__sub">Gemaakt op jouw antwoorden.</p>
 
       <div className="doelscherm__doel">
-        <span className="doelscherm__label doelscherm__label--donker">Jouw doel</span>
-        <span className="doelscherm__doel-tekst">{doelBlok}</span>
+        <div className="doelscherm__doel-links">
+          <span className="doelscherm__label doelscherm__label--donker">Jouw doel</span>
+          <span className="doelscherm__doel-tekst">{doelBlok}</span>
+        </div>
+        <DoelIcoon doel={doelKeuze(data)} />
       </div>
 
       {chips.length > 0 && (
