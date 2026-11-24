@@ -102,6 +102,9 @@ export interface OnboardingData {
   doel_oefening: string
   doel_start: number | null
   doel_waarde: number | null
+  // Hoofddoel zoals de bezoeker het koos (24-11, lijst per man/vrouw), bv.
+  // "Breder en gespierder". `doel` blijft de waarde die app en n8n kennen.
+  doel_keuze: string
   source: string
   subscribed_int: number
 }
@@ -214,6 +217,7 @@ export const initialOnboardingData: OnboardingData = {
   doel_oefening: '',
   doel_start: null,
   doel_waarde: null,
+  doel_keuze: '',
   source: 'web',
   subscribed_int: 0,
 }
@@ -232,6 +236,7 @@ const NIET_IN_CHECKOUT = new Set<string>([
   'doel_oefening',
   'doel_start',
   'doel_waarde',
+  'doel_keuze',
   'soort_sportschool',
   ...SPORTSCHOOL_TOESTELLEN.map((t) => t.key),
 ])

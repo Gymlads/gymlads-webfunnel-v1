@@ -2555,3 +2555,105 @@
   font-size: 0.95rem;
   cursor: pointer;
 }
+
+/* ── Kilo-scherm doelgewicht (Roel, 24-11-2026, VOORSTEL v1) ── */
+.doelgewicht__sub {
+  margin-top: -4px;
+  text-align: center;
+}
+
+.doelgewicht__nu {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.doelgewicht__chip-rij {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 22px;
+}
+
+.doelgewicht__chip {
+  padding: 6px 16px;
+  border: 1.5px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.doelgewicht__oordeel {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #2c2c2e;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.doelgewicht__oordeel p {
+  margin: 0;
+}
+
+.doelgewicht__oordeel strong {
+  color: var(--text);
+}
+
+.doelgewicht__stip {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+}
+
+.doelgewicht__stip--lime {
+  background: var(--accent);
+}
+
+.doelgewicht__stip--oranje {
+  background: #ff9500;
+}
+
+.doelgewicht__stip--rood {
+  background: #ff453a;
+}
+
+/* Lijnicoon rechts in het doelblok (Roel, 24-11-2026, VOORSTEL v13) */
+.doelscherm__doel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 86px;
+}
+
+.doelscherm__doel-links {
+  min-width: 0;
+}
+
+.doelscherm__icoon {
+  flex: none;
+  display: flex;
+  width: 66px;
+  height: 66px;
+  color: #171719;
+}
+
+.doelscherm__icoon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-height: 720px) {
+  .doelscherm__doel {
+    min-height: 72px;
+  }
+  .doelscherm__icoon {
+    width: 54px;
+    height: 54px;
+  }
+}

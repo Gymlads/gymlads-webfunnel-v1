@@ -86,8 +86,7 @@ function getDoelSteps(data: OnboardingData): StepId[] {
   switch (data.doel) {
     case 'Afvallen':
       return ['doel-getal']
-    case 'Spieropbouw':
-      return data.geslacht === 'Man' ? ['doel-getal'] : ['doel-kiezen', 'doel-getal']
+    // Spieropbouw / Beter figuur: geen getal-scherm meer (Roel, 24-11).
     case 'Kracht opbouwen':
       return ['doel-oefening', 'doel-getal']
     default:
