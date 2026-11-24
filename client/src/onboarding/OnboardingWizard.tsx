@@ -8,7 +8,6 @@ import {
   initialOnboardingData,
   werkDagenBij,
   type BooleanFieldKey,
-  type Doel,
   type ErvaringKrachttraining,
   type Geslacht,
   type GewensteTrainingsduur,
@@ -39,6 +38,10 @@ import {
   startBereik,
   soortUitHoofddoel,
   zoneVan,
+  doelKeuze,
+  hoofddoelen,
+  tempoOordeel,
+  type HoofddoelKeuze,
 } from './doel'
 import EmailStap from './EmailStap'
 import Doelscherm from './Doelscherm'
@@ -46,6 +49,7 @@ import Paywall, { type CtaPositie } from './Paywall'
 import { STANDAARD_PLAN, type Plan } from './paywallInhoud'
 import { bewaarAntwoorden, leesAntwoorden } from './bewaren'
 import {
+  pushGtmEvent,
   trackCheckoutWacht,
   trackEmailSubmitted,
   trackOnboardingStepView,
@@ -80,14 +84,7 @@ const LEEFTIJDEN = [
   { label: '50+', waarde: 55 },
 ] as const
 
-// Gekleurde emoji per antwoord (Roel 21-10: de bekende icoontjes, zoals andere apps).
-const DOEL_ICONEN = {
-  Afvallen: '🔥',
-  Spieropbouw: '💪',
-  'Kracht opbouwen': '🏋️',
-  Onderhouden: '⚖️',
-  'Fit voelen': '❤️',
-} satisfies Record<Doel, string>
+// Hoofddoel-keuzes (met emoji) per man/vrouw staan in doel.ts (Roel, 24-11).
 
 const UITDAGING_ICONEN = {
   Consistentie: '📅',
@@ -241,13 +238,16 @@ export default function OnboardingWizard() {
 
   // Hoofddoel kiezen bepaalt meteen het soort doel (Roel, 12 nov).
   const kiesHoofddoel = useCallback(
-    (option: Doel) => {
-      const soort = soortUitHoofddoel(option)
-      setPressedOption(option)
+    (keuze: HoofddoelKeuze) => {
+      const soort = soortUitHoofddoel(keuze.doel)
+      setPressedOption(keuze.label)
+      pushGtmEvent('goal', { doel: keuze.label, geslacht: data.geslacht || 'onbekend' })
       setTimeout(() => {
         setPressedOption(null)
         navigateNext({
-          doel: option,
+          doel: keuze.doel,
+          doel_keuze: keuze.label,
+          ...(keuze.figuur ? { focus_spiergroepen: 'Billen/Benen' as const } : {}),
           doel_soort: soort,
           doel_oefening: '',
           doel_start: soort === 'workouts' ? null : standaardStart(soort, data.geslacht),
@@ -372,22 +372,14 @@ export default function OnboardingWizard() {
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Wat is jouw hoofddoel?</h1>
           <div className="onboarding__options">
-            {(
-              [
-                'Afvallen',
-                'Spieropbouw',
-                'Kracht opbouwen',
-                'Onderhouden',
-                'Fit voelen',
-              ] as Doel[]
-            ).map((option) => (
+            {hoofddoelen(data.geslacht).map((keuze) => (
               <OptionButton
-                key={option}
-                icon={DOEL_ICONEN[option]}
-                selected={isOptionSelected(option, data.doel)}
-                onClick={() => kiesHoofddoel(option)}
+                key={keuze.label}
+                icon={keuze.icoon}
+                selected={isOptionSelected(keuze.label, data.doel ? doelKeuze(data) : '')}
+                onClick={() => kiesHoofddoel(keuze)}
               >
-                {option}
+                {keuze.label}
               </OptionButton>
             ))}
           </div>
@@ -557,6 +549,82 @@ export default function OnboardingWizard() {
       const b = startBereik(soort)
       const start = data.doel_start ?? standaardStart(soort, data.geslacht)
       const g = grenzen(soort, start, niveauUitErvaring(data.ervaring_krachttraining))
+      if (soort === 'afvallen') {
+        // Kilo-scherm doelgewicht (Roel, 24-11, VOORSTEL v1): één groot getal
+        // (doelgewicht), stappen van 0,5 kg, start = nu min 3 kg. Rekent nog
+        // op 8 weken (zelfde grenzen), maar de vraag noemt geen termijn.
+        const doelGewicht = Math.min(start, data.doel_waarde ?? Math.round((start - 3) * 2) / 2)
+        const eraf = Math.round((start - doelGewicht) * 10) / 10
+        const zoneKg = zoneVan(eraf, g)
+        const oordeel = tempoOordeel(eraf, zoneKg)
+        return (
+          <OnboardingLayout
+            {...layoutProps}
+            footer={
+              <>
+                <button
+                  type="button"
+                  className="doel-onbekend"
+                  onClick={() => {
+                    meetStap('doel-getal-onbekend', undefined, data)
+                    slaDoelOver()
+                  }}
+                >
+                  Ik weet het nog niet
+                </button>
+                <NextButton
+                  label="Dit is mijn doel"
+                  onClick={() => {
+                    setStartWijzigen(false)
+                    navigateNext({ doel_start: start, doel_waarde: doelGewicht })
+                  }}
+                />
+              </>
+            }
+          >
+            <h1 className="onboarding__title">Wat is je doelgewicht?</h1>
+            <p className="onboarding__subtitle doelgewicht__sub">Hierop stemmen we je plan en caloriedoel af.</p>
+            <div className="doel-nu-regel">
+              <span className="doel-nu-regel__label">
+                Je weegt nu <strong className="doelgewicht__nu">{getal(start)} kg</strong>
+              </span>
+              <button type="button" className="doel-nu-regel__wijzig" onClick={() => setStartWijzigen((w) => !w)}>
+                {startWijzigen ? 'Klaar' : 'Wijzig'}
+              </button>
+            </div>
+            {startWijzigen ? (
+              <DoelStepper
+                klein
+                waarde={start}
+                eenheid="kg"
+                stap={b.stap}
+                min={b.min}
+                max={b.max}
+                onChange={(v) => setData((prev) => ({ ...prev, doel_start: v, doel_waarde: null }))}
+              />
+            ) : null}
+            <p className="doel-mijn">Mijn doelgewicht</p>
+            <DoelStepper
+              groot
+              waarde={doelGewicht}
+              eenheid="kg"
+              stap={0.5}
+              min={Math.max(30, b.min - 10)}
+              max={start}
+              onChange={(v) => setData((prev) => ({ ...prev, doel_start: start, doel_waarde: v }))}
+            />
+            <div className="doelgewicht__chip-rij">
+              <span className="doelgewicht__chip">{eraf > 0 ? `${getal(eraf)} kg minder dan nu` : 'Zelfde als nu'}</span>
+            </div>
+            <div className="doelgewicht__oordeel">
+              <span className={`doelgewicht__stip doelgewicht__stip--${oordeel.kleur}`} aria-hidden="true" />
+              <p>
+                <strong>{oordeel.vet}</strong> {oordeel.tekst}
+              </p>
+            </div>
+          </OnboardingLayout>
+        )
+      }
       const richting = omlaag(soort) ? -1 : 1
       const doelWaarde = data.doel_waarde ?? start + richting * g.voorstel
       const verandering = Math.abs(doelWaarde - start)
