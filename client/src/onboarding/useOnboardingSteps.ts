@@ -24,6 +24,7 @@ export type StepId =
   | 'home-days'
   | 'equipment'
   | 'info-feedback'
+  | 'laadscherm'
   | 'plan-ready'
   | 'email'
   | 'doelscherm'
@@ -54,13 +55,37 @@ const BASE_STEPS: StepId[] = [
 // EMAILSTAP_AAN op true. Op die plek staat nu het scherm "Zo haal jij je doel".
 export const EMAILSTAP_AAN = false
 
-const TAIL_STEPS: StepId[] = [
-  'info-schedule',
-  'info-feedback',
-  ...(EMAILSTAP_AAN ? (['email'] as StepId[]) : (['doelscherm'] as StepId[])),
-  'plan-ready',
-  'paywall',
-]
+// Laadscherm "We maken jouw plan" vóór "Jouw persoonlijk plan staat klaar"
+// (briefing activatie na betaling, hoofdstuk 6). Gaat live als losse test na
+// de gratis proef: dan WEB_LAADSCHERM_AAN op true. Tot die tijd alleen te zien
+// met ?laadscherm=1 in de link (voor de testlink), dat geldt dan voor dit tabblad.
+export const WEB_LAADSCHERM_AAN = false
+
+const LAADSCHERM_KEY = 'gl_laadscherm'
+
+export function laadschermAan(): boolean {
+  if (WEB_LAADSCHERM_AAN) return true
+  try {
+    if (new URLSearchParams(window.location.search).get('laadscherm') === '1') {
+      sessionStorage.setItem(LAADSCHERM_KEY, '1')
+      return true
+    }
+    return sessionStorage.getItem(LAADSCHERM_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function tailSteps(): StepId[] {
+  return [
+    'info-schedule',
+    'info-feedback',
+    ...(EMAILSTAP_AAN ? (['email'] as StepId[]) : (['doelscherm'] as StepId[])),
+    ...(laadschermAan() ? (['laadscherm'] as StepId[]) : []),
+    'plan-ready',
+    'paywall',
+  ]
+}
 
 // Zelfde vertakking als de app (locatie.tsx): grote sportschool -> dagen;
 // kleine -> toestellen, dagen; thuis -> dagen, apparatuur; beide -> thuisdagen,
@@ -101,12 +126,12 @@ export function buildStepList(data: OnboardingData): StepId[] {
     ...getDoelSteps(data),
     ...BASE_STEPS.slice(i),
     ...getConditionalSteps(data),
-    ...TAIL_STEPS,
+    ...tailSteps(),
   ]
 }
 
 export function shouldShowProgress(stepId: StepId): boolean {
-  if (stepId === 'plan-ready' || stepId === 'email' || stepId === 'paywall') {
+  if (stepId === 'plan-ready' || stepId === 'email' || stepId === 'paywall' || stepId === 'laadscherm') {
     return false
   }
 

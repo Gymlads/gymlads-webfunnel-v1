@@ -59,3 +59,20 @@ hoe geteld): `docs/dashboard-trechter.md` in Gymlads/gymlads-app.
 ## Startscherm teruggedraaid (20-11)
 
 Op verzoek van Roel (20 nov) weer de oude opbouw: de quiz begint meteen met de geslachtvraag, zonder startscherm. De stappen `startscherm` en `start-knop` worden niet meer gemeten; `gender` weer bij het tonen van de vraag (zoals vóór 16 nov). GTM-events `startscherm_view` / `startscherm_start` vervallen.
+
+## Bedankpagina v2 en web-laadscherm (25-11-2026)
+
+- Bedankpagina (`CheckoutResult.tsx`): drie stappen Download / Log in met [Stripe-e-mail] (code van
+  6 cijfers) / Start je eerste workout, één knop naar de juiste winkel (iPhone -> App Store,
+  Android -> Play Store, computer -> beide knoppen). Metingen ongewijzigd (`betaald`,
+  `checkout_success`, Tracklution, upsell). Nieuw GTM-event `bedankt_download` (winkel).
+  Live alleen samen met de app-versie met inloggen via code.
+- Laadscherm "We maken jouw plan" (`WebLaadscherm.tsx`) tussen "Zo haal jij je doel" en
+  "Jouw persoonlijk plan staat klaar". Staat UIT (`WEB_LAADSCHERM_AAN` in
+  `useOnboardingSteps.ts`); te zien met `?laadscherm=1` in de link (geldt voor dat tabblad).
+  ±7 seconden, geen knop; terug vanaf "plan staat klaar" slaat het over.
+- Metingen: stappen `laadscherm` en `laadscherm-klaar`, GTM `laadscherm_web_getoond` /
+  `laadscherm_web_afgerond`. Supabase telt de stappen pas als ze in `trechter_web_stappen()`
+  staan (gymlads-app); doe dat vóór de livegang van de test.
+- Stripe: geen `client_reference_id` (bewust, zie functions/api). De koppeling quiz -> Stripe
+  bestaat al: `submissionId` in de checkout-metadata en `funnel_sessie_id` op het abonnement.
