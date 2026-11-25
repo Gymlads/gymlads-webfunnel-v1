@@ -24,6 +24,11 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/
 // de jaarproef. Moet gelijk zijn aan PROEF_BEDRAG in client/src/onboarding/paywallInhoud.ts.
 const PROEF_BEDRAG_CENT = 100
 
+// Gratis of betaalde proefweek (Roel 23-11-2026: terug naar gratis).
+// false = 7 dagen gratis: alleen het jaarabonnement met proef, geen eenmalige €1.
+// Moet gelijk staan aan BETAALDE_PROEF in client/src/onboarding/paywallInhoud.ts.
+const BETAALDE_PROEF = false
+
 // Vaste Stripe-prijs voor de €1-proefweek (product "Gymlads proefweek", zelfde als
 // de app). Tracklution blokkeert dat product als Purchase; een losse price_data
 // maakt elke keer een nieuw product en glipt daar langs (10-11-2026).
@@ -49,8 +54,9 @@ async function vasteProefPrijs(stripe, env) {
 }
 
 const STRIPE_KNOP_TEKST = {
-  jaar:
-    'Je betaalt vandaag €1 voor je proefweek. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef. Je abonnement start direct na betaling. Daarmee vervalt je herroepingsrecht van 14 dagen.',
+  jaar: BETAALDE_PROEF
+    ? 'Je betaalt vandaag €1 voor je proefweek. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef. Je abonnement start direct na betaling. Daarmee vervalt je herroepingsrecht van 14 dagen.'
+    : 'Je betaalt vandaag €0. Na 7 dagen betaal je €99,99 per jaar. Opzeggen kan altijd tijdens je proef. Betaal je met iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen. Je abonnement start direct. Daarmee vervalt je herroepingsrecht van 14 dagen.',
   maand:
     'Je betaalt vandaag €17,99. Daarna elke maand €17,99. Elke maand opzegbaar. Je abonnement start direct na betaling. Daarmee vervalt je herroepingsrecht van 14 dagen.',
 }
@@ -252,7 +258,8 @@ async function createCheckoutSession(request, env, waitUntil) {
   // E-mail uit de e-mailstap: op de betaalpagina al ingevuld. Bewust GEEN
   // client_reference_id: n8n en Tracklution zien een web-checkout dan als app-checkout.
   const customerEmail = geldigEmail(body?.email)
-  const proefPrijsId = skipTrial ? null : await vasteProefPrijs(stripe, env)
+  const metEenmaligeProef = BETAALDE_PROEF && !skipTrial
+  const proefPrijsId = metEenmaligeProef ? await vasteProefPrijs(stripe, env) : null
   const knopTekst = plan === 'maand' ? STRIPE_KNOP_TEKST.maand : skipTrial ? null : STRIPE_KNOP_TEKST.jaar
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -260,7 +267,7 @@ async function createCheckoutSession(request, env, waitUntil) {
     // die Stripe meteen bij de start afschrijft.
     line_items: [
       { price: priceId, quantity: 1 },
-      ...(skipTrial
+      ...(!metEenmaligeProef
         ? []
         : [
             // Liefst het Stripe-product "Gymlads proefweek" (zelfde als de app),

@@ -17,6 +17,14 @@ export type Plan = 'jaar' | 'maand'
  */
 export const PROEF_BEDRAG = '€1'
 
+/**
+ * Gratis of betaalde proefweek (Roel 23-11-2026: terug naar gratis).
+ * false = 7 dagen gratis (€0 vandaag), true = proefweek voor PROEF_BEDRAG.
+ * Moet gelijk staan aan BETAALDE_PROEF in functions/api/[[path]].js.
+ * Terugzetten naar €1 = op beide plekken weer true.
+ */
+export const BETAALDE_PROEF: boolean = false
+
 /** Standaard gekozen plan. Geen kop boven de paywall, net als de app (27-10). */
 export const STANDAARD_PLAN: Plan = 'jaar'
 
@@ -41,11 +49,11 @@ export const PLANNEN: Record<
     prijs: '€0,27',
     prijsEenheid: '/ dag',
     onderPrijs: 'Daarna automatisch €99,99 per jaar',
-    proef: `7 dagen uitproberen voor ${PROEF_BEDRAG}!`,
+    proef: BETAALDE_PROEF ? `7 dagen uitproberen voor ${PROEF_BEDRAG}!` : '7 dagen gratis uitproberen!',
     knop: 'GA VERDER',
     // ⚠️ Laten checken door een jurist (opdracht deel 4c)
     kleineTekst:
-      `Vandaag betaal je ${PROEF_BEDRAG} voor je proefweek. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens je proef. Na het eerste jaar is je abonnement maandelijks opzegbaar.`,
+      `Vandaag betaal je ${BETAALDE_PROEF ? `${PROEF_BEDRAG} voor je proefweek` : '€0'}. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens je proef. Na het eerste jaar is je abonnement maandelijks opzegbaar.`,
   },
   maand: {
     naam: 'Maandabonnement',
@@ -72,8 +80,10 @@ export const PAYWALL_VERSIE: 'een-plan' | 'plankeuze' = 'een-plan'
 
 /** Teksten van het koopblok in de versie 'een-plan' (letterlijk uit de opdracht van Roel, 10-11). */
 export const EEN_PLAN = {
-  kop: `Start vandaag voor ${PROEF_BEDRAG},-`,
-  sub: `Probeer Gymlads 7 dagen voor ${PROEF_BEDRAG}. Niet overtuigd dat dit je progressie versnelt? Annuleer en je betaalt niets meer.`,
+  kop: BETAALDE_PROEF ? `Start vandaag voor ${PROEF_BEDRAG},-` : 'Start vandaag gratis',
+  sub: BETAALDE_PROEF
+    ? `Probeer Gymlads 7 dagen voor ${PROEF_BEDRAG}. Niet overtuigd dat dit je progressie versnelt? Annuleer en je betaalt niets meer.`
+    : 'Probeer Gymlads 7 dagen gratis. Niet overtuigd dat dit je progressie versnelt? Annuleer en je betaalt niets.',
   score: '4.8/5.0',
   workouts: '10.000+ workouts gemaakt',
   badge: 'SUPER BLACK FRIDAY DEAL: -50%',
@@ -84,8 +94,8 @@ export const EEN_PLAN = {
   // Echte maandprijs × 12: 12 × €17,99 = €215,88 (Roel 11-11)
   oudePrijs: '€ 215,88',
   nieuwePrijs: '€ 99,99 / jaar',
-  knop: `CLAIM JOUW 7 DAGEN VOOR ${PROEF_BEDRAG}`,
-  kleineTekst: `Vandaag betaal je ${PROEF_BEDRAG}. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens de proef, in je account. Black Friday-actie geldt t/m 1 december.`,
+  knop: BETAALDE_PROEF ? `CLAIM JOUW 7 DAGEN VOOR ${PROEF_BEDRAG}` : 'PROBEER 7 DAGEN GRATIS',
+  kleineTekst: `Vandaag betaal je ${BETAALDE_PROEF ? PROEF_BEDRAG : '€0'}. Na 7 dagen betaal je €99,99 voor een jaar. Opzeggen kan altijd tijdens de proef, in je account. Black Friday-actie geldt t/m 1 december.`,
 }
 
 /**
@@ -135,10 +145,12 @@ export const GARANTIE = {
 export const FAQ_GARANTIE =
   'Volg je 8 weken je schema (minstens 90% van je workouts helemaal af), log je eten op 5 dagen per week en weeg je minstens 4 keer per week? Dan word je sterker: meer gewicht, meer herhalingen of meer sets dan in week 1. Lukt dat niet, mail dan binnen 14 dagen na week 8 naar info@gymlads.nl en je krijgt terug wat je hebt betaald. De volledige voorwaarden staan in artikel 18 van onze algemene voorwaarden.'
 
-export const FAQ_PROEF = `Kies je het jaarabonnement, dan probeer je Gymlads 7 dagen voor ${PROEF_BEDRAG}. Die ${PROEF_BEDRAG} betaal je vandaag. Zeg je op tijdens je proef, dan betaal je verder niks. Zeg je niet op, dan betaal je na 7 dagen €99,99 voor een jaar.`
+export const FAQ_PROEF = BETAALDE_PROEF
+  ? `Kies je het jaarabonnement, dan probeer je Gymlads 7 dagen voor ${PROEF_BEDRAG}. Die ${PROEF_BEDRAG} betaal je vandaag. Zeg je op tijdens je proef, dan betaal je verder niks. Zeg je niet op, dan betaal je na 7 dagen €99,99 voor een jaar.`
+  : 'Kies je het jaarabonnement, dan probeer je Gymlads 7 dagen gratis. Vandaag betaal je €0. Zeg je op tijdens je proef, dan betaal je niks. Zeg je niet op, dan betaal je na 7 dagen €99,99 voor een jaar. Betaal je met iDEAL, dan vraagt je bank eenmalig €0,01 om je rekening te koppelen.'
 
 export const FAQ_VERSCHIL =
-  `Met het jaarabonnement probeer je Gymlads eerst 7 dagen voor ${PROEF_BEDRAG}, en betaal je daarna €99,99 per jaar. Dat is €8,33 per maand. Met het maandabonnement betaal je €17,99 per maand, zonder proefperiode, en zeg je elke maand op.`
+  `Met het jaarabonnement probeer je Gymlads eerst 7 dagen ${BETAALDE_PROEF ? `voor ${PROEF_BEDRAG}` : 'gratis'}, en betaal je daarna €99,99 per jaar. Dat is €8,33 per maand. Met het maandabonnement betaal je €17,99 per maand, zonder proefperiode, en zeg je elke maand op.`
 
 /**
  * ⚠️ Logo's onder de knop: alleen methodes die echt aanstaan in Stripe.
