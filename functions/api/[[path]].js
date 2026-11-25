@@ -170,6 +170,50 @@ async function supabaseRpc(functie, args) {
   }
 }
 
+// Supabase-functie die iets teruggeeft (null bij een fout).
+async function supabaseRpcData(functie, args) {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functie}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_PUBLIEKE_SLEUTEL,
+        Authorization: `Bearer ${SUPABASE_PUBLIEKE_SLEUTEL}`,
+      },
+      body: JSON.stringify(args),
+    })
+    if (!response.ok) {
+      console.error(`[train-samen] ${functie} mislukt (${response.status}): ${await response.text()}`)
+      return null
+    }
+    return await response.json()
+  } catch (error) {
+    console.error(`[train-samen] ${functie}:`, error)
+    return null
+  }
+}
+
+// Train samen (referral, Roel 23-11): code uit de persoonlijke link.
+const TS_CODE = /^[A-Z0-9]{4,12}$/
+function tsCode(waarde) {
+  const code = typeof waarde === 'string' ? waarde.trim().toUpperCase() : ''
+  return TS_CODE.test(code) ? code : null
+}
+
+// GET /api/train-samen?code=X: voor de tekst "Uitgenodigd door ..." op de
+// paywall. Geeft nooit het id van de kortingsbon of een e-mailadres terug.
+async function trainSamenCheck(request) {
+  const code = tsCode(new URL(request.url).searchParams.get('code'))
+  if (!code) return json({ geldig: false })
+  const uitkomst = await supabaseRpcData('ts_code_check', { p_code: code, p_email: null })
+  if (!uitkomst?.geldig) return json({ geldig: false })
+  return json({
+    geldig: true,
+    voornaam: uitkomst.voornaam ?? null,
+    korting_procent: uitkomst.korting_procent ?? null,
+  })
+}
+
 // Stap uit de vragenlijst doorgeven aan Supabase. Antwoordt altijd meteen met
 // 204; het doorgeven gebeurt op de achtergrond en een fout blijft hier.
 async function meet(request, waitUntil) {
@@ -254,6 +298,26 @@ async function createCheckoutSession(request, env, waitUntil) {
     abonnementMetadata.utm_content = meting.utm_content.slice(0, 500)
   }
 
+  // Train samen: alleen op het jaar. De korting (Stripe-kortingsbon, alleen op
+  // het jaarproduct, 12 maanden) zet de server zelf; er is geen code die
+  // iemand kan intypen. De Edge Function train-samen controleert na de start
+  // nog e-mailadres en betaalmethode en haalt de korting er vóór dag 7 af als
+  // het niet klopt.
+  let tsKorting = null
+  const tsAanvraag = plan === 'jaar' && !skipTrial ? tsCode(body?.ts_code) : null
+  if (tsAanvraag) {
+    const check = await supabaseRpcData('ts_code_check', {
+      p_code: tsAanvraag,
+      p_email: geldigEmail(body?.email) ?? null,
+    })
+    if (check?.geldig && typeof check.stripe_coupon_id === 'string' && check.stripe_coupon_id) {
+      tsKorting = check.stripe_coupon_id
+      abonnementMetadata.ts_code = tsAanvraag
+    } else {
+      console.log('[train-samen] geen korting:', tsAanvraag, check?.reden ?? 'geen antwoord')
+    }
+  }
+
   const clientUrl = resolveClientUrl(request, env, body?.clientOrigin)
   // E-mail uit de e-mailstap: op de betaalpagina al ingevuld. Bewust GEEN
   // client_reference_id: n8n en Tracklution zien een web-checkout dan als app-checkout.
@@ -294,6 +358,7 @@ async function createCheckoutSession(request, env, waitUntil) {
     ...(customerEmail ? { customer_email: customerEmail } : {}),
     ...(knopTekst ? { custom_text: { submit: { message: knopTekst } } } : {}),
     // Geen kortingsbon meer (prijsmodel 26-10: €99,99 is de echte jaarprijs).
+    ...(tsKorting ? { discounts: [{ coupon: tsKorting }] } : {}),
     subscription_data: {
       ...(skipTrial ? {} : { trial_period_days: 7 }),
       metadata: abonnementMetadata,
@@ -322,7 +387,7 @@ async function createCheckoutSession(request, env, waitUntil) {
     )
   }
 
-  return json({ url: session.url, submissionId, skipTrial, plan })
+  return json({ url: session.url, submissionId, skipTrial, plan, trainSamen: Boolean(tsKorting) })
 }
 
 // E-mailadres + antwoorden uit de e-mailstap bewaren als lead (Supabase-functie
@@ -711,6 +776,8 @@ export async function onRequest({ request, env, waitUntil }) {
         return health(env)
       case 'POST /api/create-checkout-session':
         return await createCheckoutSession(request, env, opAchtergrond)
+      case 'GET /api/train-samen':
+        return await trainSamenCheck(request)
       case 'POST /api/meet':
         return await meet(request, opAchtergrond)
       case 'POST /api/lead':

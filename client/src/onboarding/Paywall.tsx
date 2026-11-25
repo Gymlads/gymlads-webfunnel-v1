@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Gift, Star } from 'lucide-react'
 import PaymentLogos from './components/PaymentLogos'
+import { eersteJaarPrijs, useUitnodiging } from '../trainSamen'
 import {
   AANTAL_SPORTERS,
   EEN_PLAN,
@@ -129,6 +130,9 @@ function Betaalblok(props: BlokProps) {
 // het jaar gekozen (plan staat standaard op 'jaar' en is hier niet te wisselen).
 function BetaalblokEenPlan({ positie, onCheckout, bezig, fout, plan }: BlokProps) {
   const ditBlokBezig = bezig === positie
+  // Train samen: via de link van een maat korting op het eerste jaar
+  const uitnodiging = useUitnodiging()
+  const metKorting = uitnodiging ? eersteJaarPrijs(uitnodiging.kortingProcent) : null
   return (
     <section className="paywall__een" aria-label="Start je proefweek">
       <h2 className="paywall__een-kop">{EEN_PLAN.kop}</h2>
@@ -141,13 +145,25 @@ function BetaalblokEenPlan({ positie, onCheckout, bezig, fout, plan }: BlokProps
       </p>
 
       <div className="paywall__een-plan" data-plan="jaar">
-        <span className="paywall__een-badge">{EEN_PLAN.badge}</span>
+        <span className="paywall__een-badge">
+          {uitnodiging
+            ? `${uitnodiging.voornaam ? `Uitgenodigd door ${uitnodiging.voornaam}` : 'Je bent uitgenodigd'}: -${uitnodiging.kortingProcent}% op je eerste jaar`
+            : EEN_PLAN.badge}
+        </span>
         <p className="paywall__een-prijs">
-          {EEN_PLAN.prijs}
+          {metKorting ? metKorting.perDag : EEN_PLAN.prijs}
           <span> {EEN_PLAN.prijsEenheid}</span>
         </p>
         <p className="paywall__een-regel">
-          {EEN_PLAN.planNaam} <s>{EEN_PLAN.oudePrijs}</s> <strong>{EEN_PLAN.nieuwePrijs}</strong>
+          {metKorting ? (
+            <>
+              {EEN_PLAN.planNaam} <s>€ 99,99</s> <strong>{metKorting.jaar} eerste jaar</strong>
+            </>
+          ) : (
+            <>
+              {EEN_PLAN.planNaam} <s>{EEN_PLAN.oudePrijs}</s> <strong>{EEN_PLAN.nieuwePrijs}</strong>
+            </>
+          )}
         </p>
       </div>
 
@@ -170,7 +186,11 @@ function BetaalblokEenPlan({ positie, onCheckout, bezig, fout, plan }: BlokProps
           EEN_PLAN.knop
         )}
       </button>
-      <p className="paywall__smallprint">{EEN_PLAN.kleineTekst}</p>
+      <p className="paywall__smallprint">
+        {metKorting
+          ? `Vandaag betaal je €0. Na 7 dagen betaal je ${metKorting.jaar.replace('€ ', '€')} voor je eerste jaar, daarna €99,99 per jaar. Opzeggen kan altijd tijdens de proef, in je account.`
+          : EEN_PLAN.kleineTekst}
+      </p>
       <PaymentLogos />
     </section>
   )

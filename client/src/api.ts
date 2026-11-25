@@ -3,6 +3,7 @@ import { sportschoolAntwoorden, toStripeMetadata } from './types'
 import { webDoel } from './onboarding/doel'
 import { meetKoppeling } from './analytics/meten'
 import { octanistSessie } from './analytics/octanist'
+import { huidigeRef } from './trainSamen'
 
 export interface CheckoutResponse {
   url?: string
@@ -45,6 +46,8 @@ export async function createCheckoutSession(
     clientOrigin: window.location.origin,
     meting: meetKoppeling(),
     octanist: octanistSessie(),
+    // Train samen: code uit de persoonlijke link (de server controleert hem)
+    ts_code: huidigeRef() ?? undefined,
   })
   const maxAttempts = 2
 
