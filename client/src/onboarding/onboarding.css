@@ -2748,8 +2748,11 @@
 }
 
 .bedankt__email {
+  margin: 2px 0 0;
+  font-size: 1rem;
   font-weight: 700;
-  word-break: break-all;
+  color: var(--text);
+  overflow-wrap: anywhere;
 }
 
 .bedankt__stap-tekst {

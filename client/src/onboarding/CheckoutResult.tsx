@@ -187,16 +187,12 @@ export function CheckoutSuccess() {
             <span className="bedankt__nr">2</span>
             <div>
               <p className="bedankt__stap-titel">
-                {email ? (
-                  <>
-                    Log in met <strong className="bedankt__email">{email}</strong>
-                  </>
-                ) : (
-                  'Log in met het e-mailadres waarmee je betaalde'
-                )}
+                Tik op Inloggen{email ? ' met' : ''}
               </p>
+              {email && <p className="bedankt__email">{email}</p>}
               <p className="bedankt__stap-tekst">
-                {email ? 'Gebruik precies dit e-mailadres. ' : ''}Je krijgt een code van 6 cijfers.
+                {email ? 'Gebruik precies dit e-mailadres, geen nieuw account. ' : 'Geen nieuw account aanmaken. '}
+                Je krijgt een code van 6 cijfers, geen wachtwoord nodig.
               </p>
             </div>
           </li>
