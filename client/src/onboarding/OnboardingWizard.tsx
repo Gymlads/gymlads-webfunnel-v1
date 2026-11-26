@@ -45,6 +45,7 @@ import {
 } from './doel'
 import EmailStap from './EmailStap'
 import Doelscherm from './Doelscherm'
+import WebLaadscherm from './WebLaadscherm'
 import Paywall, { type CtaPositie } from './Paywall'
 import { STANDAARD_PLAN, type Plan } from './paywallInhoud'
 import { bewaarAntwoorden, leesAntwoorden } from './bewaren'
@@ -162,6 +163,7 @@ export default function OnboardingWizard() {
   useEffect(() => {
     trackOnboardingStepView(stepId, currentIndex, steps.length, progress)
     meetStap(stepId, currentIndex >= 0 ? currentIndex + 1 : undefined, data)
+    if (stepId === 'laadscherm') pushGtmEvent('laadscherm_web_getoond')
   }, [stepId])
 
   useEffect(() => {
@@ -217,7 +219,9 @@ export default function OnboardingWizard() {
   const navigateBack = useCallback(() => {
     const steps = buildStepList(data)
     const idx = steps.indexOf(stepId)
-    if (idx > 0) setStepId(steps[idx - 1])
+    // Terug vanaf "plan staat klaar": het laadscherm overslaan (niet opnieuw laden)
+    const vorige = idx > 0 && steps[idx - 1] === 'laadscherm' ? idx - 2 : idx - 1
+    if (vorige >= 0) setStepId(steps[vorige])
   }, [stepId, data])
 
   const selectSingle = useCallback(
@@ -1005,6 +1009,20 @@ export default function OnboardingWizard() {
           </p>
           <div className="onboarding__highlight-box">Behaalt uiteindelijk zijn doel</div>
           <p className="onboarding__feedback-text">Zonder is dat maar 35%.</p>
+        </OnboardingLayout>
+      )
+
+    case 'laadscherm':
+      return (
+        <OnboardingLayout centered>
+          <WebLaadscherm
+            data={data}
+            onKlaar={() => {
+              meetStap('laadscherm-klaar', undefined, data)
+              pushGtmEvent('laadscherm_web_afgerond')
+              navigateNext()
+            }}
+          />
         </OnboardingLayout>
       )
 
