@@ -66,10 +66,11 @@ Op verzoek van Roel (20 nov) weer de oude opbouw: de quiz begint meteen met de g
   6 cijfers) / Start je eerste workout, één knop naar de juiste winkel (iPhone -> App Store,
   Android -> Play Store, computer -> beide knoppen). Metingen ongewijzigd (`betaald`,
   `checkout_success`, Tracklution, upsell). Nieuw GTM-event `bedankt_download` (winkel).
-  Live alleen samen met de app-versie met inloggen via code.
+  Staat achter `BEDANKPAGINA_CODE_LOGIN` (CheckoutResult.tsx, nu false = oude pagina). Op true
+  zodra de app met inloggen via code in beide stores staat. Bekijken: `?code=1` in de link.
 - Laadscherm "We maken jouw plan" (`WebLaadscherm.tsx`) tussen "Zo haal jij je doel" en
-  "Jouw persoonlijk plan staat klaar". Staat UIT (`WEB_LAADSCHERM_AAN` in
-  `useOnboardingSteps.ts`); te zien met `?laadscherm=1` in de link (geldt voor dat tabblad).
+  "Jouw persoonlijk plan staat klaar". LIVE sinds 26-11-2026 (`WEB_LAADSCHERM_AAN` in
+  `useOnboardingSteps.ts`, Roel wilde geen losse test).
   ±7 seconden, geen knop; terug vanaf "plan staat klaar" slaat het over.
 - Metingen: stappen `laadscherm` en `laadscherm-klaar`, GTM `laadscherm_web_getoond` /
   `laadscherm_web_afgerond`. Supabase telt de stappen pas als ze in `trechter_web_stappen()`

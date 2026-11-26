@@ -11,9 +11,25 @@ import NextButton from './components/NextButton'
 import StoreDownloadButtons from './components/StoreDownloadButtons'
 import { leesAntwoorden, wisAntwoorden } from './bewaren'
 import { APP_STORE_URL, GOOGLE_PLAY_URL, UPSELL } from './paywallInhoud'
+import GymladsLogo from './components/GymladsLogo'
 import './onboarding.css'
 
 const PENDING_CHECKOUT_KEY = 'onboarding_checkout'
+
+// Nieuwe bedankpagina (inloggen met e-mail + code, 25-11-2026). Pas op true
+// zetten als de app met inloggen via code (2.3.1) in de App Store EN de Play
+// Store staat; de huidige app kent die code nog niet. Op de testlink te zien
+// met ?code=1 in de link.
+export const BEDANKPAGINA_CODE_LOGIN = false
+
+function nieuweBedankpagina(): boolean {
+  if (BEDANKPAGINA_CODE_LOGIN) return true
+  try {
+    return new URLSearchParams(window.location.search).get('code') === '1'
+  } catch {
+    return false
+  }
+}
 
 interface PendingCheckout {
   metadata: Record<string, string>
@@ -161,6 +177,67 @@ export function CheckoutSuccess() {
 
   if (sessionId && (upsell === 'aanbod' || upsell === 'bezig' || upsell === 'fout')) {
     return <UpsellScherm sessionId={sessionId} stand={upsell} setStand={setUpsell} />
+  }
+
+  if (!nieuweBedankpagina()) {
+    // Oude bedankpagina (account aanmaken), tot de app met inloggen via code in beide stores staat
+    return (
+      <OnboardingLayout centered checkoutSuccess>
+        <div className="checkout-success">
+          <GymladsLogo className="checkout-success__logo" />
+          <span className="checkout-success__vink" aria-hidden="true">
+            <Check size={24} strokeWidth={3} />
+          </span>
+          <h1 className="checkout-success__title">
+            {maand ? 'Je abonnement is gestart!' : 'Je proefweek is gestart!'}
+          </h1>
+          <p className="checkout-success__subtitle">
+            Je coach zet je persoonlijke schema voor je klaar. Nog 3 stappen en je doet vandaag je
+            eerste workout.
+          </p>
+
+          {upsell === 'gekocht' && <p className="checkout-upsell__gelukt">{UPSELL.gelukt}</p>}
+
+          <ol className="checkout-success__steps">
+            <li className="checkout-success__step">
+              <span className="checkout-success__step-nr">1</span>
+              <div className="checkout-success__step-body">
+                <p className="checkout-success__step-title">Download de Gymlads-app</p>
+                <StoreDownloadButtons />
+              </div>
+            </li>
+            <li className="checkout-success__step">
+              <span className="checkout-success__step-nr">2</span>
+              <div className="checkout-success__step-body">
+                <p className="checkout-success__step-title">Tik op "Nieuw account aanmaken"</p>
+                <p className="checkout-success__step-text">
+                  Gebruik hetzelfde e-mailadres als bij je aanmelding
+                  {email ? (
+                    <>
+                      : <strong className="checkout-success__email">{email}</strong>
+                    </>
+                  ) : (
+                    '.'
+                  )}{' '}
+                  Dan staan je antwoorden en {maand ? 'je abonnement' : 'je proefweek'} meteen klaar.
+                </p>
+              </div>
+            </li>
+            <li className="checkout-success__step">
+              <span className="checkout-success__step-nr">3</span>
+              <div className="checkout-success__step-body">
+                <p className="checkout-success__step-title">Kies je eerste workout-dag</p>
+                <p className="checkout-success__step-text">
+                  Je antwoorden van hier staan al in de app. Je kiest alleen nog wanneer je je eerste
+                  workout doet, daarna zet je coach je schema klaar. Doe hem vandaag of morgen, dan
+                  haal je {maand ? 'er meteen het meeste uit.' : 'het meeste uit je proefweek.'}
+                </p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </OnboardingLayout>
+    )
   }
 
   const winkel = winkelVoorToestel()

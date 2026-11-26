@@ -59,7 +59,7 @@ export const EMAILSTAP_AAN = false
 // (briefing activatie na betaling, hoofdstuk 6). Gaat live als losse test na
 // de gratis proef: dan WEB_LAADSCHERM_AAN op true. Tot die tijd alleen te zien
 // met ?laadscherm=1 in de link (voor de testlink), dat geldt dan voor dit tabblad.
-export const WEB_LAADSCHERM_AAN = false
+export const WEB_LAADSCHERM_AAN = true  // live 26-11-2026 (Roel)
 
 const LAADSCHERM_KEY = 'gl_laadscherm'
 
