@@ -268,8 +268,8 @@ export function CheckoutSuccess() {
               </p>
               {email && <p className="bedankt__email">{email}</p>}
               <p className="bedankt__stap-tekst">
-                {email ? 'Gebruik precies dit e-mailadres, geen nieuw account. ' : 'Geen nieuw account aanmaken. '}
-                Je krijgt een code van 6 cijfers, geen wachtwoord nodig.
+                {email ? 'Gebruik precies dit e-mailadres. ' : 'Gebruik precies hetzelfde e-mailadres. '}
+                Dan staan je antwoorden en je proef meteen klaar.
               </p>
             </div>
           </li>
