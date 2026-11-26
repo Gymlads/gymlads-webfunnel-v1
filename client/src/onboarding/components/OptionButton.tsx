@@ -5,9 +5,11 @@ interface OptionButtonProps {
   children: React.ReactNode
   /** Emoji links in het vlak. */
   icon?: string
+  /** Niet te kiezen (bv. al genoeg dagen gekozen) */
+  disabled?: boolean
 }
 
-export default function OptionButton({ selected, multi, onClick, children, icon }: OptionButtonProps) {
+export default function OptionButton({ selected, multi, onClick, children, icon, disabled }: OptionButtonProps) {
   const selectedClass = selected
     ? multi
       ? ' onboarding__option--border-selected'
@@ -19,6 +21,7 @@ export default function OptionButton({ selected, multi, onClick, children, icon 
       type="button"
       className={`onboarding__option${icon ? ' onboarding__option--icon' : ''}${selectedClass}`}
       onClick={onClick}
+      disabled={disabled}
     >
       {icon && (
         <span className="onboarding__option-icon" aria-hidden="true">
