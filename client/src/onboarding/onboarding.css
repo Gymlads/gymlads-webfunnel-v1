@@ -2933,3 +2933,16 @@
   font-size: 0.85rem;
   color: #8e8e93;
 }
+
+/* Dagkeuze: precies zoveel dagen als trainingen per week (Roel 26-11) */
+.onboarding__option:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.onboarding__dagen-teller {
+  margin: -4px 0 14px;
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-weight: 600;
+}

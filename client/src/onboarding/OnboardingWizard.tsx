@@ -274,6 +274,32 @@ export default function OnboardingWizard() {
 
   const hasSelectedGymDay = WEEKDAYS.some((d) => data[d.gym])
   const hasSelectedHomeDay = WEEKDAYS.some((d) => data[d.home])
+
+  // Precies zoveel trainingsdagen als "Hoe vaak per week" (Roel 26-11). Bij
+  // sportschool én thuis tellen thuis- en sportschooldagen samen (een dag telt
+  // één keer); thuis mag dan hooguit één dag minder, zodat er een sportschooldag overblijft.
+  const perWeek = data.sessies_per_week
+  const beide = data.locatie_training === 'Beide'
+  const gymAantal = WEEKDAYS.filter((d) => data[d.gym]).length
+  const thuisAantal = WEEKDAYS.filter((d) => data[d.home]).length
+  const dagenTotaal = WEEKDAYS.filter((d) => data[d.gym] || data[d.home]).length
+  const thuisMax = perWeek ? (beide ? Math.max(perWeek - 1, 1) : perWeek) : 7
+  const gymKlaar = perWeek ? gymAantal >= 1 && (beide ? dagenTotaal : gymAantal) === perWeek : hasSelectedGymDay
+  const thuisKlaar = perWeek
+    ? beide
+      ? thuisAantal >= 1 && thuisAantal <= thuisMax
+      : thuisAantal === perWeek
+    : hasSelectedHomeDay
+  const gymDagDicht = (dag: (typeof WEEKDAYS)[number]) => {
+    if (!perWeek || data[dag.gym]) return false
+    if (beide) return !data[dag.home] && dagenTotaal >= perWeek
+    return gymAantal >= perWeek
+  }
+  const thuisDagDicht = (dag: (typeof WEEKDAYS)[number]) => !!perWeek && !data[dag.home] && thuisAantal >= thuisMax
+  const dagenTeller = (gekozen: number, nodig: number) =>
+    gekozen > nodig
+      ? `Je traint ${nodig}× per week. Haal er ${gekozen - nodig} weg.`
+      : `${gekozen} van ${nodig} dagen gekozen`
   const hasNoHomeEquipment = HOME_EQUIPMENT.every((item) => !data[item.key])
 
   async function handleCheckout(positie: CtaPositie) {
@@ -903,7 +929,7 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout
           {...layoutProps}
-          footer={<NextButton onClick={() => navigateNext()} disabled={!hasSelectedGymDay} />}
+          footer={<NextButton onClick={() => navigateNext()} disabled={!gymKlaar} />}
         >
           {data.locatie_training === 'Beide' ? (
             <>
@@ -916,12 +942,19 @@ export default function OnboardingWizard() {
               <p className="onboarding__subtitle">Dan plan ik je gymtrainingen op die dagen.</p>
             </>
           )}
+          {perWeek && (
+            <p className="onboarding__dagen-teller">
+              {beide ? dagenTeller(dagenTotaal, perWeek) : dagenTeller(gymAantal, perWeek)}
+              {beide && thuisAantal > 0 ? ' (thuis + sportschool)' : ''}
+            </p>
+          )}
           <div className="onboarding__options">
             {WEEKDAYS.map((day) => (
               <OptionButton
                 key={day.gym}
                 multi
                 selected={data[day.gym]}
+                disabled={gymDagDicht(day)}
                 onClick={() => toggleMulti(day.gym)}
               >
                 {day.label}
@@ -935,7 +968,7 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout
           {...layoutProps}
-          footer={<NextButton onClick={() => navigateNext()} disabled={!hasSelectedHomeDay} />}
+          footer={<NextButton onClick={() => navigateNext()} disabled={!thuisKlaar} />}
         >
           <h1 className="onboarding__title">Op welke dagen wil je thuis trainen?</h1>
           <p className="onboarding__subtitle">
@@ -943,12 +976,22 @@ export default function OnboardingWizard() {
               ? 'Dan plan ik je week slim in voor ritme en herstel.'
               : 'Dan houd ik rekening met beschikbare apparatuur en kies ik passende oefeningen.'}
           </p>
+          {perWeek && (
+            <p className="onboarding__dagen-teller">
+              {beide
+                ? thuisAantal > thuisMax
+                  ? `Haal er ${thuisAantal - thuisMax} weg, dan blijft er een sportschooldag over.`
+                  : `${thuisAantal} van ${perWeek} dagen gekozen, de rest kies je bij de sportschool`
+                : dagenTeller(thuisAantal, perWeek)}
+            </p>
+          )}
           <div className="onboarding__options">
             {WEEKDAYS.map((day) => (
               <OptionButton
                 key={day.home}
                 multi
                 selected={data[day.home]}
+                disabled={thuisDagDicht(day)}
                 onClick={() => toggleMulti(day.home)}
               >
                 {day.label}
