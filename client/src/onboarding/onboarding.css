@@ -2941,8 +2941,10 @@
 }
 
 .onboarding__dagen-teller {
-  margin: -4px 0 14px;
-  font-size: 0.9rem;
-  color: var(--accent);
-  font-weight: 600;
+  margin: -6px 0 8px;
+  text-align: right;
+  font-size: 0.8rem;
+  color: #8e8e93;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
