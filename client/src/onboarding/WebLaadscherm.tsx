@@ -5,9 +5,9 @@ import { doelKeuze, getal, oefeningLabel } from './doel'
 
 // Laadscherm "We maken jouw plan" (briefing activatie na betaling, hoofdstuk 6,
 // ontwerp web-laadscherm.png). Puur voor de beleving: er wordt hier geen plan
-// gemaakt (dat gebeurt pas na betalen). ±7 seconden, geen knop, daarna vanzelf door.
+// gemaakt (dat gebeurt pas na betalen). ±11 seconden (Roel 26-11: 10-12 s), geen knop, daarna vanzelf door.
 
-const STAP_MS = 1600
+const STAP_MS = 2600
 const EINDE_MS = 600
 
 /** Letterlijk uit de App Store (11 nov, 5 sterren), gekozen door Roel 26-11. Geen woorden veranderen. */
