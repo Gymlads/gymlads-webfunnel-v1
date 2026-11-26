@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
 import type { OnboardingData } from '../types'
 import { doelKeuze, getal, oefeningLabel } from './doel'
-import { REVIEWS } from './paywallInhoud'
 
 // Laadscherm "We maken jouw plan" (briefing activatie na betaling, hoofdstuk 6,
 // ontwerp web-laadscherm.png). Puur voor de beleving: er wordt hier geen plan
@@ -11,8 +10,12 @@ import { REVIEWS } from './paywallInhoud'
 const STAP_MS = 1600
 const EINDE_MS = 600
 
-/** Kort, echt en niet de bovenste op de paywall (die staat er direct na). */
-const REVIEW = REVIEWS.find((r) => r.naam === 'Luuk') ?? REVIEWS[REVIEWS.length - 1]
+/** Letterlijk uit de App Store (11 nov, 5 sterren), gekozen door Roel 26-11. Geen woorden veranderen. */
+const REVIEW = {
+  tekst:
+    'App werkt uitstekend en de coach in de app kan je veel uitleggen. Ook de klantenservice via de mail is uitstekend. Erg tevreden met Gymlads!',
+  naam: 'Bo',
+}
 
 function plekTekst(data: OnboardingData): string | null {
   switch (data.locatie_training) {
