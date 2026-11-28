@@ -66,7 +66,7 @@ Op verzoek van Roel (20 nov) weer de oude opbouw: de quiz begint meteen met de g
   6 cijfers) / Start je eerste workout, één knop naar de juiste winkel (iPhone -> App Store,
   Android -> Play Store, computer -> beide knoppen). Metingen ongewijzigd (`betaald`,
   `checkout_success`, Tracklution, upsell). Nieuw GTM-event `bedankt_download` (winkel).
-  Staat achter `BEDANKPAGINA_CODE_LOGIN` (CheckoutResult.tsx, nu false = oude pagina). Op true
+  Achter `BEDANKPAGINA_CODE_LOGIN` (CheckoutResult.tsx), AAN sinds 28-11-2026 (2.3.1 in beide stores). Was false
   zodra de app met inloggen via code in beide stores staat. Bekijken: `?code=1` in de link.
 - Laadscherm "We maken jouw plan" (`WebLaadscherm.tsx`) tussen "Zo haal jij je doel" en
   "Jouw persoonlijk plan staat klaar". LIVE sinds 26-11-2026 (`WEB_LAADSCHERM_AAN` in
