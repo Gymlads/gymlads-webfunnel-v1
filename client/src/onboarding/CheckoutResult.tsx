@@ -16,7 +16,7 @@ import './onboarding.css'
 
 const PENDING_CHECKOUT_KEY = 'onboarding_checkout'
 
-// Nieuwe bedankpagina (inloggen met e-mail + code, 25-11-2026). Pas op true
+// Nieuwe bedankpagina (25-11-2026; app 2.3.1: Inloggen > e-mail > voornaam + wachtwoord). Pas op true
 // zetten als de app met inloggen via code (2.3.1) in de App Store EN de Play
 // Store staat; de huidige app kent die code nog niet. Op de testlink te zien
 // met ?code=1 in de link.
@@ -268,8 +268,8 @@ export function CheckoutSuccess() {
               </p>
               {email && <p className="bedankt__email">{email}</p>}
               <p className="bedankt__stap-tekst">
-                {email ? 'Gebruik precies dit e-mailadres. ' : 'Gebruik precies hetzelfde e-mailadres. '}
-                Dan staan je antwoorden en je proef meteen klaar.
+                {email ? 'Gebruik precies dit e-mailadres' : 'Gebruik precies hetzelfde e-mailadres'}, vul je
+                voornaam in en kies een wachtwoord. Dan staan je antwoorden en je proef meteen klaar.
               </p>
             </div>
           </li>
