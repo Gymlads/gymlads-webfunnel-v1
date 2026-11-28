@@ -252,7 +252,11 @@ export default function OnboardingWizard() {
         navigateNext({
           doel: keuze.doel,
           doel_keuze: keuze.label,
-          ...(keuze.figuur ? { focus_spiergroepen: 'Billen/Benen' as const } : {}),
+          ...(doelAutomatisch()
+            ? { focus_spiergroepen: keuze.figuur ? ('Billen/Benen' as const) : ('Ik wil alles gelijk trainen' as const) }
+            : keuze.figuur
+              ? { focus_spiergroepen: 'Billen/Benen' as const }
+              : {}),
           doel_soort: soort,
           doel_oefening: '',
           doel_start: soort === 'workouts' ? null : standaardStart(soort, data.geslacht),

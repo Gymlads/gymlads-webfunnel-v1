@@ -144,10 +144,13 @@ function getDoelSteps(data: OnboardingData): StepId[] {
 
 export function buildStepList(data: OnboardingData): StepId[] {
   const i = BASE_STEPS.indexOf('goal') + 1
+  // Doel automatisch: ook geen focusvraag (Roel 28-11). Beter figuur krijgt
+  // vanzelf billen/benen, de rest een gebalanceerd schema (kiesHoofddoel).
+  const basis = doelAutomatisch() ? BASE_STEPS.filter((s) => s !== 'muscle-focus') : BASE_STEPS
   return [
-    ...BASE_STEPS.slice(0, i),
+    ...basis.slice(0, i),
     ...getDoelSteps(data),
-    ...BASE_STEPS.slice(i),
+    ...basis.slice(i),
     ...getConditionalSteps(data),
     ...tailSteps(),
   ]
