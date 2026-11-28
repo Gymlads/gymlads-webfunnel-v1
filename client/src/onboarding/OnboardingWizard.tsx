@@ -65,6 +65,7 @@ import {
   type StepId,
   shouldShowProgress,
   useOnboardingSteps,
+  doelAutomatisch,
 } from './useOnboardingSteps'
 import './onboarding.css'
 import personalizationImage from './assets/02-personalization.png'
@@ -251,7 +252,11 @@ export default function OnboardingWizard() {
         navigateNext({
           doel: keuze.doel,
           doel_keuze: keuze.label,
-          ...(keuze.figuur ? { focus_spiergroepen: 'Billen/Benen' as const } : {}),
+          ...(doelAutomatisch()
+            ? { focus_spiergroepen: keuze.figuur ? ('Billen/Benen' as const) : ('Ik wil alles gelijk trainen' as const) }
+            : keuze.figuur
+              ? { focus_spiergroepen: 'Billen/Benen' as const }
+              : {}),
           doel_soort: soort,
           doel_oefening: '',
           doel_start: soort === 'workouts' ? null : standaardStart(soort, data.geslacht),
@@ -399,6 +404,9 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Wat is jouw hoofddoel?</h1>
+          {doelAutomatisch() && (
+            <p className="onboarding__subtitle doel-auto__zin">Je coach zet een haalbaar doel voor je klaar.</p>
+          )}
           <div className="onboarding__options">
             {hoofddoelen(data.geslacht).map((keuze) => (
               <OptionButton

@@ -107,7 +107,30 @@ function getConditionalSteps(data: OnboardingData): StepId[] {
 // hoofddoel bepaalt het soort doel, we vragen alleen nog het getal.
 export const DOEL_STAPPEN: StepId[] = ['doel-kiezen', 'doel-oefening', 'doel-getal']
 
+// Doel automatisch (Roel 28-11-2026, plan "doel in de funnel" v2): de quiz
+// vraagt geen kilo's of oefening meer. De coach in de app zet het standaard-
+// doel klaar op basis van het hoofddoel (onboarding.doel + geslacht + focus).
+// Gaat live tegelijk met de app-versie die dat doet: dan DOEL_AUTOMATISCH op
+// true. Tot die tijd alleen te zien met ?doel=auto (geldt voor dit tabblad).
+export const DOEL_AUTOMATISCH = false
+
+const DOEL_AUTO_KEY = 'gl_doel_auto'
+
+export function doelAutomatisch(): boolean {
+  if (DOEL_AUTOMATISCH) return true
+  try {
+    if (new URLSearchParams(window.location.search).get('doel') === 'auto') {
+      sessionStorage.setItem(DOEL_AUTO_KEY, '1')
+      return true
+    }
+    return sessionStorage.getItem(DOEL_AUTO_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 function getDoelSteps(data: OnboardingData): StepId[] {
+  if (doelAutomatisch()) return []
   switch (data.doel) {
     case 'Afvallen':
       return ['doel-getal']
@@ -121,10 +144,13 @@ function getDoelSteps(data: OnboardingData): StepId[] {
 
 export function buildStepList(data: OnboardingData): StepId[] {
   const i = BASE_STEPS.indexOf('goal') + 1
+  // Doel automatisch: ook geen focusvraag (Roel 28-11). Beter figuur krijgt
+  // vanzelf billen/benen, de rest een gebalanceerd schema (kiesHoofddoel).
+  const basis = doelAutomatisch() ? BASE_STEPS.filter((s) => s !== 'muscle-focus') : BASE_STEPS
   return [
-    ...BASE_STEPS.slice(0, i),
+    ...basis.slice(0, i),
     ...getDoelSteps(data),
-    ...BASE_STEPS.slice(i),
+    ...basis.slice(i),
     ...getConditionalSteps(data),
     ...tailSteps(),
   ]
