@@ -20,7 +20,7 @@ const PENDING_CHECKOUT_KEY = 'onboarding_checkout'
 // zetten als de app met inloggen via code (2.3.1) in de App Store EN de Play
 // Store staat; de huidige app kent die code nog niet. Op de testlink te zien
 // met ?code=1 in de link.
-export const BEDANKPAGINA_CODE_LOGIN = false
+export const BEDANKPAGINA_CODE_LOGIN = true  // aan 28-11-2026: 2.3.1 in beide stores (Roel)
 
 function nieuweBedankpagina(): boolean {
   if (BEDANKPAGINA_CODE_LOGIN) return true
@@ -268,8 +268,8 @@ export function CheckoutSuccess() {
               </p>
               {email && <p className="bedankt__email">{email}</p>}
               <p className="bedankt__stap-tekst">
-                {email ? 'Gebruik precies dit e-mailadres, geen nieuw account. ' : 'Geen nieuw account aanmaken. '}
-                Je krijgt een code van 6 cijfers, geen wachtwoord nodig.
+                {email ? 'Gebruik precies dit e-mailadres. ' : 'Gebruik precies hetzelfde e-mailadres. '}
+                Dan staan je antwoorden en je proef meteen klaar.
               </p>
             </div>
           </li>

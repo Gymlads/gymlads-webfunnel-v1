@@ -296,10 +296,8 @@ export default function OnboardingWizard() {
     return gymAantal >= perWeek
   }
   const thuisDagDicht = (dag: (typeof WEEKDAYS)[number]) => !!perWeek && !data[dag.home] && thuisAantal >= thuisMax
-  const dagenTeller = (gekozen: number, nodig: number) =>
-    gekozen > nodig
-      ? `Je traint ${nodig}× per week. Haal er ${gekozen - nodig} weg.`
-      : `${gekozen} van ${nodig} dagen gekozen`
+  // Alleen een kleine teller "1/2" (Roel 26-11: lange tekst was slordig)
+  const dagenTeller = (gekozen: number, nodig: number) => `${gekozen}/${nodig}`
   const hasNoHomeEquipment = HOME_EQUIPMENT.every((item) => !data[item.key])
 
   async function handleCheckout(positie: CtaPositie) {
@@ -944,8 +942,7 @@ export default function OnboardingWizard() {
           )}
           {perWeek && (
             <p className="onboarding__dagen-teller">
-              {beide ? dagenTeller(dagenTotaal, perWeek) : dagenTeller(gymAantal, perWeek)}
-              {beide && thuisAantal > 0 ? ' (thuis + sportschool)' : ''}
+              {dagenTeller(beide ? dagenTotaal : gymAantal, perWeek)}
             </p>
           )}
           <div className="onboarding__options">
@@ -977,13 +974,7 @@ export default function OnboardingWizard() {
               : 'Dan houd ik rekening met beschikbare apparatuur en kies ik passende oefeningen.'}
           </p>
           {perWeek && (
-            <p className="onboarding__dagen-teller">
-              {beide
-                ? thuisAantal > thuisMax
-                  ? `Haal er ${thuisAantal - thuisMax} weg, dan blijft er een sportschooldag over.`
-                  : `${thuisAantal} van ${perWeek} dagen gekozen, de rest kies je bij de sportschool`
-                : dagenTeller(thuisAantal, perWeek)}
-            </p>
+            <p className="onboarding__dagen-teller">{dagenTeller(thuisAantal, perWeek)}</p>
           )}
           <div className="onboarding__options">
             {WEEKDAYS.map((day) => (
