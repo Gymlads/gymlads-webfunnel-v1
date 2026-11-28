@@ -4,6 +4,7 @@
 // in Supabase bewaart (web_doel_bewaren); de app neemt het over bij inloggen.
 
 import type { OnboardingData } from '../types'
+import { doelAutomatisch } from './useOnboardingSteps'
 
 export type DoelSoort = 'afvallen' | 'aankomen' | 'taille' | 'billen' | 'armen' | 'kracht' | 'workouts'
 export type Niveau = 'beginner' | 'gemiddeld' | 'gevorderd'
@@ -299,6 +300,8 @@ export function adviesTekst(soort: DoelSoort, verandering: number, zone: Zone, m
 export function webDoel(data: OnboardingData):
   | { soort: DoelSoort; oefening: string | null; start: number | null; doel: number | null }
   | null {
+  // Doel automatisch: geen doel van de website, de app zet het klaar.
+  if (doelAutomatisch()) return null
   const soort = data.doel_soort
   if (!soort) return null
   if (soort === 'workouts') return { soort, oefening: null, start: null, doel: null }

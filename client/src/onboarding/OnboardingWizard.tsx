@@ -65,6 +65,7 @@ import {
   type StepId,
   shouldShowProgress,
   useOnboardingSteps,
+  doelAutomatisch,
 } from './useOnboardingSteps'
 import './onboarding.css'
 import personalizationImage from './assets/02-personalization.png'
@@ -399,6 +400,9 @@ export default function OnboardingWizard() {
       return (
         <OnboardingLayout {...layoutProps}>
           <h1 className="onboarding__title">Wat is jouw hoofddoel?</h1>
+          {doelAutomatisch() && (
+            <p className="onboarding__subtitle doel-auto__zin">Je coach zet een haalbaar doel voor je klaar.</p>
+          )}
           <div className="onboarding__options">
             {hoofddoelen(data.geslacht).map((keuze) => (
               <OptionButton
