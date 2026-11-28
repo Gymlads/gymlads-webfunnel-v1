@@ -243,7 +243,8 @@ export default function OnboardingWizard() {
   // Hoofddoel kiezen bepaalt meteen het soort doel (Roel, 12 nov).
   const kiesHoofddoel = useCallback(
     (keuze: HoofddoelKeuze) => {
-      const soort = soortUitHoofddoel(keuze.doel)
+      // Beter figuur (vrouw): centimeters erbij op je billen (Roel 28-11)
+      const soort = keuze.figuur ? 'billen' : soortUitHoofddoel(keuze.doel)
       setPressedOption(keuze.label)
       pushGtmEvent('goal', { doel: keuze.label, geslacht: data.geslacht || 'onbekend' })
       setTimeout(() => {

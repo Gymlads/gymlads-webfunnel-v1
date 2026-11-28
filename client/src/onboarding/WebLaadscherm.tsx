@@ -33,7 +33,7 @@ function plekTekst(data: OnboardingData): string | null {
 /** "Naar 80 kg · 3× per week · sportschool"; zonder kilo's de naam van het doel. */
 export function laadschermOndertitel(data: OnboardingData): string {
   let doel: string
-  if (data.doel_soort === 'afvallen' && data.doel_waarde != null) {
+  if ((data.doel_soort === 'afvallen' || data.doel_soort === 'aankomen') && data.doel_waarde != null) {
     doel = `Naar ${getal(data.doel_waarde)} kg`
   } else if (data.doel_soort === 'kracht' && data.doel_waarde != null && data.doel_oefening) {
     doel = `${oefeningLabel(data.doel_oefening)} ${getal(data.doel_waarde)} kg`

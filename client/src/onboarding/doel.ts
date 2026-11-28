@@ -21,10 +21,12 @@ export interface DoelOptie {
  * Kracht opbouwen -> zwaarder op een oefening, anders: al je workouts.
  */
 export function soortUitHoofddoel(hoofddoel: string): DoelSoort {
-  // 24-11 (Roel): Spieropbouw heeft geen getal-scherm meer.
+  // 28-11 (Roel): Spieropbouw weer kilo's erbij (24-11 even weg geweest).
   switch (hoofddoel) {
     case 'Afvallen':
       return 'afvallen'
+    case 'Spieropbouw':
+      return 'aankomen'
     case 'Kracht opbouwen':
       return 'kracht'
     default:
